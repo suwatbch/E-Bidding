@@ -1,0 +1,540 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table";
+import { Badge } from "../../components/ui/badge";
+import { 
+  Search, 
+  Gavel, 
+  AccessTime, 
+  Person, 
+  Category,
+  Devices,
+  LocalOffer,
+  Diamond,
+  DirectionsCar,
+  Collections
+} from '@mui/icons-material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
+import TimerIcon from '@mui/icons-material/Timer';
+import BlockIcon from '@mui/icons-material/Block';
+
+interface AuctionItem {
+  id: string;
+  title: string;
+  category: string;
+  startPrice: number;
+  currentBid: number;
+  bidCount: number;
+  endTime: string;
+  status: 'pending' | 'bidding' | 'ending_soon' | 'ended' | 'cancelled';
+}
+
+const categories = [
+  { name: 'ทั้งหมด', icon: <Category className="w-5 h-5" /> },
+  { name: 'อิเล็กทรอนิกส์', icon: <Devices className="w-5 h-5" /> },
+  { name: 'แฟชั่น', icon: <LocalOffer className="w-5 h-5" /> },
+  { name: 'เครื่องประดับ', icon: <Diamond className="w-5 h-5" /> },
+  { name: 'ยานยนต์', icon: <DirectionsCar className="w-5 h-5" /> },
+  { name: 'ของสะสม', icon: <Collections className="w-5 h-5" /> },
+];
+
+const auctionItems: AuctionItem[] = [
+  {
+    id: 'A001',
+    title: 'รถยนต์ Toyota Camry 2.5G ปี 2022',
+    category: 'ยานพาหนะ',
+    startPrice: 800000,
+    currentBid: 850000,
+    bidCount: 12,
+    endTime: '2024-03-25 15:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A002',
+    title: 'ที่ดินเปล่า 100 ตร.วา ถ.พระราม 2',
+    category: 'อสังหาริมทรัพย์',
+    startPrice: 2500000,
+    currentBid: 2800000,
+    bidCount: 8,
+    endTime: '2024-03-24 12:00',
+    status: 'ending_soon'
+  },
+  {
+    id: 'A003',
+    title: 'แหวนเพชรน้ำงาม 1 กะรัต',
+    category: 'เครื่องประดับ',
+    startPrice: 150000,
+    currentBid: 180000,
+    bidCount: 15,
+    endTime: '2024-03-26 18:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A004',
+    title: 'MacBook Pro M2 Max 16" 32GB 1TB',
+    category: 'อิเล็กทรอนิกส์',
+    startPrice: 89000,
+    currentBid: 95000,
+    bidCount: 6,
+    endTime: '2024-03-23 20:00',
+    status: 'ended'
+  },
+  {
+    id: 'A005',
+    title: 'เหรียญหลวงพ่อคูณ รุ่นแรก ปี 2512',
+    category: 'พระเครื่อง',
+    startPrice: 500000,
+    currentBid: 580000,
+    bidCount: 20,
+    endTime: '2024-03-27 09:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A006',
+    title: 'คอนโดมิเนียม The Base สุขุมวิท 77',
+    category: 'อสังหาริมทรัพย์',
+    startPrice: 1800000,
+    currentBid: 1950000,
+    bidCount: 10,
+    endTime: '2024-03-25 16:00',
+    status: 'cancelled'
+  },
+  {
+    id: 'A007',
+    title: 'นาฬิกา Rolex Submariner Date',
+    category: 'เครื่องประดับ',
+    startPrice: 450000,
+    currentBid: 480000,
+    bidCount: 9,
+    endTime: '2024-03-24 14:00',
+    status: 'ending_soon'
+  },
+  {
+    id: 'A008',
+    title: 'เครื่องจักรโรงงานอุตสาหกรรม CNC',
+    category: 'อุตสาหกรรม',
+    startPrice: 1200000,
+    currentBid: 1350000,
+    bidCount: 5,
+    endTime: '2024-03-26 11:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A009',
+    title: 'ภาพวาดศิลปินแห่งชาติ เฉลิมชัย',
+    category: 'ศิลปะ',
+    startPrice: 300000,
+    currentBid: 320000,
+    bidCount: 7,
+    endTime: '2024-03-25 13:00',
+    status: 'ended'
+  },
+  {
+    id: 'A010',
+    title: 'รถจักรยานยนต์ Ducati Panigale V4',
+    category: 'ยานพาหนะ',
+    startPrice: 950000,
+    currentBid: 1020000,
+    bidCount: 14,
+    endTime: '2024-03-24 17:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A011',
+    title: 'โน๊ตบุ๊ค ASUS ROG Strix G16 2024',
+    category: 'อิเล็กทรอนิกส์',
+    startPrice: 55000,
+    currentBid: 62000,
+    bidCount: 8,
+    endTime: '2024-03-28 10:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A012',
+    title: 'ทาวน์โฮม 3 ชั้น หลังมุม',
+    category: 'อสังหาริมทรัพย์',
+    startPrice: 3500000,
+    currentBid: 3750000,
+    bidCount: 4,
+    endTime: '2024-03-29 15:00',
+    status: 'cancelled'
+  },
+  {
+    id: 'A013',
+    title: 'กล้อง Sony A7R V Mirrorless',
+    category: 'อิเล็กทรอนิกส์',
+    startPrice: 125000,
+    currentBid: 138000,
+    bidCount: 11,
+    endTime: '2024-03-26 14:00',
+    status: 'ending_soon'
+  },
+  {
+    id: 'A014',
+    title: 'พระสมเด็จวัดระฆัง รุ่นอนุสรณ์ 100 ปี',
+    category: 'พระเครื่อง',
+    startPrice: 250000,
+    currentBid: 285000,
+    bidCount: 16,
+    endTime: '2024-03-23 11:00',
+    status: 'ended'
+  },
+  {
+    id: 'A015',
+    title: 'เพชรน้ำงาม GIA Certified 2 กะรัต',
+    category: 'เครื่องประดับ',
+    startPrice: 850000,
+    currentBid: 920000,
+    bidCount: 7,
+    endTime: '2024-03-27 16:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A016',
+    title: 'รถ Porsche 911 GT3 ปี 2023',
+    category: 'ยานพาหนะ',
+    startPrice: 12500000,
+    currentBid: 13200000,
+    bidCount: 5,
+    endTime: '2024-03-30 12:00',
+    status: 'bidding'
+  },
+  {
+    id: 'A017',
+    title: 'ที่ดินติดทะเล 2 ไร่ หัวหิน',
+    category: 'อสังหาริมทรัพย์',
+    startPrice: 15000000,
+    currentBid: 16500000,
+    bidCount: 9,
+    endTime: '2024-03-25 09:00',
+    status: 'ending_soon'
+  },
+  {
+    id: 'A018',
+    title: 'เครื่องบินเล็ก Cessna 172',
+    category: 'ยานพาหนะ',
+    startPrice: 8500000,
+    currentBid: 8900000,
+    bidCount: 3,
+    endTime: '2024-03-22 10:00',
+    status: 'ended'
+  },
+  {
+    id: 'A019',
+    title: 'ตู้เซฟโบราณ อายุ 100 ปี',
+    category: 'ของสะสม',
+    startPrice: 180000,
+    currentBid: 195000,
+    bidCount: 6,
+    endTime: '2024-03-28 13:00',
+    status: 'cancelled'
+  },
+  {
+    id: 'A020',
+    title: 'ภาพวาดสีน้ำมัน Vincent van Gogh',
+    category: 'ศิลปะ',
+    startPrice: 450000,
+    currentBid: 520000,
+    bidCount: 13,
+    endTime: '2024-03-29 17:00',
+    status: 'bidding'
+  }
+];
+
+export default function Home() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | AuctionItem['status']>('all');
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'bidding':
+        return <Badge className="bg-green-500">กำลังประมูล</Badge>;
+      case 'ending_soon':
+        return <Badge className="bg-orange-500">ใกล้สิ้นสุด</Badge>;
+      case 'ended':
+        return <Badge className="bg-gray-500">สิ้นสุดประมูล</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500">ยกเลิกประมูล</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const getTimeRemaining = (endTime: string) => {
+    const end = new Date(endTime);
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 0) {
+      return `${days} วัน ${hours} ชั่วโมง`;
+    } else {
+      return `${hours} ชั่วโมง ${minutes} นาที`;
+    }
+  };
+
+  const getStatusInfo = (status: AuctionItem['status']) => {
+    switch (status) {
+      case 'pending':
+        return {
+          icon: <TimerIcon className="h-5 w-5" />,
+          text: 'รอการประมูล',
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50'
+        };
+      case 'bidding':
+        return {
+          icon: <Gavel className="h-5 w-5" />,
+          text: 'กำลังประมูล',
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50'
+        };
+      case 'ending_soon':
+        return {
+          icon: <PendingIcon className="h-5 w-5" />,
+          text: 'ใกล้สิ้นสุด',
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-50'
+        };
+      case 'ended':
+        return {
+          icon: <CheckCircleIcon className="h-5 w-5" />,
+          text: 'สิ้นสุดประมูล',
+          color: 'text-green-600',
+          bgColor: 'bg-green-50'
+        };
+      case 'cancelled':
+        return {
+          icon: <BlockIcon className="h-5 w-5" />,
+          text: 'ยกเลิกประมูล',
+          color: 'text-red-600',
+          bgColor: 'bg-red-50'
+        };
+    }
+  };
+
+  // เรียงลำดับรายการตามสถานะและเวลา
+  const sortedAuctions = [...auctionItems].sort((a, b) => {
+    // เรียงตามสถานะ
+    const statusOrder = {
+      pending: 0,
+      bidding: 1,
+      ending_soon: 2,
+      ended: 3,
+      cancelled: 4
+    };
+    
+    if (statusOrder[a.status] !== statusOrder[b.status]) {
+      return statusOrder[a.status] - statusOrder[b.status];
+    }
+    
+    // ถ้าสถานะเดียวกัน เรียงตามเวลา
+    return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+  });
+
+  const filteredItems = sortedAuctions.filter(item => {
+    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="mx-auto max-w-6xl px-4 pt-8">
+        <div className="relative rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_theme(colors.blue.300/20%),_transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_theme(colors.blue.300/20%),_transparent_50%)]"></div>
+          </div>
+
+          {/* Content */}
+          <div className="relative px-8 py-12">
+            <div className="max-w-3xl mx-auto text-center">
+              <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
+                ยินดีต้อนรับสู่ <span className="text-blue-200">E-Bidding</span>
+              </h1>
+              <p className="text-lg text-blue-100 mb-8">
+                ค้นพบสินค้าที่คุณต้องการและเริ่มการประมูลได้เลย
+              </p>
+              <div className="relative max-w-xl mx-auto group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-300 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                  <input
+                    type="text"
+                    placeholder="ค้นหาสินค้าที่ต้องการประมูล..."
+                    className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-900 bg-white shadow-md focus:ring-2 focus:ring-blue-300 focus:outline-none transition duration-200"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        {/* Categories */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">หมวดหมู่</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {categories.map((category) => (
+              <button
+                key={category.name}
+                className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer"
+              >
+                <span className="mr-2">{category.icon}</span>
+                {category.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Auction Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <h2 className="text-2xl font-semibold">รายการประมูล</h2>
+              <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'all' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  ทุกสถานะ
+                </button>
+                <button
+                  onClick={() => setStatusFilter('pending')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'pending'
+                      ? 'bg-gray-600 text-white'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+                >
+                  <TimerIcon className="h-4 w-4" />
+                  รอการประมูล
+                </button>
+                <button
+                  onClick={() => setStatusFilter('bidding')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'bidding'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
+                >
+                  <Gavel className="h-4 w-4" />
+                  กำลังประมูล
+                </button>
+                <button
+                  onClick={() => setStatusFilter('ending_soon')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'ending_soon'
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}
+                >
+                  <PendingIcon className="h-4 w-4" />
+                  ใกล้สิ้นสุด
+                </button>
+                <button
+                  onClick={() => setStatusFilter('ended')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'ended'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
+                >
+                  <CheckCircleIcon className="h-4 w-4" />
+                  สิ้นสุดประมูล
+                </button>
+                <button
+                  onClick={() => setStatusFilter('cancelled')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${statusFilter === 'cancelled'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
+                >
+                  <BlockIcon className="h-4 w-4" />
+                  ยกเลิกประมูล
+                </button>
+              </div>
+            </div>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">รหัส</TableHead>
+                <TableHead>รายการ</TableHead>
+                <TableHead>หมวดหมู่</TableHead>
+                <TableHead className="text-right">ราคาเริ่มต้น</TableHead>
+                <TableHead className="text-right">ราคาปัจจุบัน</TableHead>
+                <TableHead className="text-center">จำนวนบิด</TableHead>
+                <TableHead className="text-center">เวลาที่เหลือ</TableHead>
+                <TableHead className="text-center">สถานะ</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => {
+                const statusInfo = getStatusInfo(item.status);
+                return (
+                  <TableRow key={item.id} className="hover:bg-blue-50/50 cursor-pointer transition-colors">
+                    <TableCell className="font-medium">{item.id}</TableCell>
+                    <TableCell className="font-medium text-blue-600 hover:text-blue-700">{item.title}</TableCell>
+                    <TableCell>{item.category}</TableCell>
+                    <TableCell className="text-right text-gray-600">{formatPrice(item.startPrice)}</TableCell>
+                    <TableCell className="text-right font-semibold text-blue-600">
+                      {formatPrice(item.currentBid)}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-gray-600">
+                        <Person className="w-4 h-4" />
+                        {item.bidCount}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-gray-600">
+                        <TimerIcon className="w-4 h-4" />
+                        {getTimeRemaining(item.endTime)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}>
+                        {statusInfo.icon}
+                        {statusInfo.text}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    </div>
+  );
+}
