@@ -1,7 +1,8 @@
 import { io } from 'socket.io-client';
 
 // ใช้ environment variable หรือ fallback เป็น localhost ถ้าไม่มีค่า
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+// const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
 
 // สร้าง socket instance
 const socket = io(SOCKET_URL, {

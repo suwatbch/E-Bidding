@@ -1,33 +1,24 @@
-FROM php:7.4-apache
+# ใช้ Node.js เวอร์ชันล่าสุดที่เสถียร
+FROM node:18-alpine
 
-# ติดตั้ง PHP extension ที่จำเป็น
-RUN docker-php-ext-install pdo pdo_mysql
+# สร้างและตั้งค่า working directory
+WORKDIR /app
 
-# เปิด mod_rewrite
-RUN a2enmod rewrite
+# คัดลอกไฟล์ package.json และ package-lock.json
+COPY package*.json ./
 
-# ติดตั้ง git, zip, unzip สำหรับ composer
-RUN apt update && apt install -y git zip unzip
+# ติดตั้ง dependencies
+RUN npm install
 
-# ติดตั้ง Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# คัดลอกโค้ดทั้งหมด
+COPY . .
 
-# ตั้ง DocumentRoot ไปที่ frontend/web
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/frontend/web|g' /etc/apache2/sites-enabled/000-default.conf
+# Build Next.js app
+RUN npm run build
 
-# เพิ่ม Directory config
-RUN echo '<Directory /var/www/html/frontend/web>\n\
-    Options Indexes FollowSymLinks\n\
-    AllowOverride All\n\
-    Require all granted\n\
-</Directory>' >> /etc/apache2/apache2.conf
+# เปิด port ที่จำเป็น
+EXPOSE 3000
+EXPOSE 4000
 
-# คัดลอกโค้ดเข้า container
-COPY . /var/www/html
-
-# ให้สิทธิ์ไฟล์กับ apache
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
-
-# เปิดพอร์ต
-EXPOSE 80
+# คำสั่งเริ่มต้นแอพ (จะถูก override โดย docker-compose)
+CMD ["npm", "run", "dev"]

@@ -1,4 +1,4 @@
-// File: /Users/bic-suwat/Project/Next/E-Bidding/src/app/(main)/alerts/page.tsx
+// File: /app/src/app/(main)/alerts/page.tsx
 import * as entry from '../../../../../src/app/(main)/alerts/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

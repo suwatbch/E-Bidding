@@ -1,8 +1,6 @@
 {
-  "/not-found": "app/not-found.js",
-  "/page": "app/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(main)/alerts/page": "app/(main)/alerts/page.js",
+  "/(main)/my-auctions/page": "app/(main)/my-auctions/page.js",
   "/(main)/home/page": "app/(main)/home/page.js",
-  "/(main)/my-auctions/page": "app/(main)/my-auctions/page.js"
+  "/(main)/alerts/page": "app/(main)/alerts/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }

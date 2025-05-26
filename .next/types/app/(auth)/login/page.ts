@@ -1,4 +1,4 @@
-// File: /Users/bic-suwat/Project/Next/E-Bidding/src/app/(auth)/login/page.tsx
+// File: /app/src/app/(auth)/login/page.tsx
 import * as entry from '../../../../../src/app/(auth)/login/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
