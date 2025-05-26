@@ -1,8 +1,7 @@
 import { io } from 'socket.io-client';
 
 // ใช้ environment variable หรือ fallback เป็น localhost ถ้าไม่มีค่า
-// const SOCKET_URL = 'http://localhost:3001';
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL;
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 // สร้าง socket instance
 const socket = io(SOCKET_URL, {
@@ -20,7 +19,7 @@ socket.on('disconnect', () => {
   console.log('🔴 Socket disconnected');
 });
 
-socket.on('connect_error', (error) => {
+socket.on('connect_error', (error: any) => {
   console.error('❌ Socket connection error:', error);
 });
 
@@ -65,7 +64,7 @@ export const sendNotification = (name: string) => {
 // ฟังก์ชันสำหรับรับการแจ้งเตือน
 export const subscribeToNotifications = (callback: (data: any) => void) => {
   try {
-    socket.on('notification', (data) => {
+    socket.on('notification', (data: any) => {
       console.log('📨 Notification received:', data);
       callback(data);
     });

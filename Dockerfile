@@ -18,7 +18,7 @@ RUN npm run build
 
 # เปิด port ที่จำเป็น
 EXPOSE 3000
-EXPOSE 4000
+EXPOSE 3001
 
 # คำสั่งเริ่มต้นแอพ (จะถูก override โดย docker-compose)
-CMD ["npm", "run", "dev"]
+CMD ["npm", "start"]

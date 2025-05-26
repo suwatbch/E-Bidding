@@ -8,26 +8,24 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    command: npm start
     environment:
-      - NODE_ENV=development
-    command: npm run dev
-    volumes:
-      - .:/app
-      - /app/node_modules
+      - NODE_ENV=production
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
 
-  server:
+  service:
     build: .
-    container_name: ebidding_server
+    container_name: ebidding_service
     platform: linux/arm64
     restart: always
     ports:
       - "3001:3001"
+    command: npm run server
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3001
-      - FRONTEND_URL=http://localhost:3000
-      - SERVER_URL=http://localhost
-    command: npm run dev:server
-    volumes:
-      - .:/app
-      - /app/node_modules
+    # volumes:
+    #   - .:/app
+    #   - /app/node_modules
