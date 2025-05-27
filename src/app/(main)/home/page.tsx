@@ -11,7 +11,22 @@ import {
 } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
 import { 
-  Search, 
+  CategoryAllIcon,
+  CategoryElectronicsIcon,
+  CategoryFashionIcon,
+  CategoryJewelryIcon,
+  CategoryVehicleIcon,
+  CategoryCollectiblesIcon,
+  StatusPendingIcon,
+  StatusBiddingIcon,
+  StatusEndingSoonIcon,
+  StatusEndedIcon,
+  StatusCancelledIcon,
+  SearchBarIcon,
+  TimeIcon,
+  UserIcon
+} from '@/app/components/ui/icons';
+import { 
   Gavel, 
   AccessTime, 
   Person, 
@@ -39,12 +54,12 @@ interface AuctionItem {
 }
 
 const categories = [
-  { name: 'ทั้งหมด', icon: <Category className="w-5 h-5" /> },
-  { name: 'อิเล็กทรอนิกส์', icon: <Devices className="w-5 h-5" /> },
-  { name: 'แฟชั่น', icon: <LocalOffer className="w-5 h-5" /> },
-  { name: 'เครื่องประดับ', icon: <Diamond className="w-5 h-5" /> },
-  { name: 'ยานยนต์', icon: <DirectionsCar className="w-5 h-5" /> },
-  { name: 'ของสะสม', icon: <Collections className="w-5 h-5" /> },
+  { name: 'ทั้งหมด', icon: <CategoryAllIcon /> },
+  { name: 'อิเล็กทรอนิกส์', icon: <CategoryElectronicsIcon /> },
+  { name: 'แฟชั่น', icon: <CategoryFashionIcon /> },
+  { name: 'เครื่องประดับ', icon: <CategoryJewelryIcon /> },
+  { name: 'ยานยนต์', icon: <CategoryVehicleIcon /> },
+  { name: 'ของสะสม', icon: <CategoryCollectiblesIcon /> },
 ];
 
 const auctionItems: AuctionItem[] = [
@@ -251,6 +266,7 @@ const auctionItems: AuctionItem[] = [
 ];
 
 export default function Home() {
+  const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | AuctionItem['status']>('all');
 
@@ -265,14 +281,16 @@ export default function Home() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'pending':
+        return <StatusPendingIcon />;
       case 'bidding':
-        return <Badge className="bg-green-500">กำลังประมูล</Badge>;
+        return <StatusBiddingIcon />;
       case 'ending_soon':
-        return <Badge className="bg-orange-500">ใกล้สิ้นสุด</Badge>;
+        return <StatusEndingSoonIcon />;
       case 'ended':
-        return <Badge className="bg-gray-500">สิ้นสุดประมูล</Badge>;
+        return <StatusEndedIcon />;
       case 'cancelled':
-        return <Badge className="bg-red-500">ยกเลิกประมูล</Badge>;
+        return <StatusCancelledIcon />;
       default:
         return null;
     }
@@ -298,35 +316,35 @@ export default function Home() {
     switch (status) {
       case 'pending':
         return {
-          icon: <TimerIcon className="h-5 w-5" />,
+          icon: <StatusPendingIcon />,
           text: 'รอการประมูล',
           color: 'text-gray-600',
           bgColor: 'bg-gray-50'
         };
       case 'bidding':
         return {
-          icon: <Gavel className="h-5 w-5" />,
+          icon: <StatusBiddingIcon />,
           text: 'กำลังประมูล',
           color: 'text-blue-600',
           bgColor: 'bg-blue-50'
         };
       case 'ending_soon':
         return {
-          icon: <PendingIcon className="h-5 w-5" />,
+          icon: <StatusEndingSoonIcon />,
           text: 'ใกล้สิ้นสุด',
           color: 'text-yellow-600',
           bgColor: 'bg-yellow-50'
         };
       case 'ended':
         return {
-          icon: <CheckCircleIcon className="h-5 w-5" />,
+          icon: <StatusEndedIcon />,
           text: 'สิ้นสุดประมูล',
           color: 'text-green-600',
           bgColor: 'bg-green-50'
         };
       case 'cancelled':
         return {
-          icon: <BlockIcon className="h-5 w-5" />,
+          icon: <StatusCancelledIcon />,
           text: 'ยกเลิกประมูล',
           color: 'text-red-600',
           bgColor: 'bg-red-50'
@@ -385,7 +403,7 @@ export default function Home() {
               <div className="relative max-w-xl mx-auto group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-300 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                  <SearchBarIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
                   <input
                     type="text"
                     placeholder="ค้นหาสินค้าที่ต้องการประมูล..."
@@ -439,7 +457,7 @@ export default function Home() {
                       ? 'bg-gray-600 text-white'
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <TimerIcon className="h-4 w-4" />
+                  <StatusPendingIcon />
                   รอการประมูล
                 </button>
                 <button
@@ -449,7 +467,7 @@ export default function Home() {
                       ? 'bg-blue-600 text-white'
                       : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
                 >
-                  <Gavel className="h-4 w-4" />
+                  <StatusBiddingIcon />
                   กำลังประมูล
                 </button>
                 <button
@@ -459,7 +477,7 @@ export default function Home() {
                       ? 'bg-yellow-600 text-white'
                       : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}
                 >
-                  <PendingIcon className="h-4 w-4" />
+                  <StatusEndingSoonIcon />
                   ใกล้สิ้นสุด
                 </button>
                 <button
@@ -469,7 +487,7 @@ export default function Home() {
                       ? 'bg-green-600 text-white'
                       : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
                 >
-                  <CheckCircleIcon className="h-4 w-4" />
+                  <StatusEndedIcon />
                   สิ้นสุดประมูล
                 </button>
                 <button
@@ -479,7 +497,7 @@ export default function Home() {
                       ? 'bg-red-600 text-white'
                       : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                 >
-                  <BlockIcon className="h-4 w-4" />
+                  <StatusCancelledIcon />
                   ยกเลิกประมูล
                 </button>
               </div>
@@ -512,13 +530,13 @@ export default function Home() {
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1 text-gray-600">
-                        <Person className="w-4 h-4" />
+                        <UserIcon />
                         {item.bidCount}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1 text-gray-600">
-                        <TimerIcon className="w-4 h-4" />
+                        <TimeIcon />
                         {getTimeRemaining(item.endTime)}
                       </div>
                     </TableCell>

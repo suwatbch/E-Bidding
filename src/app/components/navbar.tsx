@@ -3,25 +3,19 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import HomeIcon from '@mui/icons-material/Home';
-import GavelIcon from '@mui/icons-material/Gavel';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import EditIcon from '@mui/icons-material/Edit';
-import LogoutIcon from '@mui/icons-material/Logout';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import MenuIcon from '@mui/icons-material/Menu';
-import CloseIcon from '@mui/icons-material/Close';
-import Home from '@mui/icons-material/Home';
-import Gavel from '@mui/icons-material/Gavel';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import Notifications from '@mui/icons-material/Notifications';
-import Edit from '@mui/icons-material/Edit';
-import Logout from '@mui/icons-material/Logout';
-import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
-import Menu from '@mui/icons-material/Menu';
-import Close from '@mui/icons-material/Close';
-import LocalOffer from '@mui/icons-material/LocalOffer';
+import { 
+  NavHomeIcon,
+  NavAuctionIcon,
+  NavMyAuctionIcon,
+  NavNotificationIcon,
+  NavProfileIcon,
+  NavArrowDownIcon,
+  NavEditIcon,
+  NavLogoutIcon,
+  NavMenuIcon,
+  NavCloseIcon,
+  NavLogoIcon
+} from '@/app/components/ui/icons';
 import { 
   connectSocket, 
   disconnectSocket,
@@ -83,10 +77,10 @@ export default function Navbar() {
   }, []);
 
   const navigation = [
-    { name: 'หน้าแรก', href: '/home', icon: <HomeIcon className="w-5 h-5" /> },
-    { name: 'รายการประมูล', href: '/auctions', icon: <GavelIcon className="w-5 h-5" /> },
-    { name: 'ประมูลของฉัน', href: '/my-auctions', icon: <GavelIcon className="w-5 h-5" /> },
-    { name: 'แจ้งเตือน', href: '/notifications', icon: <NotificationsIcon className="w-5 h-5" /> },
+    { name: 'หน้าแรก', href: '/home', icon: <NavHomeIcon /> },
+    { name: 'รายการประมูล', href: '/auctions', icon: <NavAuctionIcon /> },
+    { name: 'ประมูลของฉัน', href: '/my-auctions', icon: <NavMyAuctionIcon /> },
+    { name: 'แจ้งเตือน', href: '/notifications', icon: <NavNotificationIcon /> },
   ];
 
   const handleLogout = () => {
@@ -104,7 +98,7 @@ export default function Navbar() {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/home" className="flex items-center gap-2">
-                <Gavel className="h-8 w-8 text-blue-600" />
+                <NavLogoIcon />
                 <span className="text-xl font-semibold text-gray-900">E-Bidding</span>
               </Link>
             </div>
@@ -115,21 +109,21 @@ export default function Navbar() {
                 href="/home" 
                 className={`flex items-center ${isActivePage('/home') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
               >
-                <Home className="h-5 w-5 mr-1" />
+                <NavHomeIcon />
                 หน้าแรก
               </Link>
               <Link 
                 href="/auctions" 
                 className={`flex items-center ${isActivePage('/auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
               >
-                <Gavel className="h-5 w-5 mr-1" />
+                <NavAuctionIcon />
                 รายการประมูล
               </Link>
               <Link 
                 href="/my-auctions" 
                 className={`flex items-center ${isActivePage('/my-auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
               >
-                <LocalOffer className="h-5 w-5 mr-1" />
+                <NavMyAuctionIcon />
                 ประมูลของฉัน
               </Link>
               <Link 
@@ -137,7 +131,7 @@ export default function Navbar() {
                 className={`flex items-center ${isActivePage('/alerts') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'} relative`}
                 onClick={() => setNotificationCount(0)}
               >
-                <Notifications className="h-5 w-5 mr-1" />
+                <NavNotificationIcon />
                 แจ้งเตือน
                 {notificationCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -152,9 +146,9 @@ export default function Navbar() {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   className="flex items-center text-gray-700 hover:text-blue-600"
                 >
-                  <AccountCircle className="h-5 w-5 mr-1" />
+                  <NavProfileIcon />
                   โปรไฟล์
-                  <KeyboardArrowDown className={`h-5 w-5 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+                  <NavArrowDownIcon />
                 </button>
 
                 {isProfileOpen && (
@@ -167,14 +161,14 @@ export default function Navbar() {
                       onClick={() => router.push('/profile')}
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
                     >
-                      <Edit className="h-5 w-5 mr-2" />
+                      <NavEditIcon />
                       แก้ไขโปรไฟล์
                     </button>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50"
                     >
-                      <Logout className="h-5 w-5 mr-2" />
+                      <NavLogoutIcon />
                       ออกจากระบบ
                     </button>
                   </div>
@@ -189,9 +183,9 @@ export default function Navbar() {
                 className="text-gray-700 hover:text-blue-600"
               >
                 {isOpen ? (
-                  <Close className="h-6 w-6" />
+                  <NavCloseIcon />
                 ) : (
-                  <Menu className="h-6 w-6" />
+                  <NavMenuIcon />
                 )}
               </button>
             </div>
@@ -206,7 +200,7 @@ export default function Navbar() {
                   className={`flex items-center ${isActivePage('/home') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Home className="h-5 w-5 mr-2" />
+                  <NavHomeIcon />
                   หน้าแรก
                 </Link>
                 <Link 
@@ -214,7 +208,7 @@ export default function Navbar() {
                   className={`flex items-center ${isActivePage('/auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <Gavel className="h-5 w-5 mr-2" />
+                  <NavAuctionIcon />
                   รายการประมูล
                 </Link>
                 <Link 
@@ -222,7 +216,7 @@ export default function Navbar() {
                   className={`flex items-center ${isActivePage('/my-auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <LocalOffer className="h-5 w-5 mr-2" />
+                  <NavMyAuctionIcon />
                   ประมูลของฉัน
                 </Link>
                 <Link 
@@ -233,7 +227,7 @@ export default function Navbar() {
                     setNotificationCount(0);
                   }}
                 >
-                  <Notifications className="h-5 w-5 mr-2" />
+                  <NavNotificationIcon />
                   แจ้งเตือน
                   {notificationCount > 0 && (
                     <span className="absolute top-0 left-5 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -248,7 +242,7 @@ export default function Navbar() {
                   }} 
                   className="flex items-center text-gray-700 hover:text-blue-600"
                 >
-                  <Edit className="h-5 w-5 mr-2" />
+                  <NavEditIcon />
                   แก้ไขโปรไฟล์
                 </button>
                 <button 
@@ -258,7 +252,7 @@ export default function Navbar() {
                   }} 
                   className="flex items-center text-red-600 hover:text-red-700"
                 >
-                  <Logout className="h-5 w-5 mr-2" />
+                  <NavLogoutIcon />
                   ออกจากระบบ
                 </button>
               </div>

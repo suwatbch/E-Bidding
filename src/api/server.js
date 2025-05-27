@@ -43,4 +43,6 @@ app.get('/api/test', (req, res) => {
 });
 
 // Start server
-httpServer.listen(PORT, () => {}); 
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on ${SERVER_URL}:${PORT}`);
+}); 

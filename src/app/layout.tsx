@@ -8,8 +8,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "E-Bidding Platform",
+  title: "E-Bidding",
   description: "ระบบประมูลออนไลน์",
+  icons: {
+    icon: [
+      { 
+        url: '/eicon.svg', 
+        type: 'image/svg+xml', 
+        media: '(prefers-color-scheme: light)'
+      }
+    ]
+  }
 };
 
 export default function RootLayout({
@@ -19,6 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
+      <head>
+        <link rel="icon" href="/eicon.svg" type="image/svg+xml" />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
       </body>
