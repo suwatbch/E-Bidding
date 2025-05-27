@@ -10,9 +10,11 @@ import {
   ButtonSendIcon,
   LinkBackIcon
 } from '@/app/components/ui/icons';
+import { useLanguage } from '@/app/hooks/useLanguage';
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
+  const { translate } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,8 +52,8 @@ export default function ForgetPasswordPage() {
                   <LogoIcon />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">ลืมรหัสผ่าน</h2>
-              <p className="mt-2 text-sm text-gray-600">กรุณากรอกข้อมูลเพื่อตั้งรหัสผ่านใหม่</p>
+              <h2 className="text-2xl font-bold text-gray-900">{translate('forget_title')}</h2>
+              <p className="mt-2 text-sm text-gray-600">{translate('forget_subtitle')}</p>
             </div>
 
             {/* Forget Password Form */}
@@ -59,7 +61,9 @@ export default function ForgetPasswordPage() {
               <div className="space-y-4">
                 {/* Email Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {translate('forget_email_label')}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormEmailIcon />
@@ -69,7 +73,7 @@ export default function ForgetPasswordPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900"
-                      placeholder="example@email.com"
+                      placeholder={translate('forget_email_placeholder')}
                       required
                     />
                   </div>
@@ -77,7 +81,9 @@ export default function ForgetPasswordPage() {
 
                 {/* New Password Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">รหัสผ่านใหม่</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {translate('forget_new_password_label')}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormLockIcon />
@@ -87,17 +93,21 @@ export default function ForgetPasswordPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900"
-                      placeholder="••••••••"
+                      placeholder={translate('forget_new_password_placeholder')}
                       required
                       minLength={8}
                     />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500 text-right">ขั้นต่ำ 8 ตัวอักษร</p>
+                  <p className="mt-1 text-sm text-gray-500 text-right">
+                    {translate('forget_new_password_hint')}
+                  </p>
                 </div>
 
                 {/* OTP Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">รหัส OTP</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {translate('forget_otp_label')}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormKeyIcon />
@@ -109,11 +119,13 @@ export default function ForgetPasswordPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900 tracking-[0.5em] text-center font-mono"
-                      placeholder="______"
+                      placeholder={translate('forget_otp_placeholder')}
                       required
                     />
                   </div>
-                  <p className="mt-1 text-sm text-gray-500 text-right">กรอกรหัส 6 หลัก</p>
+                  <p className="mt-1 text-sm text-gray-500 text-right">
+                    {translate('forget_otp_hint')}
+                  </p>
                 </div>
               </div>
 
@@ -126,7 +138,7 @@ export default function ForgetPasswordPage() {
                   hover:scale-[1.02] active:scale-[0.98]"
               >
                 <ButtonSendIcon />
-                ตกลง
+                {translate('forget_button')}
               </button>
 
               {/* Back to Login Link */}
@@ -136,7 +148,7 @@ export default function ForgetPasswordPage() {
                   className="inline-flex items-center text-blue-600 hover:underline gap-1"
                 >
                   <LinkBackIcon />
-                  <span>กลับไปหน้าเข้าสู่ระบบ</span>
+                  <span>{translate('back_to_login')}</span>
                 </Link>
               </div>
             </form>
