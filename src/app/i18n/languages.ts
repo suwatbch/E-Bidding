@@ -1,4 +1,4 @@
-export type LanguageCode = 'th' | 'en';
+export type LanguageCode = 'th' | 'en' | 'zh';
 
 export interface Language {
   code: LanguageCode;
@@ -17,6 +17,12 @@ export const languages: Language[] = [
   {
     code: 'en',
     name: 'English',
+    isDefault: false,
+    status: 1
+  },
+  {
+    code: 'zh',
+    name: '中文',
     isDefault: false,
     status: 1
   }

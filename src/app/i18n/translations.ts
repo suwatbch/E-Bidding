@@ -78,5 +78,41 @@ export const translations: Translations = {
     forget_otp_hint: 'Enter 6 digits code',
     forget_button: 'Submit',
     back_to_login: 'Back to Login',
+  },
+  zh: {
+    // Auth
+    login_title: '登录 E-Bidding',
+    login_subtitle: '值得信赖的在线拍卖系统',
+    email_label: '电子邮件',
+    email_placeholder: 'example@email.com',
+    password_label: '密码',
+    password_placeholder: '••••••••',
+    remember_me: '记住我',
+    forgot_password: '忘记密码？',
+    login_button: '登录',
+    no_account: '没有账号？请联系管理员注册',
+    
+    // Navbar
+    home: '首页',
+    auctions: '拍卖列表',
+    my_auctions: '我的拍卖',
+    notifications: '通知',
+    profile: '个人资料',
+    edit_profile: '编辑资料',
+    logout: '退出登录',
+
+    // Forget Password
+    forget_title: '忘记密码',
+    forget_subtitle: '请输入信息以设置新密码',
+    forget_email_label: '电子邮件',
+    forget_email_placeholder: 'example@email.com',
+    forget_new_password_label: '新密码',
+    forget_new_password_placeholder: '••••••••',
+    forget_new_password_hint: '最少8个字符',
+    forget_otp_label: 'OTP验证码',
+    forget_otp_placeholder: '______',
+    forget_otp_hint: '输入6位验证码',
+    forget_button: '确认',
+    back_to_login: '返回登录页面'
   }
 }; 
