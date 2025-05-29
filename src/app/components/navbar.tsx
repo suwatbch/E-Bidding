@@ -155,16 +155,22 @@ export default function Navbar() {
                 {isDataOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10">
                     <button
-                      onClick={() => router.push('/company-info')}
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/company');
+                      }}
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
                     >
-                      {translate('company_info')}
+                      {translate('company')}
                     </button>
                     <button
-                      onClick={() => router.push('/user-info')}
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/user');
+                      }}
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
                     >
-                      {translate('user_info')}
+                      {translate('user')}
                     </button>
                   </div>
                 )}
