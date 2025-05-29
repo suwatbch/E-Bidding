@@ -46,7 +46,7 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
         onClick={() => setIsOpen(!isOpen)}
         className={currentStyle.button}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5">
           <div className={`transform group-hover:scale-110 transition duration-300 ${variant === 'navbar' ? 'md:text-white text-gray-700' : ''}`}>
             <NavLanguageIcon className="w-5 h-5" />
           </div>

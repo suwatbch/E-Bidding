@@ -196,10 +196,10 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex md:items-center md:space-x-2">
+            <div className="hidden md:flex md:items-center md:space-x-0.5">
               <Link 
                 href="/auctions" 
-                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
                   isActivePage('/auctions') 
                     ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
                     : 'text-white hover:bg-white/10'
@@ -212,7 +212,7 @@ export default function Navbar() {
               </Link>
               <Link 
                 href="/my-auctions" 
-                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
                   isActivePage('/my-auctions') 
                     ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
                     : 'text-white hover:bg-white/10'
@@ -225,7 +225,7 @@ export default function Navbar() {
               </Link>
               <Link 
                 href="/alerts" 
-                className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
                   isActivePage('/alerts') 
                     ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
                     : 'text-white hover:bg-white/10'
@@ -247,7 +247,7 @@ export default function Navbar() {
               <div className="relative" ref={dataDropdownRef}>
                 <button
                   onClick={() => setIsDataOpen(!isDataOpen)}
-                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                  className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
                     isActivePage('/company') || isActivePage('/user')
                       ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
                       : 'text-white hover:bg-white/10'
@@ -307,7 +307,7 @@ export default function Navbar() {
               <div className="relative" ref={profileDropdownRef}>
                 <button
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className={`group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all duration-300 ${
+                  className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
                     isActivePage('/profile')
                       ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
                       : 'text-white hover:bg-white/10'
