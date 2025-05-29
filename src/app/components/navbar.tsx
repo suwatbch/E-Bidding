@@ -14,7 +14,9 @@ import {
   NavMenuIcon,
   NavCloseIcon,
   NavLogoIcon,
-  NavDataIcon
+  NavDataIcon,
+  NavCompanyIcon,
+  NavUserIcon,
 } from '@/app/components/ui/icons';
 import { 
   connectSocket, 
@@ -161,7 +163,8 @@ export default function Navbar() {
                       }}
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
                     >
-                      {translate('company')}
+                      <NavCompanyIcon className="mr-2" />
+                      {translate('company_info')}
                     </button>
                     <button
                       onClick={() => {
@@ -170,7 +173,8 @@ export default function Navbar() {
                       }}
                       className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
                     >
-                      {translate('user')}
+                      <NavUserIcon className="mr-2" />
+                      {translate('user_info')}
                     </button>
                   </div>
                 )}

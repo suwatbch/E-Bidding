@@ -165,4 +165,13 @@ export const NavDataIcon = () => (
   <Settings style={{ width: '24px', height: '24px' }} />
 );
 
+// Company and User Icons for Navbar
+export const NavCompanyIcon = ({ className = "" }: IconProps) => (
+  <Business style={{ width: '24px', height: '24px' }} className={className} />
+);
+
+export const NavUserIcon = ({ className = "" }: IconProps) => (
+  <People style={{ width: '24px', height: '24px' }} className={className} />
+);
+
 // Additional icons can be added here as needed 
