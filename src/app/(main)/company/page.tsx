@@ -5,25 +5,125 @@ import React, { useState } from 'react';
 interface Company {
   id: number;
   name: string;
+  tax_id: string;
   address: string;
-  phone: string;
   email: string;
+  phone: string;
+  status: boolean;
+  created_dt?: string;
+  updated_dt?: string;
 }
 
 const initialCompanies: Company[] = [
   {
     id: 1,
-    name: 'บริษัท อี-บิดดิ้ง จำกัด',
-    address: '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',
-    phone: '02-123-4567',
-    email: 'info@ebidding.co.th',
+    name: 'บริษัท ปตท. จำกัด (มหาชน)',
+    tax_id: '0107544000108',
+    address: '555 ถนนวิภาวดีรังสิต แขวงจตุจักร เขตจตุจักร กรุงเทพมหานคร 10900',
+    phone: '02-537-2000',
+    email: 'corporate@pttplc.com',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
   },
   {
     id: 2,
-    name: 'บริษัท สมาร์ทเทค จำกัด',
-    address: '456 ถนนพระราม 4 แขวงมหาพฤฒาราม เขตบางรัก กรุงเทพมหานคร 10500',
-    phone: '02-987-6543',
-    email: 'contact@smarttech.co.th',
+    name: 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
+    tax_id: '0107542000011',
+    address: '313 อาคาร ซี.พี.ทาวเวอร์ ชั้น 24 ถนนสีลม แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500',
+    phone: '02-071-9000',
+    email: 'info@cpall.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 3,
+    name: 'ธนาคารไทยพาณิชย์ จำกัด (มหาชน)',
+    tax_id: '0107536000102',
+    address: '9 ถนนรัชดาภิเษก แขวงจตุจักร เขตจตุจักร กรุงเทพมหานคร 10900',
+    phone: '02-777-7777',
+    email: 'contact@scb.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 4,
+    name: 'บริษัท ปูนซิเมนต์ไทย จำกัด (มหาชน)',
+    tax_id: '0107537000114',
+    address: '1 ถนนปูนซิเมนต์ไทย แขวงบางซื่อ เขตบางซื่อ กรุงเทพมหานคร 10800',
+    phone: '02-586-3333',
+    email: 'info@scg.com',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 5,
+    name: 'บริษัท แอดวานซ์ อินโฟร์ เซอร์วิส จำกัด (มหาชน)',
+    tax_id: '0107535000265',
+    address: '414 อาคารเอไอเอส 1 ถนนพหลโยธิน แขวงสามเสนใน เขตพญาไท กรุงเทพมหานคร 10400',
+    phone: '02-029-5000',
+    email: 'corporate@ais.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 6,
+    name: 'บริษัท เซ็นทรัล รีเทล คอร์ปอเรชั่น จำกัด (มหาชน)',
+    tax_id: '0107542000011',
+    address: '999/9 อาคารดิ ออฟฟิศเศส แอท เซ็นทรัลเวิลด์ ชั้น 31 ถนนพระราม 1 แขวงปทุมวัน เขตปทุมวัน กรุงเทพมหานคร 10330',
+    phone: '02-650-3600',
+    email: 'contact@central.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 7,
+    name: 'บริษัท ไทยเบฟเวอเรจ จำกัด (มหาชน)',
+    tax_id: '0107546000342',
+    address: '14 ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร 10900',
+    phone: '02-785-5555',
+    email: 'info@thaibev.com',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 8,
+    name: 'บริษัท ทรู คอร์ปอเรชั่น จำกัด (มหาชน)',
+    tax_id: '0107536000081',
+    address: '18 อาคาร ทรู ทาวเวอร์ ถนนรัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพมหานคร 10310',
+    phone: '02-859-1111',
+    email: 'ir@truecorp.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 9,
+    name: 'บริษัท เจริญโภคภัณฑ์อาหาร จำกัด (มหาชน)',
+    tax_id: '0107537000246',
+    address: '313 อาคาร ซี.พี. ทาวเวอร์ ถนนสีลม แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500',
+    phone: '02-766-8000',
+    email: 'ir@cpf.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
+  },
+  {
+    id: 10,
+    name: 'บริษัท บ้านปู จำกัด (มหาชน)',
+    tax_id: '0107537000421',
+    address: '1550 อาคารธนภูมิ ชั้น 27 ถนนเพชรบุรีตัดใหม่ แขวงมักกะสัน เขตราชเทวี กรุงเทพมหานคร 10400',
+    phone: '02-694-6600',
+    email: 'contact@banpu.co.th',
+    status: true,
+    created_dt: '2024-03-20 10:00:00',
+    updated_dt: '2024-03-20 10:00:00',
   },
 ];
 
@@ -31,28 +131,51 @@ export default function CompanyInfoPage() {
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [form, setForm] = useState({
+    name: '',
+    tax_id: '',
+    address: '',
+    phone: '',
+    email: '',
+    status: true
+  });
+
+  // Filter companies based on search term
+  const filteredCompanies = companies.filter(company =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.tax_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const openAddModal = () => {
     setEditCompany(null);
-    setForm({ name: '', address: '', phone: '', email: '' });
+    setForm({ name: '', tax_id: '', address: '', phone: '', email: '', status: true });
     setIsModalOpen(true);
   };
 
   const openEditModal = (company: Company) => {
     setEditCompany(company);
-    setForm({ name: company.name, address: company.address, phone: company.phone, email: company.email });
+    setForm({
+      name: company.name,
+      tax_id: company.tax_id,
+      address: company.address,
+      phone: company.phone,
+      email: company.email,
+      status: company.status
+    });
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditCompany(null);
-    setForm({ name: '', address: '', phone: '', email: '' });
+    setForm({ name: '', tax_id: '', address: '', phone: '', email: '', status: true });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm({ ...form, [e.target.name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,126 +188,264 @@ export default function CompanyInfoPage() {
     closeModal();
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('คุณต้องการลบข้อมูลบริษัทนี้ใช่หรือไม่?')) {
-      setCompanies(companies.filter(c => c.id !== id));
+  const handleStatusChange = (id: number) => {
+    if (window.confirm('คุณต้องการลบบริษัทนี้ใช่หรือไม่?')) {
+      setCompanies(companies.map(company => 
+        company.id === id 
+          ? { ...company, status: !company.status }
+          : company
+      ));
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">ข้อมูลบริษัท</h1>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700"
-          onClick={openAddModal}
-        >
-          + เพิ่มบริษัท
-        </button>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border rounded-lg">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="py-2 px-4 border-b">ชื่อบริษัท</th>
-              <th className="py-2 px-4 border-b">ที่อยู่</th>
-              <th className="py-2 px-4 border-b">โทรศัพท์</th>
-              <th className="py-2 px-4 border-b">อีเมล</th>
-              <th className="py-2 px-4 border-b">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody>
-            {companies.map(company => (
-              <tr key={company.id} className="hover:bg-gray-50">
-                <td className="py-2 px-4 border-b">{company.name}</td>
-                <td className="py-2 px-4 border-b">{company.address}</td>
-                <td className="py-2 px-4 border-b">{company.phone}</td>
-                <td className="py-2 px-4 border-b">{company.email}</td>
-                <td className="py-2 px-4 border-b space-x-2">
-                  <button
-                    className="px-3 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500"
-                    onClick={() => openEditModal(company)}
-                  >แก้ไข</button>
-                  <button
-                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                    onClick={() => handleDelete(company.id)}
-                  >ลบ</button>
-                </td>
-              </tr>
-            ))}
-            {companies.length === 0 && (
-              <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-400">ไม่มีข้อมูลบริษัท</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col">
+      <div className="flex-1 max-w-6xl mx-auto py-8 px-4 flex flex-col">
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">ข้อมูลบริษัท</h1>
+              <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ</p>
+            </div>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none sm:w-[500px]">
+                <input
+                  type="text"
+                  placeholder="ค้นหาบริษัท..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-11 pl-12 pr-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
+                />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <button
+                onClick={openAddModal}
+                className="inline-flex items-center h-11 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform 
+                  transition-all duration-200 shadow-md hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
+              >
+                + เพิ่มบริษัท
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="flex flex-col">
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed">
+                <colgroup>
+                  <col className="w-[25%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                </colgroup>
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ชื่อบริษัท
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      เลขผู้เสียภาษี
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ที่อยู่
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      โทรศัพท์
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      อีเมล
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      สถานะ
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      จัดการ
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredCompanies.map(company => (
+                    <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="px-6 py-4">
+                        <div className="text-sm font-medium text-gray-900 truncate">{company.name}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500 truncate">{company.tax_id}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500 line-clamp-1">{company.address}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500 truncate">{company.phone}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-500 truncate">{company.email}</div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${company.status 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'}`}
+                        >
+                          {company.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-center space-x-1">
+                        <button
+                          onClick={() => openEditModal(company)}
+                          className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
+                            hover:bg-yellow-200 transition-colors duration-200"
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(company.id)}
+                          className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
+                            hover:bg-red-200 transition-colors duration-200"
+                        >
+                          ลบ
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredCompanies.length === 0 && (
+                    <tr>
+                      <td colSpan={7}>
+                        <div className="flex flex-col items-center justify-center py-8">
+                          <div className="w-16 h-16 mb-4 text-gray-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                          </div>
+                          <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
+                          <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative">
             <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
               onClick={closeModal}
-            >✕</button>
-            <h2 className="text-xl font-bold mb-4">{editCompany ? 'แก้ไขข้อมูลบริษัท' : 'เพิ่มบริษัท'}</h2>
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">
+              {editCompany ? 'แก้ไขข้อมูลบริษัท' : 'เพิ่มบริษัท'}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">ชื่อบริษัท</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อบริษัท</label>
                 <input
                   type="text"
                   name="name"
                   value={form.name}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">ที่อยู่</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">เลขประจำตัวผู้เสียภาษี</label>
+                <input
+                  type="text"
+                  name="tax_id"
+                  value={form.tax_id}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent"
+                  maxLength={13}
+                  placeholder="0000000000000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label>
                 <input
                   type="text"
                   name="address"
                   value={form.address}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">โทรศัพท์</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">โทรศัพท์</label>
                 <input
                   type="text"
                   name="phone"
                   value={form.phone}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">อีเมล</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
                 <input
                   type="email"
                   name="email"
                   value={form.email}
                   onChange={handleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="status"
+                  checked={form.status}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label className="ml-2 block text-sm text-gray-700">
+                  เปิดใช้งาน
+                </label>
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
-                  className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                   onClick={closeModal}
-                >ยกเลิก</button>
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
+                    transition-colors duration-200"
+                >
+                  ยกเลิก
+                </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >{editCompany ? 'บันทึก' : 'เพิ่ม'}</button>
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                    hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                    focus:ring-offset-2 transform transition-all duration-200"
+                >
+                  {editCompany ? 'บันทึก' : 'เพิ่ม'}
+                </button>
               </div>
             </form>
           </div>

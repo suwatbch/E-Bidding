@@ -276,19 +276,21 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setIsOpen(false);
-                      router.push('/company-info');
+                      router.push('/company');
                     }}
                     className="flex items-center text-gray-700 hover:text-blue-600"
                   >
+                    <NavCompanyIcon className="mr-2" />
                     {translate('company_info')}
                   </button>
                   <button
                     onClick={() => {
                       setIsOpen(false);
-                      router.push('/user-info');
+                      router.push('/user');
                     }}
                     className="flex items-center text-gray-700 hover:text-blue-600 mt-2"
                   >
+                    <NavUserIcon className="mr-2" />
                     {translate('user_info')}
                   </button>
                 </div>
