@@ -599,259 +599,301 @@ export default function UserInfoPage() {
 
         {/* Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative">
-              <button
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                onClick={closeModal}
-              >
-                ✕
-              </button>
-              <h2 className="text-xl font-bold text-gray-900 mb-6">
-                {editUser ? (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    แก้ไขข้อมูลผู้ใช้งาน
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+              {/* Modal Header - Fixed */}
+              <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
+                <button
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
+                    hover:bg-gray-100/80 rounded-lg p-1"
+                  onClick={closeModal}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <h2 className="text-lg font-bold text-gray-900">
+                  {editUser ? (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-yellow-100 p-1.5 rounded-lg">
+                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">แก้ไขข้อมูลผู้ใช้งาน</div>
+                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลที่ต้องการแก้ไข</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-100 p-1.5 rounded-lg">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">เพิ่มผู้ใช้งาน</div>
+                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลผู้ใช้งานใหม่</div>
+                      </div>
+                    </div>
+                  )}
+                </h2>
+              </div>
+
+              {/* Modal Content - Scrollable */}
+              <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
+                [&::-webkit-scrollbar]:w-2
+                [&::-webkit-scrollbar-track]:bg-gray-100
+                [&::-webkit-scrollbar-track]:rounded-lg
+                [&::-webkit-scrollbar-thumb]:bg-gray-300
+                [&::-webkit-scrollbar-thumb]:rounded-lg
+                [&::-webkit-scrollbar-thumb]:border-2
+                [&::-webkit-scrollbar-thumb]:border-gray-100
+                hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
+                dark:[&::-webkit-scrollbar-track]:bg-gray-700
+                dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
+                dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        ชื่อผู้ใช้
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={form.username}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    เพิ่มผู้ใช้งาน
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
+                        รหัสผ่าน {editUser && '(เว้นว่างถ้าไม่ต้องการเปลี่ยน)'}
+                      </div>
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={form.password}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required={!editUser}
+                    />
                   </div>
-                )}
-              </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                        </svg>
+                        ภาษา
+                      </div>
+                    </label>
+                    <select
+                      name="language_code"
+                      value={form.language_code}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="th">ภาษาไทย</option>
+                      <option value="en">English</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        ชื่อ-นามสกุล
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="fullname"
+                      value={form.fullname}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        เลขประจำตัวผู้เสียภาษี
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="tax_id"
+                      value={form.tax_id}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      maxLength={13}
+                      placeholder="0000000000000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        ที่อยู่
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={form.address}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        อีเมล
+                      </div>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        โทรศัพท์
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        ประเภทผู้ใช้งาน
+                      </div>
+                    </label>
+                    <select
+                      name="type"
+                      value={form.type}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    >
+                      <option value="user">ผู้ใช้งาน</option>
+                      <option value="admin">ผู้ดูแลระบบ</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="status"
+                      checked={form.status}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
                       <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      ชื่อผู้ใช้
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={form.username}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                      </svg>
-                      รหัสผ่าน {editUser && '(เว้นว่างถ้าไม่ต้องการเปลี่ยน)'}
-                    </div>
-                  </label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={form.password}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required={!editUser}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                      </svg>
-                      ภาษา
-                    </div>
-                  </label>
-                  <select
-                    name="language_code"
-                    value={form.language_code}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="th">ภาษาไทย</option>
-                    <option value="en">English</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      ชื่อ-นามสกุล
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="fullname"
-                    value={form.fullname}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                      เลขประจำตัวผู้เสียภาษี
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="tax_id"
-                    value={form.tax_id}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    maxLength={13}
-                    placeholder="0000000000000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      ที่อยู่
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      อีเมล
-                    </div>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      โทรศัพท์
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      ประเภทผู้ใช้งาน
-                    </div>
-                  </label>
-                  <select
-                    name="type"
-                    value={form.type}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="user">ผู้ใช้งาน</option>
-                    <option value="admin">ผู้ดูแลระบบ</option>
-                  </select>
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="status"
-                    checked={form.status}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    เปิดใช้งาน
-                  </label>
-                </div>
-                <div className="flex justify-end gap-3 mt-6">
+                      เปิดใช้งาน
+                    </label>
+                  </div>
+                </form>
+              </div>
+
+              {/* Modal Footer - Fixed */}
+              <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
+                <div className="flex justify-end gap-2">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
-                      transition-colors duration-200"
+                    className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                      rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
+                      focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    ยกเลิก
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      ยกเลิก
+                    </div>
                   </button>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-                      hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                      focus:ring-offset-2 transform transition-all duration-200"
+                    form="userForm"
+                    className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
+                      border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                      transition-all duration-200 shadow-sm hover:shadow-md"
                   >
-                    {editUser ? (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        บันทึก
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        เพิ่ม
-                      </>
-                    )}
+                    <div className="flex items-center gap-1.5">
+                      {editUser ? (
+                        <>
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          บันทึกการแก้ไข
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          เพิ่มผู้ใช้งาน
+                        </>
+                      )}
+                    </div>
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}

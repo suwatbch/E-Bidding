@@ -27,14 +27,14 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
 
   const styles = {
     login: {
-      button: "flex items-center gap-0.5 px-2 py-1.5 text-gray-700 hover:text-blue-600 text-sm",
-      dropdown: "absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 border border-gray-100/50",
-      item: "flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+      button: "group flex items-center gap-1.5 px-2 py-1.5 text-gray-700 hover:text-blue-600 text-sm transition-all duration-300",
+      dropdown: "absolute right-0 mt-1 w-48 bg-white backdrop-blur-xl rounded-xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.15)] ring-1 ring-white/30 py-1.5 border border-white/30",
+      item: "group flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-300"
     },
     navbar: {
-      button: "flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-gray-700 hover:bg-gray-50 text-sm",
-      dropdown: "absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 border border-gray-100/50",
-      item: "flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+      button: "group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/10 transition-all duration-300",
+      dropdown: "absolute right-0 mt-2 w-48 bg-white backdrop-blur-xl rounded-xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.15)] ring-1 ring-white/30 py-1.5 border border-white/30",
+      item: "group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
     }
   };
 
@@ -46,9 +46,15 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
         onClick={() => setIsOpen(!isOpen)}
         className={currentStyle.button}
       >
-        <NavLanguageIcon />
-        {languages.find(lang => lang.code === currentLang)?.name || currentLang}
-        <NavArrowDownIcon className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="transform group-hover:scale-110 transition duration-300">
+          <NavLanguageIcon />
+        </div>
+        <span className="transform group-hover:scale-105 transition duration-300">
+          {languages.find(lang => lang.code === currentLang)?.name || currentLang}
+        </span>
+        <div className="transform group-hover:scale-110 transition duration-300">
+          <NavArrowDownIcon className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
       {isOpen && (
@@ -60,9 +66,15 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
                 changeLanguage(lang.code);
                 setIsOpen(false);
               }}
-              className={`${currentStyle.item} ${currentLang === lang.code ? 'bg-blue-50 text-blue-600' : ''}`}
+              className={currentStyle.item}
             >
-              {lang.name}
+              <span className={`transform group-hover:scale-105 transition duration-300 ${
+                currentLang === lang.code 
+                  ? 'text-blue-700 font-medium' 
+                  : 'text-gray-700 group-hover:text-blue-600'
+              }`}>
+                {lang.name}
+              </span>
             </button>
           ))}
         </div>
