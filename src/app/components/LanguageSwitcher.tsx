@@ -32,28 +32,30 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
       item: "group flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-300"
     },
     navbar: {
-      button: "group flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/10 transition-all duration-300",
-      dropdown: "absolute right-0 mt-2 w-48 bg-white backdrop-blur-xl rounded-xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.15)] ring-1 ring-white/30 py-1.5 border border-white/30",
-      item: "group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
+      button: "group flex items-center justify-between gap-1.5 px-4 py-2.5 rounded-lg text-sm transition-all duration-300 md:text-white md:hover:bg-white/10 text-gray-700 hover:bg-blue-50/50 w-full md:w-auto",
+      dropdown: "md:absolute md:right-0 mt-1 w-full md:w-48 bg-white backdrop-blur-xl rounded-xl shadow-[0_10px_20px_-5px_rgba(0,0,0,0.15)] ring-1 ring-white/30 py-1.5 border border-white/30",
+      item: "group flex items-center w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50/50 transition-all duration-300"
     }
   };
 
   const currentStyle = styles[variant];
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative w-full md:w-auto" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={currentStyle.button}
       >
-        <div className="transform group-hover:scale-110 transition duration-300">
-          <NavLanguageIcon />
+        <div className="flex items-center gap-3">
+          <div className={`transform group-hover:scale-110 transition duration-300 ${variant === 'navbar' ? 'md:text-white text-gray-700' : ''}`}>
+            <NavLanguageIcon className="w-5 h-5" />
+          </div>
+          <span className={`transform group-hover:scale-105 transition duration-300 ${variant === 'navbar' ? 'md:text-white text-gray-700' : ''}`}>
+            {languages.find(lang => lang.code === currentLang)?.name || currentLang}
+          </span>
         </div>
-        <span className="transform group-hover:scale-105 transition duration-300">
-          {languages.find(lang => lang.code === currentLang)?.name || currentLang}
-        </span>
-        <div className="transform group-hover:scale-110 transition duration-300">
-          <NavArrowDownIcon className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <div className={`transform group-hover:scale-110 transition duration-300 ${variant === 'navbar' ? 'md:text-white text-gray-700' : ''}`}>
+          <NavArrowDownIcon className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 

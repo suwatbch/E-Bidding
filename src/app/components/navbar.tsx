@@ -167,20 +167,6 @@ export default function Navbar() {
           <div className="absolute right-36 top-4 h-2 w-2 rounded-full bg-white"></div>
         </div>
 
-        {/* Animated Dots - Left */}
-        <div className="absolute left-48 top-1/2 -translate-y-1/2 flex space-x-1">
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse"></div>
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse delay-100"></div>
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse delay-200"></div>
-        </div>
-        
-        {/* Animated Dots - Right */}
-        <div className="absolute right-48 top-1/2 -translate-y-1/2 flex space-x-1">
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse"></div>
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse delay-100"></div>
-          <div className="h-1.5 w-1.5 bg-white rounded-full animate-pulse delay-200"></div>
-        </div>
-
         {/* Glowing Lines */}
         <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         <div className="absolute bottom-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
@@ -387,35 +373,35 @@ export default function Navbar() {
 
           {/* Mobile Navigation */}
           {isOpen && (
-            <div className="md:hidden pb-4 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg mt-2 border border-white/20" ref={mobileMenuRef}>
+            <div className="md:hidden pb-8 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg mt-4 mb-4 border border-white/20" ref={mobileMenuRef}>
               <div className="flex flex-col p-2 space-y-1">
                 <Link 
                   href="/auctions" 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${
                     isActivePage('/auctions') 
                       ? 'text-blue-700 bg-blue-50/80 font-medium' 
                       : 'text-gray-700 hover:bg-blue-50/50'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <NavAuctionIcon />
+                  <NavAuctionIcon className="w-5 h-5" />
                   {translate('auctions')}
                 </Link>
                 <Link 
                   href="/my-auctions" 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${
                     isActivePage('/my-auctions') 
                       ? 'text-blue-700 bg-blue-50/80 font-medium' 
                       : 'text-gray-700 hover:bg-blue-50/50'
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <NavMyAuctionIcon />
+                  <NavMyAuctionIcon className="w-5 h-5" />
                   {translate('my_auctions')}
                 </Link>
                 <Link 
                   href="/alerts" 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${
                     isActivePage('/alerts') 
                       ? 'text-blue-700 bg-blue-50/80 font-medium' 
                       : 'text-gray-700 hover:bg-blue-50/50'
@@ -425,10 +411,10 @@ export default function Navbar() {
                     setNotificationCount(0);
                   }}
                 >
-                  <NavNotificationIcon />
+                  <NavNotificationIcon className="w-5 h-5" />
                   {translate('notifications')}
                   {notificationCount > 0 && (
-                    <span className="absolute top-2 left-7 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    <span className="absolute top-2 left-7 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                       {notificationCount}
                     </span>
                   )}
@@ -441,13 +427,13 @@ export default function Navbar() {
                       setIsOpen(false);
                       router.push('/company');
                     }}
-                    className={`flex items-center w-full px-4 py-2 rounded-lg ${
+                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                       isActivePage('/company')
                         ? 'text-blue-700 bg-blue-50/80 font-medium'
                         : 'text-gray-700 hover:bg-blue-50/50'
                     }`}
                   >
-                    <NavCompanyIcon className="mr-2" />
+                    <NavCompanyIcon className="w-5 h-5 mr-2" />
                     {translate('company_info')}
                   </button>
                   <button
@@ -455,13 +441,13 @@ export default function Navbar() {
                       setIsOpen(false);
                       router.push('/user');
                     }}
-                    className={`flex items-center w-full px-4 py-2 rounded-lg ${
+                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                       isActivePage('/user')
                         ? 'text-blue-700 bg-blue-50/80 font-medium'
                         : 'text-gray-700 hover:bg-blue-50/50'
                     }`}
                   >
-                    <NavUserIcon className="mr-2" />
+                    <NavUserIcon className="w-5 h-5 mr-2" />
                     {translate('user_info')}
                   </button>
                 </div>
@@ -477,13 +463,13 @@ export default function Navbar() {
                       setIsOpen(false);
                       router.push('/profile');
                     }} 
-                    className={`flex items-center w-full px-4 py-2 rounded-lg ${
+                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                       isActivePage('/profile')
                         ? 'text-blue-700 bg-blue-50/80 font-medium'
                         : 'text-gray-700 hover:bg-blue-50/50'
                     }`}
                   >
-                    <NavEditIcon />
+                    <NavEditIcon className="w-5 h-5 mr-2" />
                     {translate('edit_profile')}
                   </button>
                   <button 
@@ -491,9 +477,9 @@ export default function Navbar() {
                       setIsOpen(false);
                       handleLogout();
                     }} 
-                    className="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50/80 rounded-lg mt-1"
+                    className="flex items-center w-full px-4 py-2.5 text-red-600 hover:bg-red-50/80 rounded-lg mt-1"
                   >
-                    <NavLogoutIcon />
+                    <NavLogoutIcon className="w-5 h-5 mr-2" />
                     {translate('logout')}
                   </button>
                 </div>

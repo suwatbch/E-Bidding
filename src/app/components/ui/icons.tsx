@@ -127,16 +127,16 @@ export const NavHomeIcon = () => (
   <Home style={{ width: '24px', height: '24px' }} />
 );
 
-export const NavAuctionIcon = () => (
-  <Gavel style={{ width: '18px', height: '18px' }} />
+export const NavAuctionIcon: React.FC<IconProps> = ({ className }) => (
+  <Gavel style={{ width: '20px', height: '20px' }} className={className} />
 );
 
-export const NavMyAuctionIcon = () => (
-  <LocalOffer style={{ width: '18px', height: '18px' }} />
+export const NavMyAuctionIcon: React.FC<IconProps> = ({ className }) => (
+  <LocalOffer style={{ width: '20px', height: '20px' }} className={className} />
 );
 
-export const NavNotificationIcon = () => (
-  <Notifications style={{ width: '20px', height: '20px' }} />
+export const NavNotificationIcon: React.FC<IconProps> = ({ className }) => (
+  <Notifications style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 export const NavProfileIcon = () => (
@@ -169,11 +169,11 @@ export const NavDataIcon = () => (
 
 // Company and User Icons for Navbar
 export const NavCompanyIcon = ({ className = "" }: IconProps) => (
-  <Business style={{ width: '24px', height: '24px' }} className={className} />
+  <Business style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 export const NavUserIcon = ({ className = "" }: IconProps) => (
-  <People style={{ width: '24px', height: '24px' }} className={className} />
+  <People style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 // Language Icon

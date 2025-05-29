@@ -10,6 +10,7 @@ import {
 } from '@/app/components/ui/icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
+import CircuitBackground from '@/app/components/CircuitBackground';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,13 +23,16 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
+      <CircuitBackground />
+
       <div className="w-full max-w-md">
         {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden mx-auto">
-          {/* Language Switcher ขวาบน */}
+          {/* Language Switcher */}
           <div className="absolute top-4 right-4 z-10">
             <LanguageSwitcher />
           </div>
+
           {/* Background Pattern */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_theme(colors.blue.200/30%),_transparent_70%)]"></div>
@@ -39,7 +43,6 @@ export default function LoginPage() {
           <div className="relative p-8">
             {/* Logo and Title */}
             <div className="text-center mb-8">
-              {/* Centered Logo */}
               <div className="flex justify-center mb-4">
                 <div className="p-3 bg-blue-600 rounded-2xl shadow-lg">
                   <LogoIcon />
@@ -116,9 +119,14 @@ export default function LoginPage() {
                 {translate('login_button')}
               </button>
 
-              {/* Register Link */}
-              <div className="text-center">
-                <span className="text-sm text-gray-600">{translate('no_account')}</span>
+              {/* Company Info & Registration */}
+              <div className="mt-8 flex flex-col items-center space-y-2 text-center">
+                <div className="text-sm text-gray-500 font-medium">
+                  BIC CORPORATION CO.,LTD.
+                </div>
+                <div className="text-xs text-gray-400">
+                  ยังไม่มีบัญชี? สามารถติดต่อผู้ดูแลระบบเพื่อสมัครสมาชิก
+                </div>
               </div>
             </form>
           </div>

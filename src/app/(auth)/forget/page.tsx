@@ -11,6 +11,8 @@ import {
   LinkBackIcon
 } from '@/app/components/ui/icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
+import LanguageSwitcher from '@/app/components/LanguageSwitcher';
+import CircuitBackground from '@/app/components/CircuitBackground';
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
@@ -34,6 +36,8 @@ export default function ForgetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
+      <CircuitBackground />
+
       <div className="w-full max-w-md">
         {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden">
