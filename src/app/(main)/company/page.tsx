@@ -1,137 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
-
-interface Company {
-  id: number;
-  name: string;
-  tax_id: string;
-  address: string;
-  email: string;
-  phone: string;
-  status: boolean;
-  created_dt?: string;
-  updated_dt?: string;
-}
-
-const initialCompanies: Company[] = [
-  {
-    id: 1,
-    name: 'บริษัท ปตท. จำกัด (มหาชน)',
-    tax_id: '0107544000108',
-    address: '555 ถนนวิภาวดีรังสิต แขวงจตุจักร เขตจตุจักร กรุงเทพมหานคร 10900',
-    phone: '02-537-2000',
-    email: 'corporate@pttplc.com',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 2,
-    name: 'บริษัท ซีพี ออลล์ จำกัด (มหาชน)',
-    tax_id: '0107542000011',
-    address: '313 อาคาร ซี.พี.ทาวเวอร์ ชั้น 24 ถนนสีลม แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500',
-    phone: '02-071-9000',
-    email: 'info@cpall.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 3,
-    name: 'ธนาคารไทยพาณิชย์ จำกัด (มหาชน)',
-    tax_id: '0107536000102',
-    address: '9 ถนนรัชดาภิเษก แขวงจตุจักร เขตจตุจักร กรุงเทพมหานคร 10900',
-    phone: '02-777-7777',
-    email: 'contact@scb.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 4,
-    name: 'บริษัท ปูนซิเมนต์ไทย จำกัด (มหาชน)',
-    tax_id: '0107537000114',
-    address: '1 ถนนปูนซิเมนต์ไทย แขวงบางซื่อ เขตบางซื่อ กรุงเทพมหานคร 10800',
-    phone: '02-586-3333',
-    email: 'info@scg.com',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 5,
-    name: 'บริษัท แอดวานซ์ อินโฟร์ เซอร์วิส จำกัด (มหาชน)',
-    tax_id: '0107535000265',
-    address: '414 อาคารเอไอเอส 1 ถนนพหลโยธิน แขวงสามเสนใน เขตพญาไท กรุงเทพมหานคร 10400',
-    phone: '02-029-5000',
-    email: 'corporate@ais.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 6,
-    name: 'บริษัท เซ็นทรัล รีเทล คอร์ปอเรชั่น จำกัด (มหาชน)',
-    tax_id: '0107542000011',
-    address: '999/9 อาคารดิ ออฟฟิศเศส แอท เซ็นทรัลเวิลด์ ชั้น 31 ถนนพระราม 1 แขวงปทุมวัน เขตปทุมวัน กรุงเทพมหานคร 10330',
-    phone: '02-650-3600',
-    email: 'contact@central.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 7,
-    name: 'บริษัท ไทยเบฟเวอเรจ จำกัด (มหาชน)',
-    tax_id: '0107546000342',
-    address: '14 ถนนวิภาวดีรังสิต แขวงจอมพล เขตจตุจักร กรุงเทพมหานคร 10900',
-    phone: '02-785-5555',
-    email: 'info@thaibev.com',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 8,
-    name: 'บริษัท ทรู คอร์ปอเรชั่น จำกัด (มหาชน)',
-    tax_id: '0107536000081',
-    address: '18 อาคาร ทรู ทาวเวอร์ ถนนรัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพมหานคร 10310',
-    phone: '02-859-1111',
-    email: 'ir@truecorp.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 9,
-    name: 'บริษัท เจริญโภคภัณฑ์อาหาร จำกัด (มหาชน)',
-    tax_id: '0107537000246',
-    address: '313 อาคาร ซี.พี. ทาวเวอร์ ถนนสีลม แขวงสีลม เขตบางรัก กรุงเทพมหานคร 10500',
-    phone: '02-766-8000',
-    email: 'ir@cpf.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-  {
-    id: 10,
-    name: 'บริษัท บ้านปู จำกัด (มหาชน)',
-    tax_id: '0107537000421',
-    address: '1550 อาคารธนภูมิ ชั้น 27 ถนนเพชรบุรีตัดใหม่ แขวงมักกะสัน เขตราชเทวี กรุงเทพมหานคร 10400',
-    phone: '02-694-6600',
-    email: 'contact@banpu.co.th',
-    status: true,
-    created_dt: '2024-03-20 10:00:00',
-    updated_dt: '2024-03-20 10:00:00',
-  },
-];
+import React, { useState, useEffect } from 'react';
+import { Company, initialCompanies } from './data';
 
 export default function CompanyInfoPage() {
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [perPage, setPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState({
     name: '',
     tax_id: '',
@@ -147,6 +25,17 @@ export default function CompanyInfoPage() {
     company.tax_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     company.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredCompanies.length / perPage);
+  const startIndex = (currentPage - 1) * perPage;
+  const endIndex = startIndex + perPage;
+  const currentCompanies = filteredCompanies.slice(startIndex, endIndex);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const openAddModal = () => {
     setEditCompany(null);
@@ -236,6 +125,70 @@ export default function CompanyInfoPage() {
           </div>
         </div>
 
+        {/* Table Info Section */}
+        <div className="flex justify-between items-center m-4">
+          <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <span>แสดง</span>
+              <div className="relative">
+                <select
+                  value={perPage}
+                  onChange={(e) => {
+                    setPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+              <span>รายการ</span>
+            </div>
+            <div>ทั้งหมด {filteredCompanies.length} รายการ</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              ก่อนหน้า
+            </button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
+                    ${currentPage === page 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-600 hover:bg-gray-50'}`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              ถัดไป
+            </button>
+          </div>
+        </div>
+
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="flex flex-col">
@@ -276,7 +229,7 @@ export default function CompanyInfoPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredCompanies.map(company => (
+                  {currentCompanies.map(company => (
                     <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
                       <td className="px-6 py-4">
                         <div className="text-sm font-medium text-gray-900 truncate">{company.name}</div>
@@ -320,7 +273,7 @@ export default function CompanyInfoPage() {
                       </td>
                     </tr>
                   ))}
-                  {filteredCompanies.length === 0 && (
+                  {currentCompanies.length === 0 && (
                     <tr>
                       <td colSpan={7}>
                         <div className="flex flex-col items-center justify-center py-8">
