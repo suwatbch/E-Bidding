@@ -8,8 +8,12 @@ export default function CompanyInfoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(5);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Company | null;
+    direction: 'asc' | 'desc' | null;
+  }>({ key: null, direction: null });
   const [form, setForm] = useState({
     name: '',
     tax_id: '',
@@ -26,11 +30,77 @@ export default function CompanyInfoPage() {
     company.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredCompanies.length / perPage);
+  // Sort companies
+  const sortedCompanies = React.useMemo(() => {
+    let sortableCompanies = [...filteredCompanies];
+    if (sortConfig.key && sortConfig.direction) {
+      sortableCompanies.sort((a, b) => {
+        const aValue = a[sortConfig.key!];
+        const bValue = b[sortConfig.key!];
+        
+        if (aValue === null || aValue === undefined) return 1;
+        if (bValue === null || bValue === undefined) return -1;
+
+        // Convert to string for consistent comparison
+        const aString = String(aValue).toLowerCase();
+        const bString = String(bValue).toLowerCase();
+        
+        if (aString < bString) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aString > bString) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableCompanies;
+  }, [filteredCompanies, sortConfig]);
+
+  // Calculate pagination with sorted companies
+  const totalPages = Math.ceil(sortedCompanies.length / perPage);
   const startIndex = (currentPage - 1) * perPage;
   const endIndex = startIndex + perPage;
-  const currentCompanies = filteredCompanies.slice(startIndex, endIndex);
+  const currentCompanies = sortedCompanies.slice(startIndex, endIndex);
+
+  const requestSort = (key: keyof Company) => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+    
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === 'asc') {
+        direction = 'desc';
+      } else if (sortConfig.direction === 'desc') {
+        direction = null;
+      }
+    }
+    
+    setSortConfig({ key: direction ? key : null, direction });
+    setCurrentPage(1); // Reset to first page when sorting
+  };
+
+  const getSortIcon = (columnKey: keyof Company) => {
+    if (sortConfig.key !== columnKey) {
+      return (
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        </svg>
+      );
+    }
+    
+    if (sortConfig.direction === 'asc') {
+      return (
+        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+        </svg>
+      );
+    }
+    
+    return (
+      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    );
+  };
 
   // Reset to first page when search term changes
   useEffect(() => {
@@ -78,7 +148,7 @@ export default function CompanyInfoPage() {
   };
 
   const handleStatusChange = (id: number) => {
-    if (window.confirm('คุณต้องการลบบริษัทนี้ใช่หรือไม่?')) {
+    if (window.confirm('คุณต้องการ "ลบ" บริษัทนี้ใช่หรือไม่ ?')) {
       setCompanies(companies.map(company => 
         company.id === id 
           ? { ...company, status: !company.status }
@@ -93,9 +163,17 @@ export default function CompanyInfoPage() {
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">ข้อมูลบริษัท</h1>
-              <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ</p>
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-xl">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">ข้อมูลบริษัท</h1>
+                <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ E-Bidding</p>
+              </div>
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-none sm:w-[500px]">
@@ -115,11 +193,15 @@ export default function CompanyInfoPage() {
               </div>
               <button
                 onClick={openAddModal}
-                className="inline-flex items-center h-11 px-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                  focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform 
-                  transition-all duration-200 shadow-md hover:scale-[1.02] active:scale-[0.98] whitespace-nowrap"
+                className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                  active:scale-[0.98] whitespace-nowrap gap-2"
               >
-                + เพิ่มบริษัท
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                เพิ่มบริษัท
               </button>
             </div>
           </div>
@@ -140,6 +222,7 @@ export default function CompanyInfoPage() {
                   className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
                     focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
                 >
+                  <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
@@ -157,6 +240,14 @@ export default function CompanyInfoPage() {
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              หน้าแรก
+            </button>
+            <button
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
@@ -165,18 +256,34 @@ export default function CompanyInfoPage() {
               ก่อนหน้า
             </button>
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
-                    ${currentPage === page 
-                      ? 'bg-blue-600 text-white' 
-                      : 'text-gray-600 hover:bg-gray-50'}`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                  if (i === 4) return <span key="dots" className="px-2">...</span>;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - (4 - i);
+                  if (i === 0) return <span key="dots" className="px-2">...</span>;
+                } else {
+                  if (i === 0) return <span key="dots1" className="px-2">...</span>;
+                  if (i === 4) return <span key="dots2" className="px-2">...</span>;
+                  pageNum = currentPage + (i - 2);
+                }
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
+                      ${currentPage === pageNum 
+                        ? 'bg-blue-600 text-white' 
+                        : 'text-gray-600 hover:bg-gray-50'}`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
             </div>
             <button
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
@@ -185,6 +292,14 @@ export default function CompanyInfoPage() {
                 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
             >
               ถัดไป
+            </button>
+            <button
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            >
+              หน้าสุดท้าย
             </button>
           </div>
         </div>
@@ -195,56 +310,139 @@ export default function CompanyInfoPage() {
             <div className="overflow-x-auto">
               <table className="w-full table-fixed">
                 <colgroup>
+                  <col className="w-[5%]" />
                   <col className="w-[25%]" />
-                  <col className="w-[12%]" />
                   <col className="w-[20%]" />
-                  <col className="w-[12%]" />
+                  <col className="w-[15%]" />
                   <col className="w-[12%]" />
                   <col className="w-[12%]" />
                   <col className="w-[12%]" />
                 </colgroup>
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ชื่อบริษัท
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        </svg>
+                        ลำดับ
+                      </div>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      เลขผู้เสียภาษี
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('name')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        ชื่อบริษัท
+                        {getSortIcon('name')}
+                      </div>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ที่อยู่
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('address')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        ที่อยู่
+                        {getSortIcon('address')}
+                      </div>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      โทรศัพท์
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('phone')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        โทรศัพท์
+                        {getSortIcon('phone')}
+                      </div>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      อีเมล
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('email')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        อีเมล
+                        {getSortIcon('email')}
+                      </div>
+                    </th>
+                    <th 
+                      scope="col" 
+                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('status')}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        สถานะ
+                        {getSortIcon('status')}
+                      </div>
                     </th>
                     <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      สถานะ
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      จัดการ
+                      <div className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        </svg>
+                        จัดการ
+                      </div>
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentCompanies.map(company => (
+                  {currentCompanies.map((company, index) => (
                     <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
-                      <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900 truncate">{company.name}</div>
+                      <td className="px-6 py-4 text-center">
+                        <div className="text-sm text-gray-500">
+                          {(startIndex + index + 1).toLocaleString('th-TH')}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">{company.tax_id}</div>
+                        <div className="relative">
+                          <div className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
+                               title={company.name}>
+                            {company.name}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 line-clamp-1">{company.address}</div>
+                        <div className="relative">
+                          <div className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
+                               title={company.address}>
+                            {company.address}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">{company.phone}</div>
+                        <div className="relative">
+                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                               title={company.phone}>
+                            {company.phone}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">{company.email}</div>
+                        <div className="relative">
+                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                               title={company.email}>
+                            {company.email}
+                          </div>
+                        </div>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
@@ -275,7 +473,7 @@ export default function CompanyInfoPage() {
                   ))}
                   {currentCompanies.length === 0 && (
                     <tr>
-                      <td colSpan={7}>
+                      <td colSpan={8}>
                         <div className="flex flex-col items-center justify-center py-8">
                           <div className="w-16 h-16 mb-4 text-gray-300">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,11 +504,32 @@ export default function CompanyInfoPage() {
               ✕
             </button>
             <h2 className="text-xl font-bold text-gray-900 mb-6">
-              {editCompany ? 'แก้ไขข้อมูลบริษัท' : 'เพิ่มบริษัท'}
+              {editCompany ? (
+                <div className="flex items-center gap-2">
+                  <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  แก้ไขข้อมูลบริษัท
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  เพิ่มบริษัท
+                </div>
+              )}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ชื่อบริษัท</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    ชื่อบริษัท
+                  </div>
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -322,7 +541,14 @@ export default function CompanyInfoPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">เลขประจำตัวผู้เสียภาษี</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    เลขประจำตัวผู้เสียภาษี
+                  </div>
+                </label>
                 <input
                   type="text"
                   name="tax_id"
@@ -335,7 +561,15 @@ export default function CompanyInfoPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ที่อยู่</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    ที่อยู่
+                  </div>
+                </label>
                 <input
                   type="text"
                   name="address"
@@ -347,7 +581,14 @@ export default function CompanyInfoPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">โทรศัพท์</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    โทรศัพท์
+                  </div>
+                </label>
                 <input
                   type="text"
                   name="phone"
@@ -359,7 +600,14 @@ export default function CompanyInfoPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">อีเมล</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    อีเมล
+                  </div>
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -378,7 +626,10 @@ export default function CompanyInfoPage() {
                   onChange={handleChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm text-gray-700">
+                <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   เปิดใช้งาน
                 </label>
               </div>
@@ -386,18 +637,35 @@ export default function CompanyInfoPage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
+                  className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 
                     transition-colors duration-200"
                 >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
                     hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
                     focus:ring-offset-2 transform transition-all duration-200"
                 >
-                  {editCompany ? 'บันทึก' : 'เพิ่ม'}
+                  {editCompany ? (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                      บันทึก
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      เพิ่ม
+                    </>
+                  )}
                 </button>
               </div>
             </form>
