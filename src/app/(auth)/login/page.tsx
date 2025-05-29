@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/home');
+    router.push('/auctions');
   };
 
   return (
@@ -25,6 +25,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden mx-auto">
+          {/* Language Switcher ขวาบน */}
+          <div className="absolute top-4 right-4 z-10">
+            <LanguageSwitcher />
+          </div>
           {/* Background Pattern */}
           <div className="absolute inset-0">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_theme(colors.blue.200/30%),_transparent_70%)]"></div>
@@ -35,9 +39,6 @@ export default function LoginPage() {
           <div className="relative p-8">
             {/* Logo and Title */}
             <div className="text-center mb-8">
-              {/* Language Switcher */}
-              <LanguageSwitcher />
-              
               {/* Centered Logo */}
               <div className="flex justify-center mb-4">
                 <div className="p-3 bg-blue-600 rounded-2xl shadow-lg">

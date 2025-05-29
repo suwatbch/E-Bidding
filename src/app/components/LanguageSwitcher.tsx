@@ -1,23 +1,23 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { NavArrowDownIcon } from './ui/icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
-import { NavArrowDownIcon } from '@/app/components/ui/icons';
+import { Language } from '@/app/i18n/languages';
 
 interface LanguageSwitcherProps {
-  variant?: 'navbar' | 'login';
+  variant?: 'login' | 'navbar';
 }
 
 export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcherProps) {
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const { currentLang, languages, changeLanguage, isLoading } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { currentLang, languages, changeLanguage } = useLanguage();
 
-  // ปิด dropdown เมื่อคลิกข้างนอก
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsLangOpen(false);
+        setIsOpen(false);
       }
     };
 
@@ -25,50 +25,41 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // สไตล์สำหรับ login page
-  const loginStyles = {
-    container: "absolute top-8 right-8",
-    button: "flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-all duration-200",
-    dropdown: "absolute right-0 mt-1 w-24 py-1 bg-white rounded-lg shadow-lg border border-gray-100",
-    option: (isSelected: boolean) => `block w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 
-      ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-700'}`
+  const styles = {
+    login: {
+      button: "flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600",
+      dropdown: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10",
+      item: "flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+    },
+    navbar: {
+      button: "flex items-center gap-2 text-gray-700 hover:text-blue-600",
+      dropdown: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10",
+      item: "flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+    }
   };
 
-  // สไตล์สำหรับ navbar
-  const navbarStyles = {
-    container: "relative",
-    button: "flex items-center gap-2 text-gray-700 hover:text-blue-600",
-    dropdown: "absolute right-0 mt-2 w-24 py-1 bg-white rounded-lg shadow-lg border border-gray-100",
-    option: (isSelected: boolean) => `block w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50 
-      ${isSelected ? 'text-blue-600 font-medium' : 'text-gray-700'}`
-  };
-
-  const styles = variant === 'navbar' ? navbarStyles : loginStyles;
-
-  if (isLoading) {
-    return <div className={styles.container}><div className={styles.button}>&nbsp;</div></div>;
-  }
+  const currentStyle = styles[variant];
 
   return (
-    <div className={styles.container} ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => setIsLangOpen(!isLangOpen)}
-        className={styles.button}
+        onClick={() => setIsOpen(!isOpen)}
+        className={currentStyle.button}
       >
-        <span>{currentLang.toUpperCase()}</span>
-        <NavArrowDownIcon className={`transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+        {languages.find(lang => lang.code === currentLang)?.name || currentLang}
+        <NavArrowDownIcon />
       </button>
 
-      {isLangOpen && (
-        <div className={styles.dropdown}>
-          {languages.map(lang => (
+      {isOpen && (
+        <div className={currentStyle.dropdown}>
+          {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => {
                 changeLanguage(lang.code);
-                setIsLangOpen(false);
+                setIsOpen(false);
               }}
-              className={styles.option(currentLang === lang.code)}
+              className={`${currentStyle.item} ${currentLang === lang.code ? 'bg-blue-50 text-blue-600' : ''}`}
             >
               {lang.name}
             </button>

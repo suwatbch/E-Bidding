@@ -20,7 +20,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
-import { Home, Gavel, LocalOffer, Notifications, AccountCircle, KeyboardArrowDown, Edit, Logout, Menu, Close } from '@mui/icons-material';
+import { Home, Gavel, LocalOffer, Notifications, AccountCircle, KeyboardArrowDown, Edit, Logout, Menu, Close, Settings, Business, People } from '@mui/icons-material';
 
 interface IconProps {
   className?: string;
@@ -159,6 +159,10 @@ export const NavMenuIcon = () => (
 
 export const NavCloseIcon = () => (
   <Close style={{ width: '24px', height: '24px' }} />
+);
+
+export const NavDataIcon = () => (
+  <Settings style={{ width: '24px', height: '24px' }} />
 );
 
 // Additional icons can be added here as needed 

@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
-  NavHomeIcon,
   NavAuctionIcon,
   NavMyAuctionIcon,
   NavNotificationIcon,
@@ -14,7 +13,8 @@ import {
   NavLogoutIcon,
   NavMenuIcon,
   NavCloseIcon,
-  NavLogoIcon
+  NavLogoIcon,
+  NavDataIcon
 } from '@/app/components/ui/icons';
 import { 
   connectSocket, 
@@ -28,12 +28,12 @@ import LanguageSwitcher from './LanguageSwitcher';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isDataOpen, setIsDataOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   
-  // สร้าง ref สำหรับเมนูโปรไฟล์, เมนูภาษา และเมนูมือถือ
+  // สร้าง ref สำหรับเมนูโปรไฟล์, เมนูข้อมูล และเมนูมือถือ
   const profileDropdownRef = useRef<HTMLDivElement>(null);
-  const langDropdownRef = useRef<HTMLDivElement>(null);
+  const dataDropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
@@ -66,9 +66,9 @@ export default function Navbar() {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
-      // ปิดเมนูภาษาถ้าคลิกข้างนอก
-      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target as Node)) {
-        setIsLangOpen(false);
+      // ปิดเมนูข้อมูลถ้าคลิกข้างนอก
+      if (dataDropdownRef.current && !dataDropdownRef.current.contains(event.target as Node)) {
+        setIsDataOpen(false);
       }
       // ปิดเมนูมือถือถ้าคลิกข้างนอก
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
@@ -86,7 +86,6 @@ export default function Navbar() {
   }, []);
 
   const navigation = [
-    { name: translate('home'), href: '/home', icon: <NavHomeIcon /> },
     { name: translate('auctions'), href: '/auctions', icon: <NavAuctionIcon /> },
     { name: translate('my_auctions'), href: '/my-auctions', icon: <NavMyAuctionIcon /> },
     { name: translate('notifications'), href: '/notifications', icon: <NavNotificationIcon /> },
@@ -106,7 +105,7 @@ export default function Navbar() {
           <div className="flex h-16 justify-between items-center">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/home" className="flex items-center gap-2">
+              <Link href="/auctions" className="flex items-center gap-2">
                 <NavLogoIcon />
                 <span className="text-xl font-semibold text-gray-900">E-Bidding</span>
               </Link>
@@ -114,13 +113,6 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-6">
-              <Link 
-                href="/home" 
-                className={`flex items-center ${isActivePage('/home') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
-              >
-                <NavHomeIcon />
-                {translate('home')}
-              </Link>
               <Link 
                 href="/auctions" 
                 className={`flex items-center ${isActivePage('/auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
@@ -148,6 +140,35 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
+
+              {/* Data Management Dropdown */}
+              <div className="relative" ref={dataDropdownRef}>
+                <button
+                  onClick={() => setIsDataOpen(!isDataOpen)}
+                  className="flex items-center text-gray-700 hover:text-blue-600"
+                >
+                  <NavDataIcon />
+                  {translate('data_management')}
+                  <NavArrowDownIcon />
+                </button>
+
+                {isDataOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10">
+                    <button
+                      onClick={() => router.push('/company-info')}
+                      className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    >
+                      {translate('company_info')}
+                    </button>
+                    <button
+                      onClick={() => router.push('/user-info')}
+                      className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+                    >
+                      {translate('user_info')}
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Language Selector */}
               <LanguageSwitcher variant="navbar" />
@@ -208,14 +229,6 @@ export default function Navbar() {
             <div className="md:hidden pb-4" ref={mobileMenuRef}>
               <div className="flex flex-col space-y-4">
                 <Link 
-                  href="/home" 
-                  className={`flex items-center ${isActivePage('/home') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <NavHomeIcon />
-                  {translate('home')}
-                </Link>
-                <Link 
                   href="/auctions" 
                   className={`flex items-center ${isActivePage('/auctions') ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'}`}
                   onClick={() => setIsOpen(false)}
@@ -247,6 +260,28 @@ export default function Navbar() {
                     </span>
                   )}
                 </Link>
+
+                {/* Data Management Mobile */}
+                <div className="border-t border-gray-100 pt-4">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push('/company-info');
+                    }}
+                    className="flex items-center text-gray-700 hover:text-blue-600"
+                  >
+                    {translate('company_info')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push('/user-info');
+                    }}
+                    className="flex items-center text-gray-700 hover:text-blue-600 mt-2"
+                  >
+                    {translate('user_info')}
+                  </button>
+                </div>
 
                 {/* Language Selector Mobile */}
                 <div className="border-t border-gray-100 pt-4">

@@ -21,7 +21,6 @@ export const translations: Translations = {
     no_account: 'ยังไม่มีบัญชี? สามารถติดต่อผู้ดูแลระบบเพื่อสมัครสมาชิก',
     
     // Navbar
-    home: 'หน้าแรก',
     auctions: 'รายการประมูล',
     my_auctions: 'ประมูลของฉัน',
     notifications: 'แจ้งเตือน',
@@ -43,7 +42,7 @@ export const translations: Translations = {
     forget_button: 'ตกลง',
     back_to_login: 'กลับไปหน้าเข้าสู่ระบบ',
 
-    // Home Page
+    // Auction List
     search_placeholder: 'ค้นหารายการประมูล...',
     all_categories: 'ทั้งหมด',
     electronics: 'อิเล็กทรอนิกส์',
@@ -59,11 +58,6 @@ export const translations: Translations = {
     table_header_bid_count: 'จำนวนบิด',
     table_header_end_time: 'เวลาสิ้นสุด',
     table_header_status: 'สถานะ',
-    status_pending: 'รอดำเนินการ',
-    status_bidding: 'กำลังประมูล',
-    status_ending_soon: 'ใกล้สิ้นสุด',
-    status_ended: 'สิ้นสุดแล้ว',
-    status_cancelled: 'ยกเลิก',
     time_left: 'เหลือเวลา',
     days: 'วัน',
     hours: 'ชั่วโมง',
@@ -93,8 +87,10 @@ export const translations: Translations = {
     status_ended: 'สิ้นสุดประมูล',
     status_cancelled: 'ยกเลิกประมูล',
 
-    // Status Filters
-    all_status: 'ทุกสถานะ',
+    // Data Management
+    data_management: 'จัดการข้อมูล',
+    company_info: 'ข้อมูลบริษัท',
+    user_info: 'ข้อมูลผู้ใช้งาน',
   },
   en: {
     // Auth
@@ -110,7 +106,6 @@ export const translations: Translations = {
     no_account: 'No account? Please contact administrator to register',
     
     // Navbar
-    home: 'Home',
     auctions: 'Auctions',
     my_auctions: 'My Auctions',
     notifications: 'Notifications',
@@ -132,7 +127,7 @@ export const translations: Translations = {
     forget_button: 'Submit',
     back_to_login: 'Back to Login',
 
-    // Home Page
+    // Auction List
     search_placeholder: 'Search auctions...',
     all_categories: 'All Categories',
     electronics: 'Electronics',
@@ -148,11 +143,6 @@ export const translations: Translations = {
     table_header_bid_count: 'Bid Count',
     table_header_end_time: 'End Time',
     table_header_status: 'Status',
-    status_pending: 'Pending',
-    status_bidding: 'Bidding',
-    status_ending_soon: 'Ending Soon',
-    status_ended: 'Ended',
-    status_cancelled: 'Cancelled',
     time_left: 'Time Left',
     days: 'days',
     hours: 'hrs',
@@ -182,8 +172,10 @@ export const translations: Translations = {
     status_ended: 'Ended',
     status_cancelled: 'Cancelled',
 
-    // Status Filters
-    all_status: 'All Status',
+    // Data Management
+    data_management: 'Data Management',
+    company_info: 'Company Information',
+    user_info: 'User Information',
   },
   zh: {
     // Auth
@@ -199,7 +191,6 @@ export const translations: Translations = {
     no_account: '没有账号？请联系管理员注册',
     
     // Navbar
-    home: '首页',
     auctions: '拍卖列表',
     my_auctions: '我的拍卖',
     notifications: '通知',
@@ -221,7 +212,7 @@ export const translations: Translations = {
     forget_button: '确认',
     back_to_login: '返回登录页面',
 
-    // Home Page
+    // Auction List
     search_placeholder: '搜索拍卖...',
     all_categories: '所有类别',
     electronics: '电子产品',
@@ -237,11 +228,6 @@ export const translations: Translations = {
     table_header_bid_count: '出价次数',
     table_header_end_time: '结束时间',
     table_header_status: '状态',
-    status_pending: '待处理',
-    status_bidding: '竞拍中',
-    status_ending_soon: '即将结束',
-    status_ended: '已结束',
-    status_cancelled: '已取消',
     time_left: '剩余时间',
     days: '天',
     hours: '小时',
@@ -271,7 +257,9 @@ export const translations: Translations = {
     status_ended: '已结束',
     status_cancelled: '已取消',
 
-    // Status Filters
-    all_status: '所有状态',
+    // Data Management
+    data_management: '数据管理',
+    company_info: '公司信息',
+    user_info: '用户信息',
   },
 }; 
