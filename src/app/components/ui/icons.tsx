@@ -20,6 +20,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
+import LanguageIcon from '@mui/icons-material/Language';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { Home, Gavel, LocalOffer, Notifications, AccountCircle, KeyboardArrowDown, Edit, Logout, Menu, Close, Settings, Business, People } from '@mui/icons-material';
 
 interface IconProps {
@@ -31,8 +33,8 @@ export const LogoIcon = ({ className = "text-blue-600" }: IconProps) => (
   <GavelIcon style={{ width: '32px', height: '32px' }} className="text-white" />
 );
 
-export const NavLogoIcon = () => (
-  <GavelIcon style={{ width: '32px', height: '32px' }} className="text-blue-600" />
+export const NavLogoIcon = ({ className }: IconProps) => (
+  <GavelIcon style={{ width: '32px', height: '32px' }} className={className} />
 );
 
 // Medium Icons (20px)
@@ -126,31 +128,31 @@ export const NavHomeIcon = () => (
 );
 
 export const NavAuctionIcon = () => (
-  <Gavel style={{ width: '24px', height: '24px' }} />
+  <Gavel style={{ width: '18px', height: '18px' }} />
 );
 
 export const NavMyAuctionIcon = () => (
-  <LocalOffer style={{ width: '24px', height: '24px' }} />
+  <LocalOffer style={{ width: '18px', height: '18px' }} />
 );
 
 export const NavNotificationIcon = () => (
-  <Notifications style={{ width: '24px', height: '24px' }} />
+  <Notifications style={{ width: '20px', height: '20px' }} />
 );
 
 export const NavProfileIcon = () => (
-  <AccountCircle style={{ width: '24px', height: '24px' }} />
+  <AccountCircle style={{ width: '20px', height: '20px' }} />
 );
 
 export const NavArrowDownIcon = ({ className }: IconProps) => (
   <KeyboardArrowDown style={{ width: '24px', height: '24px' }} className={className} />
 );
 
-export const NavEditIcon = () => (
-  <Edit style={{ width: '24px', height: '24px' }} />
+export const NavEditIcon = ({ className = "" }: IconProps) => (
+  <Edit style={{ width: '18px', height: '18px' }} className={className} />
 );
 
-export const NavLogoutIcon = () => (
-  <Logout style={{ width: '24px', height: '24px' }} />
+export const NavLogoutIcon = ({ className = "" }: IconProps) => (
+  <Logout style={{ width: '18px', height: '18px' }} className={className} />
 );
 
 export const NavMenuIcon = () => (
@@ -162,7 +164,7 @@ export const NavCloseIcon = () => (
 );
 
 export const NavDataIcon = () => (
-  <Settings style={{ width: '24px', height: '24px' }} />
+  <Settings style={{ width: '20px', height: '20px' }} />
 );
 
 // Company and User Icons for Navbar
@@ -172,6 +174,11 @@ export const NavCompanyIcon = ({ className = "" }: IconProps) => (
 
 export const NavUserIcon = ({ className = "" }: IconProps) => (
   <People style={{ width: '24px', height: '24px' }} className={className} />
+);
+
+// Language Icon
+export const NavLanguageIcon = ({ className = "" }: IconProps) => (
+  <LanguageIcon style={{ width: '18px', height: '18px' }} className={className} />
 );
 
 // Additional icons can be added here as needed 

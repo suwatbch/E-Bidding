@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { NavArrowDownIcon } from './ui/icons';
+import { NavArrowDownIcon, NavLanguageIcon } from './ui/icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import { Language } from '@/app/i18n/languages';
 
@@ -27,14 +27,14 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
 
   const styles = {
     login: {
-      button: "flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600",
-      dropdown: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10",
-      item: "flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+      button: "flex items-center gap-0.5 px-2 py-1.5 text-gray-700 hover:text-blue-600 text-sm",
+      dropdown: "absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 border border-gray-100/50",
+      item: "flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
     },
     navbar: {
-      button: "flex items-center gap-2 text-gray-700 hover:text-blue-600",
-      dropdown: "absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10",
-      item: "flex items-center w-full px-4 py-2 text-gray-700 hover:bg-blue-50"
+      button: "flex items-center gap-0.5 px-2 py-1.5 rounded-lg text-gray-700 hover:bg-gray-50 text-sm",
+      dropdown: "absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 border border-gray-100/50",
+      item: "flex items-center w-full px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
     }
   };
 
@@ -46,8 +46,9 @@ export default function LanguageSwitcher({ variant = 'login' }: LanguageSwitcher
         onClick={() => setIsOpen(!isOpen)}
         className={currentStyle.button}
       >
+        <NavLanguageIcon />
         {languages.find(lang => lang.code === currentLang)?.name || currentLang}
-        <NavArrowDownIcon />
+        <NavArrowDownIcon className={`transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {isOpen && (

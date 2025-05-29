@@ -8,7 +8,7 @@ export default function CompanyInfoPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(5);
+  const [perPage, setPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Company | null;
@@ -22,6 +22,30 @@ export default function CompanyInfoPage() {
     email: '',
     status: true
   });
+
+  // Load perPage from localStorage on mount
+  useEffect(() => {
+    try {
+      const savedPerPage = localStorage.getItem('companyPerPage');
+      if (savedPerPage) {
+        const value = parseInt(savedPerPage);
+        setPerPage(value);
+      }
+    } catch (error) {
+      // Silently handle localStorage errors
+    }
+  }, []);
+
+  // Handle perPage changes
+  const handlePerPageChange = (value: number) => {
+    try {
+      setPerPage(value);
+      localStorage.setItem('companyPerPage', value.toString());
+      setCurrentPage(1);
+    } catch (error) {
+      // Silently handle localStorage errors
+    }
+  };
 
   // Filter companies based on search term
   const filteredCompanies = companies.filter(company =>
@@ -172,7 +196,7 @@ export default function CompanyInfoPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">ข้อมูลบริษัท</h1>
-                <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ E-Bidding</p>
+                <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ</p>
               </div>
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -215,10 +239,7 @@ export default function CompanyInfoPage() {
               <div className="relative">
                 <select
                   value={perPage}
-                  onChange={(e) => {
-                    setPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
+                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
                   className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
                     focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
                 >
@@ -236,7 +257,7 @@ export default function CompanyInfoPage() {
               </div>
               <span>รายการ</span>
             </div>
-            <div>ทั้งหมด {filteredCompanies.length} รายการ</div>
+            <div>ทั้งหมด {filteredCompanies.length.toLocaleString()} รายการ</div>
           </div>
           <div className="flex items-center gap-2">
             <button
