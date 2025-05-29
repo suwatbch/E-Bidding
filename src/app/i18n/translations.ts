@@ -42,6 +42,59 @@ export const translations: Translations = {
     forget_otp_hint: 'กรอกรหัส 6 หลัก',
     forget_button: 'ตกลง',
     back_to_login: 'กลับไปหน้าเข้าสู่ระบบ',
+
+    // Home Page
+    search_placeholder: 'ค้นหารายการประมูล...',
+    all_categories: 'ทั้งหมด',
+    electronics: 'อิเล็กทรอนิกส์',
+    fashion: 'แฟชั่น',
+    jewelry: 'เครื่องประดับ',
+    vehicles: 'ยานยนต์',
+    collectibles: 'ของสะสม',
+    table_title: 'รายการที่กำลังประมูล',
+    table_header_item: 'รายการ',
+    table_header_category: 'หมวดหมู่',
+    table_header_start_price: 'ราคาเริ่มต้น',
+    table_header_current_bid: 'ราคาปัจจุบัน',
+    table_header_bid_count: 'จำนวนบิด',
+    table_header_end_time: 'เวลาสิ้นสุด',
+    table_header_status: 'สถานะ',
+    status_pending: 'รอดำเนินการ',
+    status_bidding: 'กำลังประมูล',
+    status_ending_soon: 'ใกล้สิ้นสุด',
+    status_ended: 'สิ้นสุดแล้ว',
+    status_cancelled: 'ยกเลิก',
+    time_left: 'เหลือเวลา',
+    days: 'วัน',
+    hours: 'ชั่วโมง',
+    minutes: 'นาที',
+    seconds: 'วินาที',
+    bid_count: 'บิด',
+
+    // Hero Section
+    hero_title: 'ยินดีต้อนรับสู่',
+    hero_subtitle: 'ค้นพบสินค้าที่คุณต้องการและเริ่มการประมูลได้เลย',
+    hero_search_placeholder: 'ค้นหาสินค้าที่ต้องการประมูล...',
+
+    // Categories
+    categories_title: 'หมวดหมู่',
+    category_all: 'ทั้งหมด',
+    category_electronics: 'อิเล็กทรอนิกส์',
+    category_fashion: 'แฟชั่น',
+    category_jewelry: 'เครื่องประดับ',
+    category_vehicles: 'ยานยนต์',
+    category_collectibles: 'ของสะสม',
+
+    // Status
+    all_status: 'ทุกสถานะ',
+    status_pending: 'รอการประมูล',
+    status_bidding: 'กำลังประมูล',
+    status_ending_soon: 'ใกล้สิ้นสุด',
+    status_ended: 'สิ้นสุดประมูล',
+    status_cancelled: 'ยกเลิกประมูล',
+
+    // Status Filters
+    all_status: 'ทุกสถานะ',
   },
   en: {
     // Auth
@@ -78,6 +131,59 @@ export const translations: Translations = {
     forget_otp_hint: 'Enter 6 digits code',
     forget_button: 'Submit',
     back_to_login: 'Back to Login',
+
+    // Home Page
+    search_placeholder: 'Search auctions...',
+    all_categories: 'All Categories',
+    electronics: 'Electronics',
+    fashion: 'Fashion',
+    jewelry: 'Jewelry',
+    vehicles: 'Vehicles',
+    collectibles: 'Collectibles',
+    table_title: 'Active Auctions',
+    table_header_item: 'Item',
+    table_header_category: 'Category',
+    table_header_start_price: 'Start Price',
+    table_header_current_bid: 'Current Bid',
+    table_header_bid_count: 'Bid Count',
+    table_header_end_time: 'End Time',
+    table_header_status: 'Status',
+    status_pending: 'Pending',
+    status_bidding: 'Bidding',
+    status_ending_soon: 'Ending Soon',
+    status_ended: 'Ended',
+    status_cancelled: 'Cancelled',
+    time_left: 'Time Left',
+    days: 'days',
+    hours: 'hrs',
+    minutes: 'min',
+    seconds: 'sec',
+    bid_count: 'bids',
+
+    // Hero Section
+    hero_title: 'Welcome to',
+    hero_subtitle: 'Find the items you want and start bidding now',
+    hero_search_placeholder: 'Search for items to bid...',
+
+    // Categories
+    categories_title: 'Categories',
+    category_all: 'All',
+    category_electronics: 'Electronics',
+    category_fashion: 'Fashion',
+    category_jewelry: 'Jewelry',
+    category_vehicles: 'Vehicles',
+    category_collectibles: 'Collectibles',
+
+    // Status
+    all_status: 'All Status',
+    status_pending: 'Pending',
+    status_bidding: 'Bidding',
+    status_ending_soon: 'Ending Soon',
+    status_ended: 'Ended',
+    status_cancelled: 'Cancelled',
+
+    // Status Filters
+    all_status: 'All Status',
   },
   zh: {
     // Auth
@@ -113,6 +219,59 @@ export const translations: Translations = {
     forget_otp_placeholder: '______',
     forget_otp_hint: '输入6位验证码',
     forget_button: '确认',
-    back_to_login: '返回登录页面'
-  }
+    back_to_login: '返回登录页面',
+
+    // Home Page
+    search_placeholder: '搜索拍卖...',
+    all_categories: '所有类别',
+    electronics: '电子产品',
+    fashion: '时尚',
+    jewelry: '珠宝',
+    vehicles: '车辆',
+    collectibles: '收藏品',
+    table_title: '正在进行的拍卖',
+    table_header_item: '物品',
+    table_header_category: '类别',
+    table_header_start_price: '起拍价',
+    table_header_current_bid: '当前出价',
+    table_header_bid_count: '出价次数',
+    table_header_end_time: '结束时间',
+    table_header_status: '状态',
+    status_pending: '待处理',
+    status_bidding: '竞拍中',
+    status_ending_soon: '即将结束',
+    status_ended: '已结束',
+    status_cancelled: '已取消',
+    time_left: '剩余时间',
+    days: '天',
+    hours: '小时',
+    minutes: '分钟',
+    seconds: '秒',
+    bid_count: '次出价',
+
+    // Hero Section
+    hero_title: '欢迎来到',
+    hero_subtitle: '找到您想要的商品并立即开始竞拍',
+    hero_search_placeholder: '搜索要竞拍的商品...',
+
+    // Categories
+    categories_title: '类别',
+    category_all: '全部',
+    category_electronics: '电子产品',
+    category_fashion: '时尚',
+    category_jewelry: '珠宝',
+    category_vehicles: '车辆',
+    category_collectibles: '收藏品',
+
+    // Status
+    all_status: '所有状态',
+    status_pending: '待处理',
+    status_bidding: '竞拍中',
+    status_ending_soon: '即将结束',
+    status_ended: '已结束',
+    status_cancelled: '已取消',
+
+    // Status Filters
+    all_status: '所有状态',
+  },
 }; 

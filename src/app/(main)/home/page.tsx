@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLanguage } from '@/app/hooks/useLanguage';
 import {
   Table,
   TableBody,
@@ -269,6 +270,7 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | AuctionItem['status']>('all');
+  const { translate } = useLanguage();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -395,10 +397,10 @@ export default function Home() {
           <div className="relative px-8 py-12">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
-                ยินดีต้อนรับสู่ <span className="text-blue-200">E-Bidding</span>
+                {translate('hero_title')} <span className="text-blue-200">E-Bidding</span>
               </h1>
               <p className="text-lg text-blue-100 mb-8">
-                ค้นพบสินค้าที่คุณต้องการและเริ่มการประมูลได้เลย
+                {translate('hero_subtitle')}
               </p>
               <div className="relative max-w-xl mx-auto group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-300 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
@@ -406,7 +408,7 @@ export default function Home() {
                   <SearchBarIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
                   <input
                     type="text"
-                    placeholder="ค้นหาสินค้าที่ต้องการประมูล..."
+                    placeholder={translate('hero_search_placeholder')}
                     className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-900 bg-white shadow-md focus:ring-2 focus:ring-blue-300 focus:outline-none transition duration-200"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -421,17 +423,32 @@ export default function Home() {
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Categories */}
         <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">หมวดหมู่</h2>
+          <h2 className="text-2xl font-semibold mb-4">{translate('categories_title')}</h2>
           <div className="flex gap-4 overflow-x-auto pb-4">
-            {categories.map((category) => (
-              <button
-                key={category.name}
-                className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer"
-              >
-                <span className="mr-2">{category.icon}</span>
-                {category.name}
-              </button>
-            ))}
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryAllIcon /></span>
+              {translate('category_all')}
+            </button>
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryElectronicsIcon /></span>
+              {translate('category_electronics')}
+            </button>
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryFashionIcon /></span>
+              {translate('category_fashion')}
+            </button>
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryJewelryIcon /></span>
+              {translate('category_jewelry')}
+            </button>
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryVehicleIcon /></span>
+              {translate('category_vehicles')}
+            </button>
+            <button className="flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer">
+              <span className="mr-2"><CategoryCollectiblesIcon /></span>
+              {translate('category_collectibles')}
+            </button>
           </div>
         </div>
 
@@ -439,7 +456,7 @@ export default function Home() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-2xl font-semibold">รายการประมูล</h2>
+              <h2 className="text-2xl font-semibold">{translate('table_title')}</h2>
               <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
                 <button
                   onClick={() => setStatusFilter('all')}
@@ -448,7 +465,7 @@ export default function Home() {
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
-                  ทุกสถานะ
+                  {translate('all_status')}
                 </button>
                 <button
                   onClick={() => setStatusFilter('pending')}
@@ -458,7 +475,7 @@ export default function Home() {
                       : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
                 >
                   <StatusPendingIcon />
-                  รอการประมูล
+                  {translate('status_pending')}
                 </button>
                 <button
                   onClick={() => setStatusFilter('bidding')}
@@ -468,7 +485,7 @@ export default function Home() {
                       : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
                 >
                   <StatusBiddingIcon />
-                  กำลังประมูล
+                  {translate('status_bidding')}
                 </button>
                 <button
                   onClick={() => setStatusFilter('ending_soon')}
@@ -478,7 +495,7 @@ export default function Home() {
                       : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}
                 >
                   <StatusEndingSoonIcon />
-                  ใกล้สิ้นสุด
+                  {translate('status_ending_soon')}
                 </button>
                 <button
                   onClick={() => setStatusFilter('ended')}
@@ -488,7 +505,7 @@ export default function Home() {
                       : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
                 >
                   <StatusEndedIcon />
-                  สิ้นสุดประมูล
+                  {translate('status_ended')}
                 </button>
                 <button
                   onClick={() => setStatusFilter('cancelled')}
@@ -498,7 +515,7 @@ export default function Home() {
                       : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                 >
                   <StatusCancelledIcon />
-                  ยกเลิกประมูล
+                  {translate('status_cancelled')}
                 </button>
               </div>
             </div>

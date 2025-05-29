@@ -9,12 +9,11 @@ import {
   ButtonLoginIcon
 } from '@/app/components/ui/icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
-import { useState } from 'react';
+import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { currentLang, languages, translate, changeLanguage } = useLanguage();
-  const [isLangOpen, setIsLangOpen] = useState(false);
+  const { translate } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,46 +35,8 @@ export default function LoginPage() {
           <div className="relative p-8">
             {/* Logo and Title */}
             <div className="text-center mb-8">
-              {/* Language Selector - Absolute positioned */}
-              <div className="absolute top-8 right-8">
-                <button
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 
-                    rounded-lg text-sm font-medium text-gray-700 transition-all duration-200"
-                >
-                  <span>{currentLang.toUpperCase()}</span>
-                  <svg
-                    className={`w-4 h-4 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-                {isLangOpen && (
-                  <div className="absolute right-0 mt-1 w-24 py-1 bg-white rounded-lg shadow-lg border border-gray-100">
-                    {languages.map(lang => (
-                      <button
-                        key={lang.code}
-                        onClick={() => {
-                          changeLanguage(lang.code);
-                          setIsLangOpen(false);
-                        }}
-                        className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-gray-50
-                          ${currentLang === lang.code ? 'text-blue-600 font-medium' : 'text-gray-700'}`}
-                      >
-                        {lang.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Language Switcher */}
+              <LanguageSwitcher />
               
               {/* Centered Logo */}
               <div className="flex justify-center mb-4">

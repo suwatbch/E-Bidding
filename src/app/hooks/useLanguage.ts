@@ -1,37 +1,57 @@
+'use client';
+
 import { useState, useEffect } from 'react';
-import { LanguageCode, languages } from '../i18n/languages';
+import { languages, LanguageCode } from '../i18n/languages';
 import { translations } from '../i18n/translations';
 
-const LANGUAGE_KEY = 'e-bidding-language';
+const LANGUAGE_KEY = 'selectedLanguage';
 
-export const useLanguage = () => {
+export function useLanguage() {
   const [currentLang, setCurrentLang] = useState<LanguageCode>('th');
+  const [isLoading, setIsLoading] = useState(true);
 
+  // อ่านค่าภาษาจาก localStorage เมื่อ component mount
   useEffect(() => {
-    // โหลดค่าภาษาจาก localStorage ถ้าไม่มีให้ใช้ค่า default
-    const savedLang = localStorage.getItem(LANGUAGE_KEY) as LanguageCode;
-    const defaultLang = languages.find(lang => lang.isDefault)?.code || 'th';
-    
-    // ตรวจสอบว่าภาษาที่บันทึกไว้ยังใช้งานได้อยู่หรือไม่
-    const isValidLang = languages.some(lang => lang.code === savedLang && lang.status === 1);
-    
-    setCurrentLang(isValidLang ? savedLang : defaultLang);
+    const storedLang = localStorage.getItem(LANGUAGE_KEY) as LanguageCode;
+    if (storedLang && languages.some(lang => lang.code === storedLang)) {
+      setCurrentLang(storedLang);
+    }
+    setIsLoading(false);
   }, []);
 
+  // ฟังก์ชันเปลี่ยนภาษา
+  const changeLanguage = (lang: LanguageCode) => {
+    setCurrentLang(lang);
+    localStorage.setItem(LANGUAGE_KEY, lang);
+    // เพิ่ม force update ให้ component ที่ใช้ hook นี้
+    window.dispatchEvent(new Event('languageChange'));
+  };
+
+  // ฟังก์ชันแปลข้อความ
   const translate = (key: string): string => {
     return translations[currentLang][key] || key;
   };
 
-  const changeLanguage = (lang: LanguageCode) => {
-    setCurrentLang(lang);
-    // บันทึกค่าภาษาลง localStorage
-    localStorage.setItem(LANGUAGE_KEY, lang);
-  };
+  // เพิ่ม event listener สำหรับการเปลี่ยนภาษา
+  useEffect(() => {
+    const handleLanguageChange = () => {
+      const savedLang = localStorage.getItem(LANGUAGE_KEY) as LanguageCode;
+      if (savedLang && ['th', 'en', 'zh'].includes(savedLang)) {
+        setCurrentLang(savedLang);
+      }
+    };
+
+    window.addEventListener('languageChange', handleLanguageChange);
+    return () => {
+      window.removeEventListener('languageChange', handleLanguageChange);
+    };
+  }, []);
 
   return {
     currentLang,
     languages,
     translate,
-    changeLanguage
+    changeLanguage,
+    isLoading
   };
-}; 
+} 

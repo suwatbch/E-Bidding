@@ -141,8 +141,8 @@ export const NavProfileIcon = () => (
   <AccountCircle style={{ width: '24px', height: '24px' }} />
 );
 
-export const NavArrowDownIcon = () => (
-  <KeyboardArrowDown style={{ width: '24px', height: '24px' }} />
+export const NavArrowDownIcon = ({ className }: IconProps) => (
+  <KeyboardArrowDown style={{ width: '24px', height: '24px' }} className={className} />
 );
 
 export const NavEditIcon = () => (
