@@ -42,6 +42,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
+import Container from '@/app/components/ui/Container';
 
 interface AuctionItem {
   id: string;
@@ -266,7 +267,7 @@ const auctionItems: AuctionItem[] = [
   }
 ];
 
-export default function Home() {
+export default function AuctionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | AuctionItem['status']>('all');
@@ -383,9 +384,9 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Container className="py-8">
       {/* Hero Section */}
-      <div className="mx-auto max-w-6xl px-4 pt-8">
+      <div className="pt-8">
         <div className="relative rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0">
@@ -420,7 +421,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-8">
+      <div className="py-8">
         {/* Categories */}
         <div className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">{translate('categories_title')}</h2>
@@ -570,6 +571,6 @@ export default function Home() {
           </Table>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

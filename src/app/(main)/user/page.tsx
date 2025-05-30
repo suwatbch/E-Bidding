@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { initialUsers } from './data';
+import Container from '@/app/components/ui/Container';
 
 interface User {
   user_id: number;
@@ -32,13 +33,20 @@ interface FormData {
   status: boolean;
 }
 
-export default function UserInfoPage() {
+export default function UserPage() {
   // State declarations
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(() => {
+    try {
+      const savedPerPage = localStorage.getItem('userPerPage');
+      return savedPerPage ? parseInt(savedPerPage) : 10;
+    } catch (error) {
+      return 10;
+    }
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'asc' | 'desc' | null }>({
     key: 'username',
@@ -57,19 +65,6 @@ export default function UserInfoPage() {
     type: 'user',
     status: true
   });
-
-  // Load perPage from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedPerPage = localStorage.getItem('userPerPage');
-      if (savedPerPage) {
-        const value = parseInt(savedPerPage);
-        setPerPage(value);
-      }
-    } catch (error) {
-      // Silently handle localStorage errors
-    }
-  }, []);
 
   // Handle perPage changes
   const handlePerPageChange = (value: number) => {
@@ -243,8 +238,8 @@ export default function UserInfoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col">
-      <div className="flex-1 max-w-6xl mx-auto py-8 px-4 flex flex-col">
+    <Container className="py-8">
+      <div className="flex-1 py-8 flex flex-col">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -898,6 +893,6 @@ export default function UserInfoPage() {
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import Container from '@/app/components/ui/Container';
 import { useState } from 'react';
 import GavelIcon from '@mui/icons-material/Gavel';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -101,7 +102,7 @@ export default function MyAuctionsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <Container className="py-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">ประมูลของฉัน</h1>
@@ -181,6 +182,6 @@ export default function MyAuctionsPage() {
           </div>
         ))}
       </div>
-    </div>
+    </Container>
   );
 } 

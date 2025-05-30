@@ -182,3 +182,17 @@ export const NavLanguageIcon = ({ className = "" }: IconProps) => (
 );
 
 // Additional icons can be added here as needed 
+
+export function NavSaveIcon({ className = "w-5 h-5" }: IconProps) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path fillRule="evenodd" d="M5.478 5.559A1.5 1.5 0 016.912 4.5H9A.75.75 0 009 3H6.912a3 3 0 00-2.868 2.118l-2.411 7.838a3 3 0 00-.133.882V18a3 3 0 003 3h15a3 3 0 003-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0017.088 3H15a.75.75 0 000 1.5h2.088a1.5 1.5 0 011.434 1.059l2.411 7.838a1.5 1.5 0 01.067.441V18a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18v-4.162c0-.147.023-.293.067-.441l2.411-7.838z" clipRule="evenodd" />
+      <path d="M12 2.25a.75.75 0 01.75.75v8.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3a.75.75 0 01.75-.75z" />
+    </svg>
+  );
+} 

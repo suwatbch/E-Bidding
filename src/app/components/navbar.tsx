@@ -28,6 +28,7 @@ import {
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
+import Container from './ui/Container';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -173,7 +174,7 @@ export default function Navbar() {
         <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
         <div className="absolute bottom-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
-        <div className="mx-auto max-w-6xl px-4 relative">
+        <Container>
           {/* Glowing Line */}
           <div className="absolute -bottom-px left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
 
@@ -490,7 +491,7 @@ export default function Navbar() {
               </div>
             </div>
           )}
-        </div>
+        </Container>
       </nav>
       {/* Spacer to prevent content from hiding behind fixed navbar */}
       <div className="h-16"></div>

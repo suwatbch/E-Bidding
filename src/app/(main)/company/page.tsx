@@ -2,13 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { Company, initialCompanies } from './data';
+import Container from '@/app/components/ui/Container';
 
-export default function CompanyInfoPage() {
+export default function CompanyPage() {
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(() => {
+    try {
+      const savedPerPage = localStorage.getItem('companyPerPage');
+      return savedPerPage ? parseInt(savedPerPage) : 10;
+    } catch (error) {
+      return 10;
+    }
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Company | null;
@@ -22,19 +30,6 @@ export default function CompanyInfoPage() {
     email: '',
     status: true
   });
-
-  // Load perPage from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedPerPage = localStorage.getItem('companyPerPage');
-      if (savedPerPage) {
-        const value = parseInt(savedPerPage);
-        setPerPage(value);
-      }
-    } catch (error) {
-      // Silently handle localStorage errors
-    }
-  }, []);
 
   // Handle perPage changes
   const handlePerPageChange = (value: number) => {
@@ -182,8 +177,8 @@ export default function CompanyInfoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex flex-col">
-      <div className="flex-1 max-w-6xl mx-auto py-8 px-4 flex flex-col">
+    <Container className="py-8">
+      <div className="flex-1 py-8 flex flex-col">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -215,8 +210,8 @@ export default function CompanyInfoPage() {
                   </svg>
                 </div>
               </div>
-        <button
-          onClick={openAddModal}
+              <button
+                onClick={openAddModal}
                 className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
                   hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
                   focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
@@ -321,14 +316,14 @@ export default function CompanyInfoPage() {
                 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
             >
               หน้าสุดท้าย
-        </button>
-      </div>
+            </button>
+          </div>
         </div>
 
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="flex flex-col">
-      <div className="overflow-x-auto">
+            <div className="overflow-x-auto">
               <table className="w-full table-fixed">
                 <colgroup>
                   <col className="w-[5%]" />
@@ -423,8 +418,8 @@ export default function CompanyInfoPage() {
                         จัดการ
                       </div>
                     </th>
-            </tr>
-          </thead>
+                  </tr>
+                </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentCompanies.map((company, index) => (
                     <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
@@ -475,23 +470,23 @@ export default function CompanyInfoPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-center space-x-1">
-                  <button
-                    onClick={() => openEditModal(company)}
+                        <button
+                          onClick={() => openEditModal(company)}
                           className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
                             hover:bg-yellow-200 transition-colors duration-200"
                         >
                           แก้ไข
                         </button>
-                  <button
+                        <button
                           onClick={() => handleStatusChange(company.id)}
                           className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
                             hover:bg-red-200 transition-colors duration-200"
                         >
                           ลบ
                         </button>
-                </td>
-              </tr>
-            ))}
+                      </td>
+                    </tr>
+                  ))}
                   {currentCompanies.length === 0 && (
                     <tr>
                       <td colSpan={8}>
@@ -505,236 +500,236 @@ export default function CompanyInfoPage() {
                           <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
                         </div>
                       </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
-            {/* Modal Header - Fixed */}
-            <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
-              <button
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
-                  hover:bg-gray-100/80 rounded-lg p-1"
-                onClick={closeModal}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <h2 className="text-lg font-bold text-gray-900">
-                {editCompany ? (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-yellow-100 p-1.5 rounded-lg">
-                      <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">แก้ไขข้อมูลบริษัท</div>
-                      <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลที่ต้องการแก้ไข</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 p-1.5 rounded-lg">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">เพิ่มข้อมูลบริษัท</div>
-                      <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลบริษัทใหม่</div>
-                    </div>
-                  </div>
-                )}
-              </h2>
-            </div>
-
-            {/* Modal Content - Scrollable */}
-            <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
-              [&::-webkit-scrollbar]:w-2
-              [&::-webkit-scrollbar-track]:bg-gray-100
-              [&::-webkit-scrollbar-track]:rounded-lg
-              [&::-webkit-scrollbar-thumb]:bg-gray-300
-              [&::-webkit-scrollbar-thumb]:rounded-lg
-              [&::-webkit-scrollbar-thumb]:border-2
-              [&::-webkit-scrollbar-thumb]:border-gray-100
-              hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
-              dark:[&::-webkit-scrollbar-track]:bg-gray-700
-              dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
-              dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      ชื่อบริษัท
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={form.name}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                      </svg>
-                      เลขประจำตัวผู้เสียภาษี
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="tax_id"
-                    value={form.tax_id}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    maxLength={13}
-                    placeholder="0000000000000"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      ที่อยู่
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={form.address}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      โทรศัพท์
-                    </div>
-                  </label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={form.phone}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    <div className="flex items-center gap-2">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                      อีเมล
-                    </div>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={form.email}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="status"
-                    checked={form.status}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    เปิดใช้งาน
-                  </label>
-                </div>
-              </form>
-            </div>
-
-            {/* Modal Footer - Fixed */}
-            <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
-              <div className="flex justify-end gap-2">
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+              {/* Modal Header - Fixed */}
+              <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
                 <button
-                  type="button"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
+                    hover:bg-gray-100/80 rounded-lg p-1"
                   onClick={closeModal}
-                  className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
-                    rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
-                    focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                 >
-                  <div className="flex items-center gap-1.5">
-                    <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                    ยกเลิก
-                  </div>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
-                <button
-                  type="submit"
-                  form="companyForm"
-                  className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
-                    border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
-                    transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <div className="flex items-center gap-1.5">
-                    {editCompany ? (
-                      <>
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                <h2 className="text-lg font-bold text-gray-900">
+                  {editCompany ? (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-yellow-100 p-1.5 rounded-lg">
+                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                        บันทึกการแก้ไข
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">แก้ไขข้อมูลบริษัท</div>
+                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลที่ต้องการแก้ไข</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-100 p-1.5 rounded-lg">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                         </svg>
-                        เพิ่มบริษัท
-                      </>
-                    )}
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-gray-900">เพิ่มข้อมูลบริษัท</div>
+                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลบริษัทใหม่</div>
+                      </div>
+                    </div>
+                  )}
+                </h2>
+              </div>
+
+              {/* Modal Content - Scrollable */}
+              <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
+                [&::-webkit-scrollbar]:w-2
+                [&::-webkit-scrollbar-track]:bg-gray-100
+                [&::-webkit-scrollbar-track]:rounded-lg
+                [&::-webkit-scrollbar-thumb]:bg-gray-300
+                [&::-webkit-scrollbar-thumb]:rounded-lg
+                [&::-webkit-scrollbar-thumb]:border-2
+                [&::-webkit-scrollbar-thumb]:border-gray-100
+                hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
+                dark:[&::-webkit-scrollbar-track]:bg-gray-700
+                dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
+                dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        ชื่อบริษัท
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
                   </div>
-                </button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        </svg>
+                        เลขประจำตัวผู้เสียภาษี
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="tax_id"
+                      value={form.tax_id}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      maxLength={13}
+                      placeholder="0000000000000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        ที่อยู่
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={form.address}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        โทรศัพท์
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        อีเมล
+                      </div>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="status"
+                      checked={form.status}
+                      onChange={handleChange}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      เปิดใช้งาน
+                    </label>
+                  </div>
+                </form>
+              </div>
+
+              {/* Modal Footer - Fixed */}
+              <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                      rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
+                      focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      ยกเลิก
+                    </div>
+                  </button>
+                  <button
+                    type="submit"
+                    form="companyForm"
+                    className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
+                      border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                      transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      {editCompany ? (
+                        <>
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          </svg>
+                          บันทึกการแก้ไข
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          เพิ่มบริษัท
+                        </>
+                      )}
+                    </div>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </Container>
   );
 } 
