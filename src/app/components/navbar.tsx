@@ -428,8 +428,8 @@ export default function Navbar() {
                 }
               >
                 <div className="px-4 py-3 bg-gradient-to-r from-blue-50/90 via-blue-50/70 to-white/80 border-b border-blue-100/50">
-                  <p className="text-sm font-medium text-gray-900">สมชาย ใจดี</p>
-                  <p className="text-xs text-gray-500">somchai@example.com</p>
+                  <p className="text-sm font-medium text-gray-900">{profile?.fullname || 'ไม่ระบุชื่อ'}</p>
+                  <p className="text-xs text-gray-500">{profile?.email || 'ไม่ระบุอีเมล'}</p>
                 </div>
                 <button
                   onClick={handleEditProfile}
