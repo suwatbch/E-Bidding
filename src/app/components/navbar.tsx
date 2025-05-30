@@ -27,6 +27,7 @@ import {
 } from '@/app/services/socket';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from './LanguageSwitcher';
+import Dropdown from './ui/Dropdown';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -245,118 +246,120 @@ export default function Navbar() {
               </Link>
 
               {/* Data Management Dropdown */}
-              <div className="relative" ref={dataDropdownRef}>
+              <Dropdown
+                isOpen={isDataOpen}
+                onClose={() => setIsDataOpen(false)}
+                variant="navbar"
+                trigger={
+                  <button
+                    onClick={() => setIsDataOpen(!isDataOpen)}
+                    className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
+                      isActivePage('/company') || isActivePage('/user')
+                        ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavDataIcon />
+                    </div>
+                    <span className="transform group-hover:scale-105">{translate('data_management')}</span>
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavArrowDownIcon className={`transition-transform duration-200 ${isDataOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+                }
+              >
                 <button
-                  onClick={() => setIsDataOpen(!isDataOpen)}
-                  className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                    isActivePage('/company') || isActivePage('/user')
-                      ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
-                      : 'text-white hover:bg-white/10'
-                  }`}
+                  onClick={() => {
+                    setIsDataOpen(false);
+                    router.push('/company');
+                  }}
+                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
                 >
-                  <div className="transform group-hover:scale-110 transition duration-300">
-                    <NavDataIcon />
+                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                    <NavCompanyIcon className={isActivePage('/company') ? 'text-blue-700' : 'text-gray-700'} />
                   </div>
-                  <span className="transform group-hover:scale-105">{translate('data_management')}</span>
-                  <div className="transform group-hover:scale-110 transition duration-300">
-                    <NavArrowDownIcon className={`transition-transform duration-200 ${isDataOpen ? 'rotate-180' : ''}`} />
-                  </div>
+                  <span className={`transform group-hover:scale-105 ${
+                    isActivePage('/company')
+                      ? 'text-blue-700 font-medium'
+                      : 'text-gray-700 group-hover:text-blue-600'
+                  }`}>{translate('company_info')}</span>
                 </button>
-
-                {isDataOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg py-1.5 border border-white/20 transform transition-all duration-200">
-                    <button
-                      onClick={() => {
-                        setIsDataOpen(false);
-                        router.push('/company');
-                      }}
-                      className="group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
-                    >
-                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                        <NavCompanyIcon className={isActivePage('/company') ? 'text-blue-700' : 'text-gray-700'} />
-                      </div>
-                      <span className={`transform group-hover:scale-105 ${
-                        isActivePage('/company')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}>{translate('company_info')}</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsDataOpen(false);
-                        router.push('/user');
-                      }}
-                      className="group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
-                    >
-                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                        <NavUserIcon className={isActivePage('/user') ? 'text-blue-700' : 'text-gray-700'} />
-                      </div>
-                      <span className={`transform group-hover:scale-105 ${
-                        isActivePage('/user')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}>{translate('user_info')}</span>
-                    </button>
+                <button
+                  onClick={() => {
+                    setIsDataOpen(false);
+                    router.push('/user');
+                  }}
+                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                >
+                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                    <NavUserIcon className={isActivePage('/user') ? 'text-blue-700' : 'text-gray-700'} />
                   </div>
-                )}
-              </div>
+                  <span className={`transform group-hover:scale-105 ${
+                    isActivePage('/user')
+                      ? 'text-blue-700 font-medium'
+                      : 'text-gray-700 group-hover:text-blue-600'
+                  }`}>{translate('user_info')}</span>
+                </button>
+              </Dropdown>
 
               {/* Language Switcher */}
               <LanguageSwitcher variant="navbar" />
 
               {/* Profile Dropdown */}
-              <div className="relative" ref={profileDropdownRef}>
-                <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                    isActivePage('/profile')
-                      ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
-                      : 'text-white hover:bg-white/10'
-                  }`}
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300">
-                    <NavProfileIcon />
-                  </div>
-                  <span className="transform group-hover:scale-105">{translate('profile')}</span>
-                  <div className="transform group-hover:scale-110 transition duration-300">
-                    <NavArrowDownIcon className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
-                  </div>
-                </button>
-
-                {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-white/20 overflow-hidden transform transition-all duration-200">
-                    <div className="px-4 py-3 bg-gradient-to-r from-blue-50/90 via-blue-50/70 to-white/80 border-b border-blue-100/50">
-                      <p className="text-sm font-medium text-gray-900">สมชาย ใจดี</p>
-                      <p className="text-xs text-gray-500">somchai@example.com</p>
+              <Dropdown
+                isOpen={isProfileOpen}
+                onClose={() => setIsProfileOpen(false)}
+                variant="navbar"
+                trigger={
+                  <button
+                    onClick={() => setIsProfileOpen(!isProfileOpen)}
+                    className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
+                      isActivePage('/profile')
+                        ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
+                        : 'text-white hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavProfileIcon />
                     </div>
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        router.push('/profile');
-                      }}
-                      className="group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
-                    >
-                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                        <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
-                      </div>
-                      <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
-                        {translate('edit_profile')}
-                      </span>
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="group flex items-center w-full px-4 py-2 text-sm transition-all duration-300"
-                    >
-                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                        <NavLogoutIcon className="text-red-600" />
-                      </div>
-                      <span className="transform group-hover:scale-105 text-red-600">
-                        {translate('logout')}
-                      </span>
-                    </button>
+                    <span className="transform group-hover:scale-105">{translate('profile')}</span>
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavArrowDownIcon className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+                }
+              >
+                <div className="px-4 py-3 bg-gradient-to-r from-blue-50/90 via-blue-50/70 to-white/80 border-b border-blue-100/50">
+                  <p className="text-sm font-medium text-gray-900">สมชาย ใจดี</p>
+                  <p className="text-xs text-gray-500">somchai@example.com</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    router.push('/profile');
+                  }}
+                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                >
+                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                    <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
                   </div>
-                )}
-              </div>
+                  <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
+                    {translate('edit_profile')}
+                  </span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                >
+                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                    <NavLogoutIcon className="text-red-600" />
+                  </div>
+                  <span className="transform group-hover:scale-105 text-red-600">
+                    {translate('logout')}
+                  </span>
+                </button>
+              </Dropdown>
             </div>
 
             {/* Mobile menu button */}
