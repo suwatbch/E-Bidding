@@ -198,5 +198,5 @@ export function NavSaveIcon({ className = "w-5 h-5" }: IconProps) {
 }
 
 export const LockTableIcon = () => (
-  <LockIcon style={{ width: '20px', height: '20px' }} className="text-red-400 hover:scale-110 transition-transform duration-200" />
+  <LockIcon style={{ width: '18px', height: '18px' }} className="text-red-400 hover:scale-110 transition-transform duration-200" />
 ); 
