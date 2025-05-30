@@ -123,8 +123,8 @@ export const UserIcon = () => (
 );
 
 // Navbar Icons (24px)
-export const NavHomeIcon = () => (
-  <Home style={{ width: '24px', height: '24px' }} />
+export const NavHomeIcon: React.FC<IconProps> = ({ className }) => (
+  <Home style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 export const NavAuctionIcon: React.FC<IconProps> = ({ className }) => (

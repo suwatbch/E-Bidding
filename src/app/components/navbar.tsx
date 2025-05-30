@@ -17,6 +17,7 @@ import {
   NavDataIcon,
   NavCompanyIcon,
   NavUserIcon,
+  NavHomeIcon,
 } from '@/app/components/ui/icons';
 import { 
   connectSocket, 
@@ -206,7 +207,7 @@ export default function Navbar() {
                 }`}
               >
                 <div className="transform group-hover:scale-110 transition duration-300">
-                  <NavAuctionIcon />
+                  <NavHomeIcon className="w-5 h-5" />
                 </div>
                 <span className="transform group-hover:scale-105">{translate('auctions')}</span>
               </Link>
@@ -384,7 +385,7 @@ export default function Navbar() {
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <NavAuctionIcon className="w-5 h-5" />
+                  <NavHomeIcon className="w-5 h-5" />
                   {translate('auctions')}
                 </Link>
                 <Link 

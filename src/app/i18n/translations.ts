@@ -21,7 +21,7 @@ export const translations: Translations = {
     no_account: 'ยังไม่มีบัญชี? สามารถติดต่อผู้ดูแลระบบเพื่อสมัครสมาชิก',
     
     // Navbar
-    auctions: 'รายการประมูล',
+    auctions: 'ตลาดประมูล',
     my_auctions: 'ประมูลของฉัน',
     notifications: 'แจ้งเตือน',
     profile: 'โปรไฟล์',
@@ -191,7 +191,7 @@ export const translations: Translations = {
     no_account: '没有账号？请联系管理员注册',
     
     // Navbar
-    auctions: '拍卖列表',
+    auctions: '拍卖',
     my_auctions: '我的拍卖',
     notifications: '通知',
     profile: '个人资料',
