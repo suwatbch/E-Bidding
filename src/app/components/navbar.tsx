@@ -29,12 +29,47 @@ import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
 import Container from './ui/Container';
+import UserFormModal from './user/UserFormModal';
+import { User } from '@/app/model/dataUser';
+import { useUser } from '@/app/contexts/UserContext';
+
+interface FormData {
+  username: string;
+  password: string;
+  language_code: string;
+  fullname: string;
+  tax_id: string;
+  address: string;
+  email: string;
+  phone: string;
+  type: 'admin' | 'user';
+  status: boolean;
+  is_locked: boolean;
+  is_profile: boolean;
+}
+
+const initialForm: FormData = {
+  username: '',
+  password: '',
+  language_code: 'th',
+  fullname: '',
+  tax_id: '',
+  address: '',
+  email: '',
+  phone: '',
+  type: 'user',
+  status: true,
+  is_locked: false,
+  is_profile: true
+};
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDataOpen, setIsDataOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<FormData>(initialForm);
   
   // สร้าง ref สำหรับเมนูโปรไฟล์, เมนูข้อมูล และเมนูมือถือ
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -44,6 +79,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentLang, languages, translate, changeLanguage } = useLanguage();
+  const { profile, updateProfile, updateUser } = useUser();
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -102,6 +138,66 @@ export default function Navbar() {
   };
 
   const isActivePage = (path: string) => pathname === path;
+
+  const handleEditProfile = () => {
+    setIsProfileOpen(false);
+    if (profile) {
+      setFormData({
+        username: profile.username,
+        password: '',
+        language_code: profile.language_code || 'th',
+        fullname: profile.fullname,
+        tax_id: profile.tax_id || '',
+        address: profile.address || '',
+        email: profile.email,
+        phone: profile.phone,
+        type: profile.type,
+        status: profile.status,
+        is_locked: profile.is_locked,
+        is_profile: true
+      });
+      setIsModalOpen(true);
+    }
+  };
+
+  const handleSubmit = async (formData: FormData) => {
+    if (profile) {
+      const updatedProfile: User = {
+        ...profile,
+        username: formData.username,
+        email: formData.email,
+        fullname: formData.fullname,
+        tax_id: formData.tax_id,
+        address: formData.address,
+        phone: formData.phone,
+        type: formData.type,
+        status: formData.status,
+        is_locked: formData.is_locked,
+        language_code: formData.language_code,
+        updated_dt: new Date().toISOString(),
+        is_profile: true
+      };
+
+      // อัพเดทรหัสผ่านเฉพาะเมื่อมีการกรอกข้อมูล
+      if (formData.password) {
+        updatedProfile.password = formData.password;
+      }
+
+      // อัพเดทข้อมูลโปรไฟล์
+      updateProfile(updatedProfile);
+
+      // อัพเดทข้อมูลในตารางผู้ใช้ด้วย
+      updateUser(updatedProfile);
+
+      setIsModalOpen(false);
+      setFormData(initialForm);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setFormData(initialForm);
+  };
 
   return (
     <>
@@ -336,10 +432,7 @@ export default function Navbar() {
                   <p className="text-xs text-gray-500">somchai@example.com</p>
                 </div>
                 <button
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    router.push('/profile');
-                  }}
+                  onClick={handleEditProfile}
                   className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
                 >
                   <div className="transform group-hover:scale-110 transition duration-300 mr-2">
@@ -513,6 +606,18 @@ export default function Navbar() {
           animation: circuit-flow 4s infinite;
         }
       `}</style>
+
+      {/* Profile Edit Modal */}
+      <UserFormModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleSubmit}
+        editUser={profile}
+        initialForm={initialForm}
+        form={formData}
+        setForm={setFormData}
+        isFromProfileMenu={true}
+      />
     </>
   );
 }

@@ -14,6 +14,7 @@ export interface User {
     updated_dt?: string;
     login_count: number;
     is_locked: boolean;
+    is_profile?: boolean;
   }
   
   export const initialUsers: User[] = [
