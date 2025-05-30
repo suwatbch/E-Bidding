@@ -10,8 +10,8 @@ export interface User {
     phone: string;
     type: 'admin' | 'user';
     status: boolean;
-    created_dt: string;
-    updated_dt: string;
+    created_dt?: string;
+    updated_dt?: string;
     login_count: number;
     is_locked: boolean;
   }

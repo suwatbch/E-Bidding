@@ -50,6 +50,12 @@ export default function UserPage() {
 
   const [form, setForm] = useState<FormData>(initialForm);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Add loading state
   const [loading, setLoading] = useState(true);
 
@@ -221,144 +227,150 @@ export default function UserPage() {
       <div className="flex-1 py-8 flex flex-col">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-3 rounded-xl">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">ข้อมูลผู้ใช้งาน</h1>
-                <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลผู้ใช้งานในระบบ</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none sm:w-[500px]">
-                <input
-                  type="text"
-                  placeholder="ค้นหาผู้ใช้งาน..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 pl-12 pr-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
-                />
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
+          {mounted ? (
+            <>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-100 p-3 rounded-xl">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">ข้อมูลผู้ใช้งาน</h1>
+                    <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลผู้ใช้งานในระบบ</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:flex-none sm:w-[500px]">
+                    <input
+                      type="text"
+                      placeholder="ค้นหาผู้ใช้งาน..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full h-11 pl-12 pr-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
+                        focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <button
+                    onClick={openAddModal}
+                    className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                      hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                      focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                      active:scale-[0.98] whitespace-nowrap gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    เพิ่มผู้ใช้งาน
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={openAddModal}
-                className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
-                  active:scale-[0.98] whitespace-nowrap gap-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                เพิ่มผู้ใช้งาน
-              </button>
-            </div>
-          </div>
+            </>
+          ) : null}
         </div>
 
         {/* Table Info Section */}
-        <div className="flex justify-between items-center m-4">
-          <div className="flex items-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <span>แสดง</span>
-              <div className="relative">
-                <select
-                  value={perPage}
-                  onChange={(e) => setPerPage(Number(e.target.value))}
-                  className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-              <span>รายการ</span>
-            </div>
-            <div>ทั้งหมด {filteredUsers.length.toLocaleString()} รายการ</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-            >
-              หน้าแรก
-            </button>
-            <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-            >
-              ก่อนหน้า
-            </button>
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                  if (i === 4) return <span key="dots" className="px-2">...</span>;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - (4 - i);
-                  if (i === 0) return <span key="dots" className="px-2">...</span>;
-                } else {
-                  if (i === 0) return <span key="dots1" className="px-2">...</span>;
-                  if (i === 4) return <span key="dots2" className="px-2">...</span>;
-                  pageNum = currentPage + (i - 2);
-                }
-                return (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
-                      ${currentPage === pageNum 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-600 hover:bg-gray-50'}`}
+        {mounted ? (
+          <div className="flex justify-between items-center m-4">
+            <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <span>แสดง</span>
+                <div className="relative">
+                  <select
+                    value={perPage}
+                    onChange={(e) => setPerPage(Number(e.target.value))}
+                    className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
                   >
-                    {pageNum}
-                  </button>
-                );
-              })}
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+                <span>รายการ</span>
+              </div>
+              <div>ทั้งหมด {filteredUsers.length.toLocaleString('th-TH')} รายการ</div>
             </div>
-            <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-            >
-              ถัดไป
-            </button>
-            <button
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-                hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-            >
-              หน้าสุดท้าย
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                  hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                หน้าแรก
+              </button>
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                  hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                ก่อนหน้า
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                    if (i === 4) return <span key="dots" className="px-2">...</span>;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - (4 - i);
+                    if (i === 0) return <span key="dots" className="px-2">...</span>;
+                  } else {
+                    if (i === 0) return <span key="dots1" className="px-2">...</span>;
+                    if (i === 4) return <span key="dots2" className="px-2">...</span>;
+                    pageNum = currentPage + (i - 2);
+                  }
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
+                        ${currentPage === pageNum 
+                          ? 'bg-blue-600 text-white' 
+                          : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                  hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                ถัดไป
+              </button>
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
+                  hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+              >
+                หน้าสุดท้าย
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -475,110 +487,109 @@ export default function UserPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={8}>
-                        <TableLoading />
-                      </td>
-                    </tr>
-                  ) : currentUsers.length > 0 ? (
-                    currentUsers.map((user, index) => (
-                      <tr key={user.user_id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-6 py-4 text-center">
-                          {user.is_locked ? (
-                            <div className="flex justify-center items-center text-red-400">
-                              <LockTableIcon />
+                  {mounted ? (
+                    <>
+                      {currentUsers.map((user, index) => (
+                        <tr key={user.user_id} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-6 py-4 text-center">
+                            {user.is_locked ? (
+                              <div className="flex justify-center items-center text-red-400">
+                                <LockTableIcon />
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-500">
+                                {(startIndex + index + 1).toLocaleString('th-TH')}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-900 truncate cursor-help hover:text-blue-600"
+                                   title={user.fullname}>
+                                {user.fullname}
+                              </div>
                             </div>
-                          ) : (
-                            <div className="text-sm text-gray-500">
-                              {(startIndex + index + 1).toLocaleString('th-TH')}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                   title={user.address || '-'}>
+                                {user.address || '-'}
+                              </div>
                             </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <div className="text-sm text-gray-900 truncate cursor-help hover:text-blue-600"
-                                 title={user.fullname}>
-                              {user.fullname}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                   title={user.phone}>
+                                {user.phone}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                 title={user.address || '-'}>
-                              {user.address || '-'}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                   title={user.email}>
+                                {user.email}
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                 title={user.phone}>
-                              {user.phone}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${user.status 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-red-100 text-red-800'}`}
+                              >
+                                {user.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                              </span>
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="relative">
-                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                 title={user.email}>
-                              {user.email}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                          </td>
+                          <td className="px-6 py-4 text-center">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                              ${user.status 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'}`}
+                              ${user.type === 'admin'
+                                ? 'bg-purple-100 text-purple-800' 
+                                : 'bg-blue-100 text-blue-800'}`}
                             >
-                              {user.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                              {user.type === 'admin' ? 'ผู้ดูแล' : 'ผู้ใช้งาน'}
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            ${user.type === 'admin'
-                              ? 'bg-purple-100 text-purple-800' 
-                              : 'bg-blue-100 text-blue-800'}`}
-                          >
-                            {user.type === 'admin' ? 'ผู้ดูแล' : 'ผู้ใช้งาน'}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center space-x-1">
-                          <button
-                            onClick={() => openEditModal(user)}
-                            className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
-                              hover:bg-yellow-200 transition-colors duration-200"
-                          >
-                            แก้ไข
-                          </button>
-                          <button
-                            onClick={() => handleStatusChange(user.user_id)}
-                            className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
-                              hover:bg-red-200 transition-colors duration-200"
-                          >
-                            ลบ
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                          </td>
+                          <td className="px-6 py-4 text-center space-x-1">
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
+                                hover:bg-yellow-200 transition-colors duration-200"
+                            >
+                              แก้ไข
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(user.user_id)}
+                              className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
+                                hover:bg-red-200 transition-colors duration-200"
+                            >
+                              ลบ
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {currentUsers.length === 0 && (
+                        <tr>
+                          <td colSpan={8}>
+                            <div className="flex flex-col items-center justify-center py-8">
+                              <div className="w-16 h-16 mb-4 text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </div>
+                              <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
+                              <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ) : (
-                    <tr>
-                      <td colSpan={8}>
-                        <div className="flex flex-col items-center justify-center py-8">
-                          <div className="w-16 h-16 mb-4 text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                          </div>
-                          <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
-                          <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
-                        </div>
-                      </td>
-                    </tr>
+                    <TableLoading />
                   )}
                 </tbody>
               </table>
