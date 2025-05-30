@@ -1,28 +1,33 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Company, initialCompanies } from './data';
+import { Company, initialCompanies } from '@/app/model/dataCompany';
 import Container from '@/app/components/ui/Container';
+import TableLoading from '@/app/components/ui/TableLoading';
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+
+interface FormData {
+  name: string;
+  tax_id: string;
+  address: string;
+  phone: string;
+  email: string;
+  status: boolean;
+}
 
 export default function CompanyPage() {
   const [companies, setCompanies] = useState<Company[]>(initialCompanies);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(() => {
-    try {
-      const savedPerPage = localStorage.getItem('companyPerPage');
-      return savedPerPage ? parseInt(savedPerPage) : 10;
-    } catch (error) {
-      return 10;
-    }
-  });
+  const [perPage, setPerPage] = useLocalStorage('companyPerPage', 10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [mounted, setMounted] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof Company | null;
     direction: 'asc' | 'desc' | null;
   }>({ key: null, direction: null });
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormData>({
     name: '',
     tax_id: '',
     address: '',
@@ -31,16 +36,9 @@ export default function CompanyPage() {
     status: true
   });
 
-  // Handle perPage changes
-  const handlePerPageChange = (value: number) => {
-    try {
-      setPerPage(value);
-      localStorage.setItem('companyPerPage', value.toString());
-      setCurrentPage(1);
-    } catch (error) {
-      // Silently handle localStorage errors
-    }
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter companies based on search term
   const filteredCompanies = companies.filter(company =>
@@ -176,6 +174,12 @@ export default function CompanyPage() {
     }
   };
 
+  // แก้ไข handlePerPageChange
+  const handlePerPageChange = (value: number) => {
+    setPerPage(value);
+    setCurrentPage(1);
+  };
+
   return (
     <Container className="py-8">
       <div className="flex-1 py-8 flex flex-col">
@@ -252,7 +256,7 @@ export default function CompanyPage() {
               </div>
               <span>รายการ</span>
             </div>
-            <div>ทั้งหมด {filteredCompanies.length.toLocaleString()} รายการ</div>
+            <div>ทั้งหมด {mounted ? filteredCompanies.length.toLocaleString() : '-'} รายการ</div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -421,86 +425,92 @@ export default function CompanyPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentCompanies.map((company, index) => (
-                    <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
-                      <td className="px-6 py-4 text-center">
-                        <div className="text-sm text-gray-500">
-                          {(startIndex + index + 1).toLocaleString('th-TH')}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
-                               title={company.name}>
-                            {company.name}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
-                               title={company.address}>
-                            {company.address}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                               title={company.phone}>
-                            {company.phone}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                               title={company.email}>
-                            {company.email}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${company.status 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'}`}
-                        >
-                          {company.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center space-x-1">
-                        <button
-                          onClick={() => openEditModal(company)}
-                          className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
-                            hover:bg-yellow-200 transition-colors duration-200"
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(company.id)}
-                          className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
-                            hover:bg-red-200 transition-colors duration-200"
-                        >
-                          ลบ
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {currentCompanies.length === 0 && (
-                    <tr>
-                      <td colSpan={8}>
-                        <div className="flex flex-col items-center justify-center py-8">
-                          <div className="w-16 h-16 mb-4 text-gray-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                          </div>
-                          <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
-                          <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
-                        </div>
-                      </td>
-                    </tr>
+                  {mounted ? (
+                    <>
+                      {currentCompanies.map((company, index) => (
+                        <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-6 py-4 text-center">
+                            <div className="text-sm text-gray-500">
+                              {(startIndex + index + 1).toLocaleString('th-TH')}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
+                                   title={company.name}>
+                                {company.name}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
+                                   title={company.address}>
+                                {company.address}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                   title={company.phone}>
+                                {company.phone}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="relative">
+                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                   title={company.email}>
+                                {company.email}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${company.status 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'}`}
+                            >
+                              {company.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-center space-x-1">
+                            <button
+                              onClick={() => openEditModal(company)}
+                              className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
+                                hover:bg-yellow-200 transition-colors duration-200"
+                            >
+                              แก้ไข
+                            </button>
+                            <button
+                              onClick={() => handleStatusChange(company.id)}
+                              className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
+                                hover:bg-red-200 transition-colors duration-200"
+                            >
+                              ลบ
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {currentCompanies.length === 0 && (
+                        <tr>
+                          <td colSpan={8}>
+                            <div className="flex flex-col items-center justify-center py-8">
+                              <div className="w-16 h-16 mb-4 text-gray-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                              </div>
+                              <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
+                              <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ) : (
+                    <TableLoading />
                   )}
                 </tbody>
               </table>
@@ -565,7 +575,7 @@ export default function CompanyPage() {
                 dark:[&::-webkit-scrollbar-track]:bg-gray-700
                 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
                 dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form id="companyForm" onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
