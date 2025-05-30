@@ -12,6 +12,8 @@ export interface User {
     status: boolean;
     created_dt: string;
     updated_dt: string;
+    login_count: number;
+    is_locked: boolean;
   }
   
   export const initialUsers: User[] = [
@@ -28,7 +30,9 @@ export interface User {
       type: 'admin',
       status: true,
       created_dt: '2024-01-01 00:00:00',
-      updated_dt: '2024-01-01 00:00:00'
+      updated_dt: '2024-01-01 00:00:00',
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 2,
@@ -43,7 +47,9 @@ export interface User {
       type: 'user',
       status: true,
       created_dt: '2024-01-02 00:00:00',
-      updated_dt: '2024-01-02 00:00:00'
+      updated_dt: '2024-01-02 00:00:00',
+      login_count: 5,
+      is_locked: true
     },
     {
       user_id: 3,
@@ -58,7 +64,9 @@ export interface User {
       type: 'user',
       status: false,
       created_dt: '2024-01-03 00:00:00',
-      updated_dt: '2024-01-03 00:00:00'
+      updated_dt: '2024-01-03 00:00:00',
+      login_count: 0,
+      is_locked: false
     },
     // Regular users (IDs: 4-50)
     {
@@ -74,7 +82,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:03:00",
-      updated_dt: "2024-03-20 10:03:00"
+      updated_dt: "2024-03-20 10:03:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 5,
@@ -89,7 +99,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:04:00",
-      updated_dt: "2024-03-20 10:04:00"
+      updated_dt: "2024-03-20 10:04:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 6,
@@ -104,7 +116,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:05:00",
-      updated_dt: "2024-03-20 10:05:00"
+      updated_dt: "2024-03-20 10:05:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 7,
@@ -119,7 +133,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:06:00",
-      updated_dt: "2024-03-20 10:06:00"
+      updated_dt: "2024-03-20 10:06:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 8,
@@ -134,7 +150,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:07:00",
-      updated_dt: "2024-03-20 10:07:00"
+      updated_dt: "2024-03-20 10:07:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 9,
@@ -149,7 +167,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:08:00",
-      updated_dt: "2024-03-20 10:08:00"
+      updated_dt: "2024-03-20 10:08:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 10,
@@ -164,7 +184,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:09:00",
-      updated_dt: "2024-03-20 10:09:00"
+      updated_dt: "2024-03-20 10:09:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 11,
@@ -179,7 +201,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:10:00",
-      updated_dt: "2024-03-20 10:10:00"
+      updated_dt: "2024-03-20 10:10:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 12,
@@ -194,7 +218,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:11:00",
-      updated_dt: "2024-03-20 10:11:00"
+      updated_dt: "2024-03-20 10:11:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 13,
@@ -209,7 +235,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:12:00",
-      updated_dt: "2024-03-20 10:12:00"
+      updated_dt: "2024-03-20 10:12:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 14,
@@ -224,7 +252,9 @@ export interface User {
       type: "user",
       status: false,
       created_dt: "2024-03-20 10:13:00",
-      updated_dt: "2024-03-20 10:13:00"
+      updated_dt: "2024-03-20 10:13:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 15,
@@ -239,7 +269,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:14:00",
-      updated_dt: "2024-03-20 10:14:00"
+      updated_dt: "2024-03-20 10:14:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 16,
@@ -254,7 +286,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:15:00",
-      updated_dt: "2024-03-20 10:15:00"
+      updated_dt: "2024-03-20 10:15:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 17,
@@ -269,7 +303,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:16:00",
-      updated_dt: "2024-03-20 10:16:00"
+      updated_dt: "2024-03-20 10:16:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 18,
@@ -284,7 +320,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:17:00",
-      updated_dt: "2024-03-20 10:17:00"
+      updated_dt: "2024-03-20 10:17:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 19,
@@ -299,7 +337,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:18:00",
-      updated_dt: "2024-03-20 10:18:00"
+      updated_dt: "2024-03-20 10:18:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 20,
@@ -314,7 +354,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:19:00",
-      updated_dt: "2024-03-20 10:19:00"
+      updated_dt: "2024-03-20 10:19:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 21,
@@ -329,7 +371,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:20:00",
-      updated_dt: "2024-03-20 10:20:00"
+      updated_dt: "2024-03-20 10:20:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 22,
@@ -344,7 +388,9 @@ export interface User {
       type: "user",
       status: false,
       created_dt: "2024-03-20 10:21:00",
-      updated_dt: "2024-03-20 10:21:00"
+      updated_dt: "2024-03-20 10:21:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 23,
@@ -359,7 +405,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:22:00",
-      updated_dt: "2024-03-20 10:22:00"
+      updated_dt: "2024-03-20 10:22:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 24,
@@ -374,7 +422,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:23:00",
-      updated_dt: "2024-03-20 10:23:00"
+      updated_dt: "2024-03-20 10:23:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 25,
@@ -389,7 +439,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:24:00",
-      updated_dt: "2024-03-20 10:24:00"
+      updated_dt: "2024-03-20 10:24:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 26,
@@ -404,7 +456,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:25:00",
-      updated_dt: "2024-03-20 10:25:00"
+      updated_dt: "2024-03-20 10:25:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 27,
@@ -419,7 +473,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:26:00",
-      updated_dt: "2024-03-20 10:26:00"
+      updated_dt: "2024-03-20 10:26:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 28,
@@ -434,7 +490,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:27:00",
-      updated_dt: "2024-03-20 10:27:00"
+      updated_dt: "2024-03-20 10:27:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 29,
@@ -449,7 +507,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:27:00",
-      updated_dt: "2024-03-20 10:27:00"
+      updated_dt: "2024-03-20 10:27:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 30,
@@ -464,7 +524,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:28:00",
-      updated_dt: "2024-03-20 10:28:00"
+      updated_dt: "2024-03-20 10:28:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 31,
@@ -479,7 +541,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:29:00",
-      updated_dt: "2024-03-20 10:29:00"
+      updated_dt: "2024-03-20 10:29:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 32,
@@ -494,7 +558,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:30:00",
-      updated_dt: "2024-03-20 10:30:00"
+      updated_dt: "2024-03-20 10:30:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 33,
@@ -509,7 +575,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:31:00",
-      updated_dt: "2024-03-20 10:31:00"
+      updated_dt: "2024-03-20 10:31:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 34,
@@ -524,7 +592,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:32:00",
-      updated_dt: "2024-03-20 10:32:00"
+      updated_dt: "2024-03-20 10:32:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 35,
@@ -539,7 +609,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:33:00",
-      updated_dt: "2024-03-20 10:33:00"
+      updated_dt: "2024-03-20 10:33:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 36,
@@ -554,7 +626,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:34:00",
-      updated_dt: "2024-03-20 10:34:00"
+      updated_dt: "2024-03-20 10:34:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 37,
@@ -569,7 +643,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:35:00",
-      updated_dt: "2024-03-20 10:35:00"
+      updated_dt: "2024-03-20 10:35:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 38,
@@ -584,7 +660,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:36:00",
-      updated_dt: "2024-03-20 10:36:00"
+      updated_dt: "2024-03-20 10:36:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 39,
@@ -599,7 +677,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:37:00",
-      updated_dt: "2024-03-20 10:37:00"
+      updated_dt: "2024-03-20 10:37:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 40,
@@ -614,7 +694,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:38:00",
-      updated_dt: "2024-03-20 10:38:00"
+      updated_dt: "2024-03-20 10:38:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 41,
@@ -629,7 +711,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:42:00",
-      updated_dt: "2024-03-20 11:42:00"
+      updated_dt: "2024-03-20 11:42:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 42,
@@ -644,7 +728,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:43:00",
-      updated_dt: "2024-03-20 11:43:00"
+      updated_dt: "2024-03-20 11:43:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 43,
@@ -659,7 +745,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:48:00",
-      updated_dt: "2024-03-20 11:48:00"
+      updated_dt: "2024-03-20 11:48:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 44,
@@ -674,7 +762,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:49:00",
-      updated_dt: "2024-03-20 11:49:00"
+      updated_dt: "2024-03-20 11:49:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 45,
@@ -689,7 +779,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:50:00",
-      updated_dt: "2024-03-20 11:50:00"
+      updated_dt: "2024-03-20 11:50:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 46,
@@ -704,7 +796,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 11:51:00",
-      updated_dt: "2024-03-20 11:51:00"
+      updated_dt: "2024-03-20 11:51:00",
+      login_count: 0,
+      is_locked: false
     },
     {
       user_id: 47,
@@ -719,7 +813,9 @@ export interface User {
       type: "user",
       status: true,
       created_dt: "2024-03-20 10:49:00",
-      updated_dt: "2024-03-20 10:49:00"
+      updated_dt: "2024-03-20 10:49:00",
+      login_count: 0,
+      is_locked: false
     }
   ];
   

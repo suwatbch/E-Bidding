@@ -195,4 +195,8 @@ export function NavSaveIcon({ className = "w-5 h-5" }: IconProps) {
       <path d="M12 2.25a.75.75 0 01.75.75v8.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3a.75.75 0 01.75-.75z" />
     </svg>
   );
-} 
+}
+
+export const LockTableIcon = () => (
+  <LockIcon style={{ width: '20px', height: '20px' }} className="text-red-400 hover:scale-110 transition-transform duration-200" />
+); 

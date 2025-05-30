@@ -1,24 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { initialUsers } from './data';
+import { User, initialUsers } from '@/app/model/dataUser';
 import Container from '@/app/components/ui/Container';
-
-interface User {
-  user_id: number;
-  username: string;
-  password: string;
-  language_code: string;
-  fullname: string;
-  tax_id: string | null;
-  address: string | null;
-  email: string;
-  phone: string;
-  type: 'admin' | 'user';
-  status: boolean;
-  created_dt: string;
-  updated_dt: string;
-}
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import TableLoading from '@/app/components/ui/TableLoading';
+import { LockTableIcon } from '@/app/components/ui/icons';
 
 interface FormData {
   username: string;
@@ -31,7 +18,22 @@ interface FormData {
   phone: string;
   type: 'admin' | 'user';
   status: boolean;
+  is_locked: boolean;
 }
+
+const initialForm: FormData = {
+  username: '',
+  password: '',
+  language_code: 'th',
+  fullname: '',
+  tax_id: '',
+  address: '',
+  email: '',
+  phone: '',
+  type: 'user',
+  status: true,
+  is_locked: false
+};
 
 export default function UserPage() {
   // State declarations
@@ -39,43 +41,22 @@ export default function UserPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useState(() => {
-    try {
-      const savedPerPage = localStorage.getItem('userPerPage');
-      return savedPerPage ? parseInt(savedPerPage) : 10;
-    } catch (error) {
-      return 10;
-    }
-  });
+  const [perPage, setPerPage] = useLocalStorage('userPerPage', 10);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'asc' | 'desc' | null }>({
     key: 'username',
     direction: null
   });
 
-  const [form, setForm] = useState<FormData>({
-    username: '',
-    password: '',
-    language_code: 'th',
-    fullname: '',
-    tax_id: '',
-    address: '',
-    email: '',
-    phone: '',
-    type: 'user',
-    status: true
-  });
+  const [form, setForm] = useState<FormData>(initialForm);
 
-  // Handle perPage changes
-  const handlePerPageChange = (value: number) => {
-    try {
-      setPerPage(value);
-      localStorage.setItem('userPerPage', value.toString());
-      setCurrentPage(1);
-    } catch (error) {
-      // Silently handle localStorage errors
-    }
-  };
+  // Add loading state
+  const [loading, setLoading] = useState(true);
+
+  // Add useEffect to handle loading
+  useEffect(() => {
+    setLoading(false);
+  }, []);
 
   // Filter users based on search term
   const filteredUsers = users.filter(user =>
@@ -151,18 +132,7 @@ export default function UserPage() {
 
   const openAddModal = () => {
     setEditUser(null);
-    setForm({
-      username: '',
-      password: '',
-      language_code: 'th',
-      fullname: '',
-      tax_id: '',
-      address: '',
-      email: '',
-      phone: '',
-      type: 'user',
-      status: true
-    });
+    setForm(initialForm);
     setIsModalOpen(true);
   };
 
@@ -178,7 +148,8 @@ export default function UserPage() {
       email: user.email,
       phone: user.phone,
       type: user.type,
-      status: user.status
+      status: user.status,
+      is_locked: user.is_locked // เพิ่ม is_locked เข้าไปใน form
     });
     setIsModalOpen(true);
   };
@@ -186,18 +157,7 @@ export default function UserPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditUser(null);
-    setForm({
-      username: '',
-      password: '',
-      language_code: 'th',
-      fullname: '',
-      tax_id: '',
-      address: '',
-      email: '',
-      phone: '',
-      type: 'user',
-      status: true
-    });
+    setForm(initialForm);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -205,26 +165,45 @@ export default function UserPage() {
     setForm({ ...form, [e.target.name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (editUser) {
-      // ถ้าไม่ได้กรอก password ให้ใช้ password เดิม
-      const updatedUser = {
+      const updatedUser: User = {
         ...editUser,
         ...form,
-        password: form.password || editUser.password
+        updated_dt: new Date().toISOString(),
+        login_count: form.is_locked ? 5 : (editUser.login_count >= 5 ? 0 : editUser.login_count),
+        is_locked: form.is_locked,
+        created_dt: editUser.created_dt,
+        user_id: editUser.user_id
       };
-      setUsers(users.map(u => u.user_id === editUser.user_id ? updatedUser : u));
+      
+      if (!form.password) {
+        updatedUser.password = editUser.password;
+      }
+      
+      const updatedUsers = users.map(user => 
+        user.user_id === editUser.user_id ? updatedUser : user
+      );
+      setUsers(updatedUsers);
     } else {
-      const newUser = {
-        user_id: Date.now(),
+      const newUser: User = {
         ...form,
-        created_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-        updated_dt: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        user_id: Date.now(),
+        created_dt: new Date().toISOString(),
+        updated_dt: new Date().toISOString(),
+        login_count: 0,
+        is_locked: false
       };
-      setUsers([...users, newUser]);
+      
+      const updatedUsers = [...users, newUser];
+      setUsers(updatedUsers);
     }
-    closeModal();
+    
+    setIsModalOpen(false);
+    setEditUser(null);
+    setForm(initialForm);
   };
 
   const handleStatusChange = (id: number) => {
@@ -295,7 +274,7 @@ export default function UserPage() {
               <div className="relative">
                 <select
                   value={perPage}
-                  onChange={(e) => handlePerPageChange(Number(e.target.value))}
+                  onChange={(e) => setPerPage(Number(e.target.value))}
                   className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
                     focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
                 >
@@ -481,7 +460,7 @@ export default function UserPage() {
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        ประเภท
+                        ประเภทผู้ใช้งาน
                         {getSortIcon('type')}
                       </div>
                     </th>
@@ -496,82 +475,99 @@ export default function UserPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {currentUsers.map((user, index) => (
-                    <tr key={user.user_id} className="hover:bg-gray-50 transition-colors duration-200">
-                      <td className="px-6 py-4 text-center">
-                        <div className="text-sm text-gray-500">
-                          {(startIndex + index + 1).toLocaleString('th-TH')}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-900 truncate cursor-help hover:text-blue-600"
-                               title={user.fullname}>
-                            {user.fullname}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                               title={user.address || '-'}>
-                            {user.address || '-'}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                               title={user.phone}>
-                            {user.phone}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="relative">
-                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                               title={user.email}>
-                            {user.email}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${user.status 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'}`}
-                        >
-                          {user.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${user.type === 'admin' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'}`}
-                        >
-                          {user.type === 'admin' ? 'ผู้ดูแล' : 'ผู้ใช้งาน'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center space-x-1">
-                        <button
-                          onClick={() => openEditModal(user)}
-                          className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
-                            hover:bg-yellow-200 transition-colors duration-200"
-                        >
-                          แก้ไข
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(user.user_id)}
-                          className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
-                            hover:bg-red-200 transition-colors duration-200"
-                        >
-                          ลบ
-                        </button>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8}>
+                        <TableLoading />
                       </td>
                     </tr>
-                  ))}
-                  {currentUsers.length === 0 && (
+                  ) : currentUsers.length > 0 ? (
+                    currentUsers.map((user, index) => (
+                      <tr key={user.user_id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-6 py-4 text-center">
+                          {user.is_locked ? (
+                            <div className="flex justify-center items-center text-red-400">
+                              <svg className="w-6 h-6 hover:scale-110 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500">
+                              {(startIndex + index + 1).toLocaleString('th-TH')}
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div className="text-sm text-gray-900 truncate cursor-help hover:text-blue-600"
+                                 title={user.fullname}>
+                              {user.fullname}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                 title={user.address || '-'}>
+                              {user.address || '-'}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                 title={user.phone}>
+                              {user.phone}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                 title={user.email}>
+                              {user.email}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${user.status 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'}`}
+                            >
+                              {user.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${user.type === 'admin'
+                              ? 'bg-purple-100 text-purple-800' 
+                              : 'bg-blue-100 text-blue-800'}`}
+                          >
+                            {user.type === 'admin' ? 'ผู้ดูแล' : 'ผู้ใช้งาน'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center space-x-1">
+                          <button
+                            onClick={() => openEditModal(user)}
+                            className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
+                              hover:bg-yellow-200 transition-colors duration-200"
+                          >
+                            แก้ไข
+                          </button>
+                          <button
+                            onClick={() => handleStatusChange(user.user_id)}
+                            className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
+                              hover:bg-red-200 transition-colors duration-200"
+                          >
+                            ลบ
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
                       <td colSpan={8}>
                         <div className="flex flex-col items-center justify-center py-8">
@@ -596,7 +592,7 @@ export default function UserPage() {
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
-              {/* Modal Header - Fixed */}
+              {/* Modal Header */}
               <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
                 <button
                   className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
@@ -636,20 +632,9 @@ export default function UserPage() {
                 </h2>
               </div>
 
-              {/* Modal Content - Scrollable */}
-              <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
-                [&::-webkit-scrollbar]:w-2
-                [&::-webkit-scrollbar-track]:bg-gray-100
-                [&::-webkit-scrollbar-track]:rounded-lg
-                [&::-webkit-scrollbar-thumb]:bg-gray-300
-                [&::-webkit-scrollbar-thumb]:rounded-lg
-                [&::-webkit-scrollbar-thumb]:border-2
-                [&::-webkit-scrollbar-thumb]:border-gray-100
-                hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
-                dark:[&::-webkit-scrollbar-track]:bg-gray-700
-                dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
-                dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-                <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Modal Content */}
+              <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4">
+                <form id="userForm" onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
@@ -692,7 +677,8 @@ export default function UserPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
                         <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         ภาษา
                       </div>
@@ -817,7 +803,7 @@ export default function UserPage() {
                     <select
                       name="type"
                       value={form.type}
-                      onChange={handleChange}
+                      onChange={(e) => setForm({ ...form, type: e.target.value as 'admin' | 'user' })}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                         focus:ring-blue-500 focus:border-transparent"
                       required
@@ -826,25 +812,53 @@ export default function UserPage() {
                       <option value="admin">ผู้ดูแลระบบ</option>
                     </select>
                   </div>
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="status"
-                      checked={form.status}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      เปิดใช้งาน
-                    </label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="status"
+                        checked={form.status}
+                        onChange={handleChange}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        เปิดใช้งาน
+                      </label>
+                    </div>
+                    {editUser && (
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          name="is_locked"
+                          checked={form.is_locked}
+                          onChange={(e) => {
+                            const newIsLocked = e.target.checked;
+                            const newLoginCount = newIsLocked ? 5 : (editUser.login_count >= 5 ? 0 : editUser.login_count);
+                            
+                            setForm(prev => ({
+                              ...prev,
+                              is_locked: newIsLocked,
+                              login_count: newLoginCount
+                            }));
+                          }}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                        />
+                        <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          {form.is_locked ? 'ปลดล็อก' : 'ล็อก'}
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </form>
               </div>
 
-              {/* Modal Footer - Fixed */}
+              {/* Modal Footer */}
               <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
                 <div className="flex justify-end gap-2">
                   <button
