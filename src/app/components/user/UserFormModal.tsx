@@ -43,6 +43,10 @@ export default function UserFormModal({
 }: UserFormModalProps) {
   if (!isOpen) return null;
 
+  console.log('UserFormModal - Current form data:', form);
+  console.log('UserFormModal - Image URL:', form.image);
+  console.log('UserFormModal - Edit user data:', editUser);
+
   // เช็คว่าเป็น admin หรือไม่
   const isAdmin = form.type === 'admin';
   // เช็คว่ามาจากเมนูโปรไฟล์หรือไม่
@@ -183,12 +187,21 @@ export default function UserFormModal({
               <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-blue-500/20">
                 {form.image ? (
                   <img 
-                    src={form.image.startsWith('blob:') 
+                    src={form.image.startsWith('blob:') || form.image.startsWith('http') 
                       ? form.image 
-                      : `${process.env.NEXT_PUBLIC_API_URL}${form.image}`
+                      : form.image.startsWith('/') 
+                        ? `${process.env.NEXT_PUBLIC_API_URL}${form.image}`
+                        : form.image
                     } 
                     alt="Profile" 
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Error loading image:', form.image);
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null; // prevent infinite loop
+                      target.src = ''; // clear the broken image
+                      // You might want to set a default image here
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">

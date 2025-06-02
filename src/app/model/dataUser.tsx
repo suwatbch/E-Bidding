@@ -35,7 +35,7 @@ export interface User {
       updated_dt: '2024-01-01 00:00:00',
       login_count: 0,
       is_locked: false,
-      image: ''
+      image: 'http://localhost:3000/uploads/profile/1-1748599083946.jpeg'
     },
     {
       user_id: 2,
@@ -53,7 +53,7 @@ export interface User {
       created_dt: '2024-01-01T00:00:00.000Z',
       updated_dt: '2024-01-01T00:00:00.000Z',
       login_count: 0,
-      image: 'http://localhost:3000/uploads/1-1748598627932.jpg'
+      image: 'http://localhost:3000/uploads/profile/1-1748598627932.jpg'
     },
     {
       user_id: 3,

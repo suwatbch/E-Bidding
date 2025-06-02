@@ -143,7 +143,8 @@ export default function Navbar() {
   const handleEditProfile = () => {
     setIsProfileOpen(false);
     if (profile) {
-      setFormData({
+      console.log('Profile data:', profile);
+      const newFormData = {
         username: profile.username,
         password: '',
         language_code: profile.language_code || 'th',
@@ -156,8 +157,10 @@ export default function Navbar() {
         status: profile.status,
         is_locked: profile.is_locked,
         is_profile: true,
-        image: profile.image || ''
-      });
+        image: profile.image || undefined
+      };
+      console.log('Form data being set:', newFormData);
+      setFormData(newFormData);
       setIsModalOpen(true);
     }
   };
