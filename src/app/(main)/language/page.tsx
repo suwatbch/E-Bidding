@@ -8,6 +8,9 @@ import {
   languages as initialLanguages,
   LanguageCode,
 } from '@/app/model/dataLanguage';
+import { translations } from '@/app/model/dataLanguageText';
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import TransectionLanguage from '@/app/components/language/LanguageText';
 
 interface FormData {
   code: string;
@@ -207,7 +210,7 @@ export default function LanguagePage() {
           {/* Table Section */}
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full">
                 <colgroup>
                   <col className="w-[5%]" />
                   <col className="w-[25%]" />
@@ -216,21 +219,21 @@ export default function LanguagePage() {
                   <col className="w-[15%]" />
                   <col className="w-[15%]" />
                 </colgroup>
-                <thead className="bg-gray-50">
-                  <tr>
+                <thead>
+                  <tr className="bg-gray-50">
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                     >
                       ลำดับ
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -247,11 +250,11 @@ export default function LanguagePage() {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -268,11 +271,11 @@ export default function LanguagePage() {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -289,11 +292,11 @@ export default function LanguagePage() {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -310,11 +313,11 @@ export default function LanguagePage() {
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
                       <div className="flex items-center justify-center gap-2">
                         <svg
-                          className="w-5 h-5 text-gray-500"
+                          className="w-5 h-5 text-gray-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -331,7 +334,7 @@ export default function LanguagePage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-200">
                   <TableLoading />
                 </tbody>
               </table>
@@ -399,7 +402,7 @@ export default function LanguagePage() {
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+            <table className="min-w-full">
               <colgroup>
                 <col className="w-[5%]" />
                 <col className="w-[25%]" />
@@ -408,21 +411,21 @@ export default function LanguagePage() {
                 <col className="w-[15%]" />
                 <col className="w-[15%]" />
               </colgroup>
-              <thead className="bg-gray-50">
-                <tr>
+              <thead>
+                <tr className="bg-gray-50">
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                   >
                     ลำดับ
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -439,11 +442,11 @@ export default function LanguagePage() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -460,11 +463,11 @@ export default function LanguagePage() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -481,11 +484,11 @@ export default function LanguagePage() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -502,11 +505,11 @@ export default function LanguagePage() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     <div className="flex items-center justify-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -523,7 +526,7 @@ export default function LanguagePage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {!mounted ? (
                   <TableLoading />
                 ) : (
@@ -590,6 +593,20 @@ export default function LanguagePage() {
             </table>
           </div>
         </div>
+
+        {/* Language Text Table */}
+        <TransectionLanguage
+          onEdit={(key) => {
+            // Handle edit
+            console.log('Edit:', key);
+          }}
+          onDelete={(key) => {
+            // Handle delete
+            if (window.confirm('คุณต้องการลบข้อความนี้ใช่หรือไม่?')) {
+              console.log('Delete:', key);
+            }
+          }}
+        />
       </div>
 
       {/* Modal */}
