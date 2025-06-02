@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Company, initialCompanies } from '@/app/model/dataCompany';
@@ -33,7 +33,7 @@ export default function CompanyPage() {
     address: '',
     phone: '',
     email: '',
-    status: true
+    status: true,
   });
 
   useEffect(() => {
@@ -41,12 +41,14 @@ export default function CompanyPage() {
   }, []);
 
   // Filter companies based on search term
-  const filteredCompanies = companies.filter(company => {
+  const filteredCompanies = companies.filter((company) => {
     const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
-    return company.name.toLowerCase().includes(searchTermLower) ||
+    return (
+      company.name.toLowerCase().includes(searchTermLower) ||
       company.address.toLowerCase().includes(searchTermLower) ||
       company.phone.toString().replace(/\s/g, '').includes(searchTermLower) ||
-      company.email.toLowerCase().includes(searchTermLower);
+      company.email.toLowerCase().includes(searchTermLower)
+    );
   });
 
   // Sort companies
@@ -56,14 +58,14 @@ export default function CompanyPage() {
       sortableCompanies.sort((a, b) => {
         const aValue = a[sortConfig.key!];
         const bValue = b[sortConfig.key!];
-        
+
         if (aValue === null || aValue === undefined) return 1;
         if (bValue === null || bValue === undefined) return -1;
 
         // Convert to string for consistent comparison
         const aString = String(aValue).toLowerCase();
         const bString = String(bValue).toLowerCase();
-        
+
         if (aString < bString) {
           return sortConfig.direction === 'asc' ? -1 : 1;
         }
@@ -84,7 +86,7 @@ export default function CompanyPage() {
 
   const requestSort = (key: keyof Company) => {
     let direction: 'asc' | 'desc' | null = 'asc';
-    
+
     if (sortConfig.key === key) {
       if (sortConfig.direction === 'asc') {
         direction = 'desc';
@@ -92,7 +94,7 @@ export default function CompanyPage() {
         direction = null;
       }
     }
-    
+
     setSortConfig({ key: direction ? key : null, direction });
     setCurrentPage(1); // Reset to first page when sorting
   };
@@ -100,23 +102,53 @@ export default function CompanyPage() {
   const getSortIcon = (columnKey: keyof Company) => {
     if (sortConfig.key !== columnKey) {
       return (
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        <svg
+          className="w-4 h-4 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+          />
         </svg>
       );
     }
-    
+
     if (sortConfig.direction === 'asc') {
       return (
-        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" />
+        <svg
+          className="w-4 h-4 text-blue-600"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M5 15l7-7 7 7"
+          />
         </svg>
       );
     }
-    
+
     return (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+      <svg
+        className="w-4 h-4 text-blue-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M19 9l-7 7-7-7"
+        />
       </svg>
     );
   };
@@ -128,7 +160,14 @@ export default function CompanyPage() {
 
   const openAddModal = () => {
     setEditCompany(null);
-    setForm({ name: '', tax_id: '', address: '', phone: '', email: '', status: true });
+    setForm({
+      name: '',
+      tax_id: '',
+      address: '',
+      phone: '',
+      email: '',
+      status: true,
+    });
     setIsModalOpen(true);
   };
 
@@ -140,7 +179,7 @@ export default function CompanyPage() {
       address: company.address,
       phone: company.phone,
       email: company.email,
-      status: company.status
+      status: company.status,
     });
     setIsModalOpen(true);
   };
@@ -148,18 +187,30 @@ export default function CompanyPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditCompany(null);
-    setForm({ name: '', tax_id: '', address: '', phone: '', email: '', status: true });
+    setForm({
+      name: '',
+      tax_id: '',
+      address: '',
+      phone: '',
+      email: '',
+      status: true,
+    });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value =
+      e.target.type === 'checkbox' ? e.target.checked : e.target.value;
     setForm({ ...form, [e.target.name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editCompany) {
-      setCompanies(companies.map(c => c.id === editCompany.id ? { ...editCompany, ...form } : c));
+      setCompanies(
+        companies.map((c) =>
+          c.id === editCompany.id ? { ...editCompany, ...form } : c
+        )
+      );
     } else {
       setCompanies([...companies, { id: Date.now(), ...form }]);
     }
@@ -168,11 +219,11 @@ export default function CompanyPage() {
 
   const handleStatusChange = (id: number) => {
     if (window.confirm('คุณต้องการ "ลบ" บริษัทนี้ใช่หรือไม่ ?')) {
-      setCompanies(companies.map(company => 
-        company.id === id 
-          ? { ...company, status: !company.status }
-          : company
-      ));
+      setCompanies(
+        companies.map((company) =>
+          company.id === id ? { ...company, status: !company.status } : company
+        )
+      );
     }
   };
 
@@ -190,14 +241,27 @@ export default function CompanyPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="bg-blue-100 p-3 rounded-xl">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                <svg
+                  className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">ข้อมูลบริษัท</h1>
-                <p className="mt-1 text-sm text-gray-500">จัดการข้อมูลบริษัทในระบบ</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  ข้อมูลบริษัท
+                </h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  จัดการข้อมูลบริษัทในระบบ
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -211,8 +275,16 @@ export default function CompanyPage() {
                     focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
                 />
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 </div>
               </div>
@@ -223,8 +295,18 @@ export default function CompanyPage() {
                   focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
                   active:scale-[0.98] whitespace-nowrap gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
                 </svg>
                 เพิ่มบริษัท
               </button>
@@ -251,14 +333,27 @@ export default function CompanyPage() {
                   <option value={100}>100</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </div>
               </div>
               <span>รายการ</span>
             </div>
-            <div>ทั้งหมด {mounted ? filteredCompanies.length.toLocaleString() : '-'} รายการ</div>
+            <div>
+              ทั้งหมด{' '}
+              {mounted ? filteredCompanies.length.toLocaleString() : '-'} รายการ
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -270,7 +365,7 @@ export default function CompanyPage() {
               หน้าแรก
             </button>
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
                 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
@@ -284,13 +379,33 @@ export default function CompanyPage() {
                   pageNum = i + 1;
                 } else if (currentPage <= 3) {
                   pageNum = i + 1;
-                  if (i === 4) return <span key="dots" className="px-2">...</span>;
+                  if (i === 4)
+                    return (
+                      <span key="dots" className="px-2">
+                        ...
+                      </span>
+                    );
                 } else if (currentPage >= totalPages - 2) {
                   pageNum = totalPages - (4 - i);
-                  if (i === 0) return <span key="dots" className="px-2">...</span>;
+                  if (i === 0)
+                    return (
+                      <span key="dots" className="px-2">
+                        ...
+                      </span>
+                    );
                 } else {
-                  if (i === 0) return <span key="dots1" className="px-2">...</span>;
-                  if (i === 4) return <span key="dots2" className="px-2">...</span>;
+                  if (i === 0)
+                    return (
+                      <span key="dots1" className="px-2">
+                        ...
+                      </span>
+                    );
+                  if (i === 4)
+                    return (
+                      <span key="dots2" className="px-2">
+                        ...
+                      </span>
+                    );
                   pageNum = currentPage + (i - 2);
                 }
                 return (
@@ -298,9 +413,11 @@ export default function CompanyPage() {
                     key={i}
                     onClick={() => setCurrentPage(pageNum)}
                     className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
-                      ${currentPage === pageNum 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-gray-600 hover:bg-gray-50'}`}
+                      ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
                   >
                     {pageNum}
                   </button>
@@ -308,7 +425,9 @@ export default function CompanyPage() {
               })}
             </div>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
                 hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
@@ -342,84 +461,165 @@ export default function CompanyPage() {
                 </colgroup>
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       <div className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                          />
                         </svg>
                         ลำดับ
                       </div>
                     </th>
-                    <th 
-                      scope="col" 
+                    <th
+                      scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('name')}
                     >
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
                         </svg>
                         ชื่อบริษัท
                         {getSortIcon('name')}
                       </div>
                     </th>
-                    <th 
-                      scope="col" 
+                    <th
+                      scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('address')}
                     >
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                         ที่อยู่
                         {getSortIcon('address')}
                       </div>
                     </th>
-                    <th 
-                      scope="col" 
+                    <th
+                      scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('phone')}
                     >
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
                         </svg>
                         โทรศัพท์
                         {getSortIcon('phone')}
                       </div>
                     </th>
-                    <th 
-                      scope="col" 
+                    <th
+                      scope="col"
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('email')}
                     >
                       <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                         อีเมล
                         {getSortIcon('email')}
                       </div>
                     </th>
-                    <th 
-                      scope="col" 
+                    <th
+                      scope="col"
                       className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => requestSort('status')}
                     >
                       <div className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         สถานะ
                         {getSortIcon('status')}
                       </div>
                     </th>
-                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
                       <div className="flex items-center justify-center gap-2">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          />
                         </svg>
                         จัดการ
                       </div>
@@ -430,7 +630,10 @@ export default function CompanyPage() {
                   {mounted ? (
                     <>
                       {currentCompanies.map((company, index) => (
-                        <tr key={company.id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <tr
+                          key={company.id}
+                          className="hover:bg-gray-50 transition-colors duration-200"
+                        >
                           <td className="px-6 py-4 text-center">
                             <div className="text-sm text-gray-500">
                               {(startIndex + index + 1).toLocaleString('th-TH')}
@@ -438,41 +641,52 @@ export default function CompanyPage() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="relative">
-                              <div className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
-                                   title={company.name}>
+                              <div
+                                className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
+                                title={company.name}
+                              >
                                 {company.name}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="relative">
-                              <div className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
-                                   title={company.address}>
+                              <div
+                                className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
+                                title={company.address}
+                              >
                                 {company.address}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="relative">
-                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                   title={company.phone}>
+                              <div
+                                className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                title={company.phone}
+                              >
                                 {company.phone}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4">
                             <div className="relative">
-                              <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                   title={company.email}>
+                              <div
+                                className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                                title={company.email}
+                              >
                                 {company.email}
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center">
-                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                              ${company.status 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-red-100 text-red-800'}`}
+                            <span
+                              className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                              ${
+                                company.status
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                             >
                               {company.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
                             </span>
@@ -500,12 +714,27 @@ export default function CompanyPage() {
                           <td colSpan={8}>
                             <div className="flex flex-col items-center justify-center py-8">
                               <div className="w-16 h-16 mb-4 text-gray-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={1.5}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                  />
                                 </svg>
                               </div>
-                              <p className="text-xl font-medium text-gray-500 mb-1">ไม่พบข้อมูลที่ค้นหา</p>
-                              <p className="text-sm text-gray-400">ลองค้นหาด้วยคำค้นอื่น หรือลองตรวจสอบการสะกดอีกครั้ง</p>
+                              <p className="text-xl font-medium text-gray-500 mb-1">
+                                ไม่พบข้อมูลที่ค้นหา
+                              </p>
+                              <p className="text-sm text-gray-400">
+                                ลองค้นหาด้วยคำค้นอื่น
+                                หรือลองตรวจสอบการสะกดอีกครั้ง
+                              </p>
                             </div>
                           </td>
                         </tr>
@@ -531,33 +760,71 @@ export default function CompanyPage() {
                     hover:bg-gray-100/80 rounded-lg p-1"
                   onClick={closeModal}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
                 <h2 className="text-lg font-bold text-gray-900">
                   {editCompany ? (
                     <div className="flex items-center gap-2">
                       <div className="bg-yellow-100 p-1.5 rounded-lg">
-                        <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg
+                          className="w-5 h-5 text-yellow-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-gray-900">แก้ไขข้อมูลบริษัท</div>
-                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลที่ต้องการแก้ไข</div>
+                        <div className="text-lg font-bold text-gray-900">
+                          แก้ไขข้อมูลบริษัท
+                        </div>
+                        <div className="text-xs text-gray-500 font-normal">
+                          กรุณากรอกข้อมูลที่ต้องการแก้ไข
+                        </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <div className="bg-blue-100 p-1.5 rounded-lg">
-                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-lg font-bold text-gray-900">เพิ่มข้อมูลบริษัท</div>
-                        <div className="text-xs text-gray-500 font-normal">กรุณากรอกข้อมูลบริษัทใหม่</div>
+                        <div className="text-lg font-bold text-gray-900">
+                          เพิ่มข้อมูลบริษัท
+                        </div>
+                        <div className="text-xs text-gray-500 font-normal">
+                          กรุณากรอกข้อมูลบริษัทใหม่
+                        </div>
                       </div>
                     </div>
                   )}
@@ -565,7 +832,8 @@ export default function CompanyPage() {
               </div>
 
               {/* Modal Content - Scrollable */}
-              <div className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
+              <div
+                className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
                 [&::-webkit-scrollbar]:w-2
                 [&::-webkit-scrollbar-track]:bg-gray-100
                 [&::-webkit-scrollbar-track]:rounded-lg
@@ -576,13 +844,28 @@ export default function CompanyPage() {
                 hover:[&::-webkit-scrollbar-thumb]:bg-gray-400
                 dark:[&::-webkit-scrollbar-track]:bg-gray-700
                 dark:[&::-webkit-scrollbar-thumb]:bg-gray-500
-                dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400">
-                <form id="companyForm" onSubmit={handleSubmit} className="space-y-4">
+                dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-400"
+              >
+                <form
+                  id="companyForm"
+                  onSubmit={handleSubmit}
+                  className="space-y-4"
+                >
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
                         </svg>
                         ชื่อบริษัท
                       </div>
@@ -600,8 +883,18 @@ export default function CompanyPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                          />
                         </svg>
                         เลขประจำตัวผู้เสียภาษี
                       </div>
@@ -620,9 +913,24 @@ export default function CompanyPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
                         </svg>
                         ที่อยู่
                       </div>
@@ -640,8 +948,18 @@ export default function CompanyPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                          />
                         </svg>
                         โทรศัพท์
                       </div>
@@ -659,8 +977,18 @@ export default function CompanyPage() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
                         </svg>
                         อีเมล
                       </div>
@@ -684,8 +1012,18 @@ export default function CompanyPage() {
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
-                      <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
                       </svg>
                       เปิดใช้งาน
                     </label>
@@ -704,8 +1042,18 @@ export default function CompanyPage() {
                       focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                   >
                     <div className="flex items-center gap-1.5">
-                      <svg className="w-4 h-4 text-gray-500 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-4 h-4 text-gray-500 group-hover:text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                       ยกเลิก
                     </div>
@@ -721,15 +1069,35 @@ export default function CompanyPage() {
                     <div className="flex items-center gap-1.5">
                       {editCompany ? (
                         <>
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                           บันทึกการแก้ไข
                         </>
                       ) : (
                         <>
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          <svg
+                            className="w-4 h-4 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                            />
                           </svg>
                           เพิ่มบริษัท
                         </>
@@ -744,4 +1112,4 @@ export default function CompanyPage() {
       </div>
     </Container>
   );
-} 
+}

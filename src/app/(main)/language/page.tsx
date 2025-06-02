@@ -186,6 +186,14 @@ export default function LanguagePage() {
           <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
+                <colgroup>
+                  <col className="w-[5%]" />
+                  <col className="w-[25%]" />
+                  <col className="w-[25%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[15%]" />
+                </colgroup>
                 <thead className="bg-gray-50">
                   <tr>
                     <th
@@ -345,9 +353,9 @@ export default function LanguagePage() {
               <button
                 onClick={openAddModal}
                 className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-                                    hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                                    focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
-                                    active:scale-[0.98] whitespace-nowrap gap-2"
+                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                  active:scale-[0.98] whitespace-nowrap gap-2"
               >
                 <svg
                   className="w-5 h-5"
@@ -372,6 +380,14 @@ export default function LanguagePage() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
+              <colgroup>
+                <col className="w-[5%]" />
+                <col className="w-[25%]" />
+                <col className="w-[25%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+              </colgroup>
               <thead className="bg-gray-50">
                 <tr>
                   <th
