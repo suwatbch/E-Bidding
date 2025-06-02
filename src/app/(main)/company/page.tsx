@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Company, initialCompanies } from '@/app/model/dataCompany';
 import Container from '@/app/components/ui/Container';
-import TableLoading from '@/app/components/ui/TableLoading';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 interface FormData {
