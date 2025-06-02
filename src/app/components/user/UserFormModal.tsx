@@ -64,53 +64,6 @@ export default function UserFormModal({
     onSubmit(form);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      try {
-        // กำหนดชื่อไฟล์ใหม่ตาม user_id หรือเวลาปัจจุบัน
-        const fileName = editUser?.user_id 
-          ? `${editUser.user_id}-${Date.now()}.${file.name.split('.').pop()}`
-          : `new-user-${Date.now()}.${file.name.split('.').pop()}`;
-
-        // กำหนด path ตามประเภทการใช้งาน
-        const uploadPath = isFromProfileMenu ? '/uploads/profiles/' : '/uploads/users/';
-        
-        // แสดงรูปภาพชั่วคราวก่อนอัพโหลด
-        const tempImageUrl = URL.createObjectURL(file);
-        setForm(prev => ({
-          ...prev,
-          image: tempImageUrl
-        }));
-
-        // อัพโหลดรูปภาพผ่าน service
-        const result = await uploadImage({
-          file,
-          fileName,
-          uploadPath
-        });
-
-        if (result.success && result.imageUrl) {
-          // อัพเดท form state ด้วย path ของรูปภาพ (ไม่รวม API URL)
-          const imageUrl = result.imageUrl;
-          setForm(prev => ({
-            ...prev,
-            image: imageUrl.replace(process.env.NEXT_PUBLIC_API_URL || '', '')
-          }));
-        } else {
-          throw new Error(result.message || 'Upload failed');
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        // TODO: แสดง error message ให้ user ทราบ
-        setForm(prev => ({
-          ...prev,
-          image: undefined // ลบรูปภาพชั่วคราวออกถ้าอัพโหลดไม่สำเร็จ
-        }));
-      }
-    }
-  };
-
   const getModalTitle = () => {
     if (editUser) {
       if (isFromProfileMenu) {
@@ -187,7 +140,7 @@ export default function UserFormModal({
               <div className="relative w-24 h-24 rounded-full overflow-hidden bg-gray-100 border-2 border-blue-500/20">
                 {form.image ? (
                   <img 
-                    src={form.image.startsWith('blob:') || form.image.startsWith('http') 
+                    src={form.image.startsWith('http') 
                       ? form.image 
                       : form.image.startsWith('/') 
                         ? `${process.env.NEXT_PUBLIC_API_URL}${form.image}`
@@ -198,36 +151,28 @@ export default function UserFormModal({
                     onError={(e) => {
                       console.error('Error loading image:', form.image);
                       const target = e.target as HTMLImageElement;
-                      target.onerror = null; // prevent infinite loop
-                      target.src = ''; // clear the broken image
-                      // You might want to set a default image here
+                      target.src = '/images/default-avatar.png'; // ใส่รูป default ถ้าโหลดรูปไม่สำเร็จ
                     }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
                     <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 )}
               </div>
-              <label className="cursor-pointer text-sm text-blue-600 hover:text-blue-700 transition-colors">
-                <span className="flex items-center gap-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  อัพโหลดรูปภาพ
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </label>
             </div>
+            <label className="flex justify-center cursor-pointer text-sm text-blue-600 hover:text-blue-700 transition-colors mt-2">
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                อัพโหลดรูปภาพ
+              </span>
+            </label>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <div className="flex items-center gap-2">
