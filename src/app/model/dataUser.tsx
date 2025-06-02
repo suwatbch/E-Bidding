@@ -53,7 +53,7 @@ export interface User {
       created_dt: '2024-01-01T00:00:00.000Z',
       updated_dt: '2024-01-01T00:00:00.000Z',
       login_count: 0,
-      image: '/1-1748598627932.jpg'
+      image: 'http://localhost:3000/uploads/1-1748598627932.jpg'
     },
     {
       user_id: 3,

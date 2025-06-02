@@ -423,17 +423,16 @@ export default function Navbar() {
                     <div className="transform group-hover:scale-110 transition duration-300">
                       <NavProfileIcon />
                     </div>
-                    <span className="transform group-hover:scale-105">{translate('profile')}</span>
-                    <div className="transform group-hover:scale-110 transition duration-300">
+                    <div className="flex flex-col items-start ml-1">
+                      <span className="transform group-hover:scale-105 text-sm">{profile?.fullname || 'ไม่ระบุชื่อ'}</span>
+                      <span className="transform group-hover:scale-105 text-xs opacity-80">{profile?.email || 'ไม่ระบุอีเมล'}</span>
+                    </div>
+                    <div className="transform group-hover:scale-110 transition duration-300 ml-1">
                       <NavArrowDownIcon className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                     </div>
                   </button>
                 }
               >
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-50/90 via-blue-50/70 to-white/80 border-b border-blue-100/50">
-                  <p className="text-sm font-medium text-gray-900">{profile?.fullname || 'ไม่ระบุชื่อ'}</p>
-                  <p className="text-xs text-gray-500">{profile?.email || 'ไม่ระบุอีเมล'}</p>
-                </div>
                 <button
                   onClick={handleEditProfile}
                   className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"

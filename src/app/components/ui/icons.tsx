@@ -140,7 +140,7 @@ export const NavNotificationIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const NavProfileIcon = () => (
-  <AccountCircle style={{ width: '20px', height: '20px' }} />
+  <AccountCircle style={{ width: '38px', height: '38px' }} />
 );
 
 export const NavArrowDownIcon = ({ className }: IconProps) => (
