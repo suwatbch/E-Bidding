@@ -20,7 +20,7 @@ export default function CompanyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useLocalStorage('companyPerPage', 10);
+  const [perPage, setPerPage] = useLocalStorage('companyPerPage', 5);
   const [currentPage, setCurrentPage] = useState(1);
   const [mounted, setMounted] = useState(false);
   const [sortConfig, setSortConfig] = useState<{
