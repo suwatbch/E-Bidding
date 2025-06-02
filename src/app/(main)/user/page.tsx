@@ -344,28 +344,32 @@ export default function UserPage() {
                   </svg>
                 </div>
               </div>
-              <button
-                onClick={openAddModal}
-                className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
-                  active:scale-[0.98] whitespace-nowrap gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              <div>
+                <button
+                  onClick={openAddModal}
+                  className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                    hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                    focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                    active:scale-[0.98] whitespace-nowrap gap-2"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                  />
-                </svg>
-                เพิ่มผู้ใช้งาน
-              </button>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                    <span>เพิ่มผู้ใช้งาน</span>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -522,7 +526,7 @@ export default function UserPage() {
                       scope="col"
                       className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      ลำดับ
+                      <div>ลำดับ</div>
                     </th>
                     <th
                       scope="col"
@@ -543,7 +547,7 @@ export default function UserPage() {
                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                           />
                         </svg>
-                        ชื่อ-นามสกุล
+                        <span>ชื่อ-นามสกุล</span>
                         {getSortIcon('fullname')}
                       </div>
                     </th>
@@ -572,7 +576,7 @@ export default function UserPage() {
                             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                           />
                         </svg>
-                        ที่อยู่
+                        <span>ที่อยู่</span>
                         {getSortIcon('address')}
                       </div>
                     </th>
@@ -595,7 +599,7 @@ export default function UserPage() {
                             d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                           />
                         </svg>
-                        โทรศัพท์
+                        <span>โทรศัพท์</span>
                         {getSortIcon('phone')}
                       </div>
                     </th>
@@ -618,7 +622,7 @@ export default function UserPage() {
                             d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                           />
                         </svg>
-                        อีเมล
+                        <span>อีเมล</span>
                         {getSortIcon('email')}
                       </div>
                     </th>
@@ -641,7 +645,7 @@ export default function UserPage() {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        สถานะ
+                        <span>สถานะ</span>
                         {getSortIcon('status')}
                       </div>
                     </th>
@@ -664,7 +668,7 @@ export default function UserPage() {
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        ประเภท
+                        <span>ประเภท</span>
                         {getSortIcon('type')}
                       </div>
                     </th>
@@ -686,7 +690,7 @@ export default function UserPage() {
                             d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                           />
                         </svg>
-                        จัดการ
+                        <span>จัดการ</span>
                       </div>
                     </th>
                   </tr>
@@ -704,38 +708,42 @@ export default function UserPage() {
                     <tr>
                       <td colSpan={8}>
                         <div className="text-center py-8">
-                          <div className="w-16 h-16 mb-4 text-gray-300">
-                            <svg
-                              className="w-full h-full"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                              />
-                            </svg>
+                          <div className="flex justify-center">
+                            <div className="w-16 h-16 mb-4 text-gray-300">
+                              <svg
+                                className="w-full h-full"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                                />
+                              </svg>
+                            </div>
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-1">
-                            ไม่พบข้อมูล
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            ไม่พบข้อมูลที่ตรงกับการค้นหา
-                          </p>
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-1">
+                              ไม่พบข้อมูล
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              ไม่พบข้อมูลที่ตรงกับการค้นหา
+                            </p>
+                          </div>
                         </div>
                       </td>
                     </tr>
                   ) : (
-                    <>
-                      {currentUsers.map((user, index) => (
-                        <tr
-                          key={user.user_id}
-                          className="hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          <td className="px-6 py-4 text-center">
+                    currentUsers.map((user, index) => (
+                      <tr
+                        key={user.user_id}
+                        className="hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        <td className="px-6 py-4 text-center">
+                          <div>
                             {user.is_locked ? (
                               <div className="flex justify-center items-center text-red-400">
                                 <LockTableIcon />
@@ -747,50 +755,52 @@ export default function UserPage() {
                                 )}
                               </div>
                             )}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="relative">
-                              <div
-                                className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
-                                title={user.fullname}
-                              >
-                                {user.fullname}
-                              </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div
+                              className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
+                              title={user.fullname}
+                            >
+                              {user.fullname}
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="relative">
-                              <div
-                                className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                title={user.address || '-'}
-                              >
-                                {user.address || '-'}
-                              </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div
+                              className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                              title={user.address || '-'}
+                            >
+                              {user.address || '-'}
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="relative">
-                              <div
-                                className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                title={user.phone}
-                              >
-                                {user.phone}
-                              </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div
+                              className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                              title={user.phone}
+                            >
+                              {user.phone}
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="relative">
-                              <div
-                                className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
-                                title={user.email}
-                              >
-                                {user.email}
-                              </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="relative">
+                            <div
+                              className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                              title={user.email}
+                            >
+                              {user.email}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              <span
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <div>
+                              <div
                                 className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 ${
                                   user.status
@@ -799,11 +809,13 @@ export default function UserPage() {
                                 }`}
                               >
                                 {user.status ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                              </span>
+                              </div>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div>
+                            <div
                               className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                               ${
                                 user.type === 'admin'
@@ -812,9 +824,11 @@ export default function UserPage() {
                               }`}
                             >
                               {user.type === 'admin' ? 'ผู้ดูแล' : 'ผู้ใช้งาน'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center space-x-1">
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-center space-x-1">
+                          <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEdit(user)}
                               className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
@@ -829,10 +843,10 @@ export default function UserPage() {
                             >
                               ลบ
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>
