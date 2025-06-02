@@ -314,7 +314,7 @@ export default function UserPage() {
                   placeholder="ค้นหาผู้ใช้งาน..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-10 pl-10 pr-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
+                  className="w-full h-11 pl-12 pr-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
                     focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -333,9 +333,10 @@ export default function UserPage() {
               </div>
               <button
                 onClick={openAddModal}
-                className="inline-flex items-center h-10 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
                   hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                  focus:ring-offset-2 shadow-md whitespace-nowrap gap-2 transition-colors duration-200"
+                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                  active:scale-[0.98] whitespace-nowrap gap-2"
               >
                 <svg
                   className="w-5 h-5"
@@ -510,22 +511,7 @@ export default function UserPage() {
                       scope="col"
                       className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="w-8 h-8"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                          />
-                        </svg>
-                        ลำดับ
-                      </div>
+                      ลำดับ
                     </th>
                     <th
                       scope="col"
@@ -718,7 +704,7 @@ export default function UserPage() {
                           <td className="px-6 py-4">
                             <div className="relative">
                               <div
-                                className="text-sm text-gray-900 truncate cursor-help hover:text-blue-600"
+                                className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
                                 title={user.fullname}
                               >
                                 {user.fullname}
