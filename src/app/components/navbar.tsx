@@ -436,7 +436,7 @@ export default function Navbar() {
                       <span className="transform group-hover:scale-105 text-xs text-white/80">{profile?.email || 'ไม่ระบุอีเมล'}</span>
                     </div>
                     <div className="transform group-hover:scale-110 transition duration-300 ml-1">
-                      <NavArrowDownIcon className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+                      <NavArrowDownIcon className={`text-white transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
                     </div>
                   </button>
                 }

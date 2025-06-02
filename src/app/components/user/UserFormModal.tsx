@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { User } from '@/app/model/dataUser';
-import { uploadImage } from '@/app/services/uploadImage';
 
 interface FormData {
   username: string;

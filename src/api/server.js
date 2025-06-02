@@ -3,7 +3,6 @@ const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const auctionRouter = require('./controllers/auctions');
-const uploadRouter = require('./controllers/uploadImage');
 
 const app = express();
 
@@ -79,7 +78,6 @@ io.on('connection', (socket) => {
 
 // API Routes
 app.use('/api/auctions', auctionRouter);
-app.use('/api/upload', uploadRouter);
 
 // Health check route
 app.get('/api/health', (req, res) => {
