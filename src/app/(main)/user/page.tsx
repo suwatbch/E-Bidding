@@ -22,6 +22,7 @@ interface FormData {
   status: boolean;
   is_locked: boolean;
   is_profile: boolean;
+  image?: string;
 }
 
 const initialForm: FormData = {
@@ -36,7 +37,8 @@ const initialForm: FormData = {
   type: 'user',
   status: true,
   is_locked: false,
-  is_profile: false
+  is_profile: false,
+  image: ''
 };
 
 export default function UserPage() {
@@ -68,10 +70,13 @@ export default function UserPage() {
   }, []);
 
   // Filter users based on search term
-  const filteredUsers = users.filter(user =>
-    user.fullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
+    return user.fullname.toLowerCase().includes(searchTermLower) ||
+      (user.address || '').toLowerCase().includes(searchTermLower) ||
+      user.phone.toString().replace(/\s/g, '').includes(searchTermLower) ||
+      user.email.toLowerCase().includes(searchTermLower);
+  });
 
   // Sort users
   const sortedUsers = React.useMemo(() => {
@@ -162,7 +167,8 @@ export default function UserPage() {
       type: user.type,
       status: user.status,
       is_locked: user.is_locked,
-      is_profile: isCurrentProfile
+      is_profile: isCurrentProfile,
+      image: user.image || ''
     });
     setIsModalOpen(true);
   };

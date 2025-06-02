@@ -41,11 +41,13 @@ export default function CompanyPage() {
   }, []);
 
   // Filter companies based on search term
-  const filteredCompanies = companies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.tax_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCompanies = companies.filter(company => {
+    const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
+    return company.name.toLowerCase().includes(searchTermLower) ||
+      company.address.toLowerCase().includes(searchTermLower) ||
+      company.phone.toString().replace(/\s/g, '').includes(searchTermLower) ||
+      company.email.toLowerCase().includes(searchTermLower);
+  });
 
   // Sort companies
   const sortedCompanies = React.useMemo(() => {

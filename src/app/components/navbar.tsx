@@ -46,6 +46,7 @@ interface FormData {
   status: boolean;
   is_locked: boolean;
   is_profile: boolean;
+  image?: string;
 }
 
 const initialForm: FormData = {
@@ -154,7 +155,8 @@ export default function Navbar() {
         type: profile.type,
         status: profile.status,
         is_locked: profile.is_locked,
-        is_profile: true
+        is_profile: true,
+        image: profile.image || ''
       });
       setIsModalOpen(true);
     }
@@ -175,7 +177,8 @@ export default function Navbar() {
         is_locked: formData.is_locked,
         language_code: formData.language_code,
         updated_dt: new Date().toISOString(),
-        is_profile: true
+        is_profile: true,
+        image: formData.image
       };
 
       // อัพเดทรหัสผ่านเฉพาะเมื่อมีการกรอกข้อมูล
