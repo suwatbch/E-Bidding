@@ -91,6 +91,7 @@ export const translations: Translations = {
     data_management: 'จัดการข้อมูล',
     company_info: 'ข้อมูลบริษัท',
     user_info: 'ข้อมูลผู้ใช้งาน',
+    language_info: 'ข้อมูลภาษา',
   },
   en: {
     // Auth

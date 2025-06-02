@@ -181,6 +181,10 @@ export const NavLanguageIcon = ({ className = "" }: IconProps) => (
   <LanguageIcon style={{ width: '18px', height: '18px' }} className={className} />
 );
 
+export const NavLanguageManageIcon = ({ className = "" }: IconProps) => (
+  <LanguageIcon style={{ width: '20px', height: '20px' }} className={className} />
+);
+
 // Additional icons can be added here as needed 
 
 export function NavSaveIcon({ className = "w-5 h-5" }: IconProps) {

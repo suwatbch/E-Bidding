@@ -18,6 +18,7 @@ import {
   NavCompanyIcon,
   NavUserIcon,
   NavHomeIcon,
+  NavLanguageManageIcon,
 } from '@/app/components/ui/icons';
 import { 
   connectSocket, 
@@ -387,6 +388,22 @@ export default function Navbar() {
                       ? 'text-blue-700 font-medium'
                       : 'text-gray-700 group-hover:text-blue-600'
                   }`}>{translate('user_info')}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsDataOpen(false);
+                    router.push('/language');
+                  }}
+                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                >
+                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                    <NavLanguageManageIcon className={isActivePage('/language') ? 'text-blue-700' : 'text-gray-700'} />
+                  </div>
+                  <span className={`transform group-hover:scale-105 ${
+                    isActivePage('/language')
+                      ? 'text-blue-700 font-medium'
+                      : 'text-gray-700 group-hover:text-blue-600'
+                  }`}>{translate('language_info')}</span>
                 </button>
               </Dropdown>
 
