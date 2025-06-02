@@ -236,7 +236,22 @@ export default function LanguagePage() {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    ลำดับ
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                        />
+                      </svg>
+                      ลำดับ
+                    </div>
                   </th>
                   <th
                     scope="col"
@@ -354,45 +369,86 @@ export default function LanguagePage() {
                       </div>
                     </td>
                   </tr>
+                ) : filteredLanguages.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>
+                      <div className="text-center py-8">
+                        <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
+                          <svg
+                            className="w-full h-full"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                            />
+                          </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">
+                          ไม่พบข้อมูล
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          ไม่พบข้อมูลที่ตรงกับการค้นหา
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
                 ) : (
                   filteredLanguages.map((language, index) => (
-                    <tr key={language.language_code}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                        {index + 1}
+                    <tr
+                      key={language.language_code}
+                      className="hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <td className="px-6 py-4 text-center">
+                        <div className="text-sm text-gray-500">{index + 1}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <span className="inline-flex items-center">
-                            <span className="mr-2">{language.flag}</span>
-                            {language.language_code.toUpperCase()} -{' '}
+                      <td className="px-6 py-4">
+                        <div className="relative">
+                          <div className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600">
+                            <span className="inline-flex items-center">
+                              <span className="mr-2">{language.flag}</span>
+                              {language.language_code.toUpperCase()} -{' '}
+                              {language.language_name}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="relative">
+                          <div className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600">
                             {language.language_name}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="relative">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              language.is_default
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}
+                          >
+                            {language.is_default ? 'ใช่' : 'ไม่'}
                           </span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {language.language_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            language.is_default
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {language.is_default ? 'ใช่' : 'ไม่'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span
-                          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            language.status === 1
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {language.status === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                        </span>
+                      <td className="px-6 py-4">
+                        <div className="relative">
+                          <span
+                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              language.status === 1
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {language.status === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-center items-center space-x-2">
@@ -425,11 +481,9 @@ export default function LanguagePage() {
         {/* Language Text Table */}
         <TransectionLanguage
           onEdit={(key) => {
-            // Handle edit
             console.log('Edit:', key);
           }}
           onDelete={(key) => {
-            // Handle delete
             if (window.confirm('คุณต้องการลบข้อความนี้ใช่หรือไม่?')) {
               console.log('Delete:', key);
             }
@@ -440,14 +494,15 @@ export default function LanguagePage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
               <h2 className="text-xl font-semibold text-gray-900">
                 {editLanguage ? 'แก้ไขภาษา' : 'เพิ่มภาษา'}
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-gray-500 transition-colors duration-200"
               >
                 <svg
                   className="w-6 h-6"
@@ -465,120 +520,235 @@ export default function LanguagePage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="language_code"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  รหัสภาษา
-                </label>
-                <input
-                  type="text"
-                  name="language_code"
-                  id="language_code"
-                  value={form.language_code}
-                  onChange={handleChange}
-                  maxLength={5}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:border-transparent"
-                  placeholder="th"
-                  required
-                  disabled={editLanguage !== null}
-                />
-              </div>
+            {/* Modal Body - Scrollable */}
+            <div className="p-5">
+              <form
+                id="languageForm"
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                        />
+                      </svg>
+                      รหัสภาษา
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="language_code"
+                    value={form.language_code}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent"
+                    placeholder="th"
+                    required
+                    disabled={editLanguage !== null}
+                  />
+                </div>
 
-              <div>
-                <label
-                  htmlFor="language_name"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  ชื่อภาษา
-                </label>
-                <input
-                  type="text"
-                  name="language_name"
-                  id="language_name"
-                  value={form.language_name}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:border-transparent"
-                  placeholder="ภาษาไทย"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
+                        />
+                      </svg>
+                      ชื่อภาษา
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="language_name"
+                    value={form.language_name}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent"
+                    placeholder="ภาษาไทย"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label
-                  htmlFor="flag"
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  ธงชาติ (Emoji)
-                </label>
-                <input
-                  type="text"
-                  name="flag"
-                  id="flag"
-                  value={form.flag}
-                  onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                    focus:ring-blue-500 focus:border-transparent"
-                  placeholder="🇹🇭"
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                        />
+                      </svg>
+                      ธงชาติ (Emoji)
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="flag"
+                    value={form.flag}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent"
+                    placeholder="🇹🇭"
+                  />
+                </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="is_default"
-                  id="is_default"
-                  checked={form.is_default}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="is_default"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  ตั้งเป็นค่าเริ่มต้น
-                </label>
-              </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="is_default"
+                    checked={form.is_default}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    ตั้งเป็นค่าเริ่มต้น
+                  </label>
+                </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="status"
-                  id="status"
-                  checked={form.status === 1}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="status"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  เปิดใช้งาน
-                </label>
-              </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="status"
+                    checked={form.status === 1}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    เปิดใช้งาน
+                  </label>
+                </div>
+              </form>
+            </div>
 
-              <div className="flex justify-end gap-4 mt-6">
+            {/* Modal Footer - Fixed */}
+            <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg 
-                    hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
+                    rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
+                    focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                 >
-                  ยกเลิก
+                  <div className="flex items-center gap-1.5">
+                    <svg
+                      className="w-4 h-4 text-gray-500 group-hover:text-gray-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    ยกเลิก
+                  </div>
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg 
-                    hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  form="languageForm"
+                  className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
+                    border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                    transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  {editLanguage ? 'บันทึกการแก้ไข' : 'เพิ่มภาษา'}
+                  <div className="flex items-center gap-1.5">
+                    {editLanguage ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        บันทึกการแก้ไข
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        เพิ่มภาษา
+                      </>
+                    )}
+                  </div>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

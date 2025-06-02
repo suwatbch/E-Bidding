@@ -397,14 +397,14 @@ export default function Navbar() {
                       setIsDataOpen(false);
                       router.push('/company');
                     }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300 mr-2">
                       <NavCompanyIcon
                         className={
                           isActivePage('/company')
                             ? 'text-blue-700'
-                            : 'text-gray-700'
+                            : 'text-gray-700 group-hover:text-blue-600'
                         }
                       />
                     </div>
@@ -423,14 +423,14 @@ export default function Navbar() {
                       setIsDataOpen(false);
                       router.push('/user');
                     }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300 mr-2">
                       <NavUserIcon
                         className={
                           isActivePage('/user')
                             ? 'text-blue-700'
-                            : 'text-gray-700'
+                            : 'text-gray-700 group-hover:text-blue-600'
                         }
                       />
                     </div>
@@ -449,14 +449,14 @@ export default function Navbar() {
                       setIsDataOpen(false);
                       router.push('/language');
                     }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300 mr-2">
                       <NavLanguageManageIcon
                         className={
                           isActivePage('/language')
                             ? 'text-blue-700'
-                            : 'text-gray-700'
+                            : 'text-gray-700 group-hover:text-blue-600'
                         }
                       />
                     </div>
@@ -555,7 +555,7 @@ export default function Navbar() {
                 <div className="py-1">
                   <button
                     onClick={handleEditProfile}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300 mr-2">
                       <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
@@ -566,7 +566,7 @@ export default function Navbar() {
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-red-50/50"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300 mr-2">
                       <NavLogoutIcon className="text-red-600" />
