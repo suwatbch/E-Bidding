@@ -43,6 +43,7 @@ const initialForm: FormData = {
 
 export default function UserPage() {
   const { users, setUsers, updateUser, profile, updateProfile } = useUser();
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,8 +62,21 @@ export default function UserPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // จำลองการโหลดข้อมูลจริง
+        setUsers(initialUsers);
+      } catch (error) {
+        console.error('Error loading users:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
     setMounted(true);
-  }, []);
+  }, [setUsers]);
 
   // Filter users based on search term
   const filteredUsers = users.filter((user) => {
@@ -681,7 +695,43 @@ export default function UserPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {mounted ? (
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={8}>
+                        <div className="flex justify-center items-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={8}>
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 mb-4 text-gray-300">
+                            <svg
+                              className="w-full h-full"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                              />
+                            </svg>
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-1">
+                            ไม่พบข้อมูล
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            ไม่พบข้อมูลที่ตรงกับการค้นหา
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
                     <>
                       {currentUsers.map((user, index) => (
                         <tr
@@ -785,39 +835,7 @@ export default function UserPage() {
                           </td>
                         </tr>
                       ))}
-                      {currentUsers.length === 0 && (
-                        <tr>
-                          <td colSpan={8}>
-                            <div className="flex flex-col items-center justify-center py-8">
-                              <div className="w-16 h-16 mb-4 text-gray-300">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="currentColor"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1.5}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                  />
-                                </svg>
-                              </div>
-                              <p className="text-xl font-medium text-gray-500 mb-1">
-                                ไม่พบข้อมูลที่ค้นหา
-                              </p>
-                              <p className="text-sm text-gray-400">
-                                ลองค้นหาด้วยคำค้นอื่น
-                                หรือลองตรวจสอบการสะกดอีกครั้ง
-                              </p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                     </>
-                  ) : (
-                    <TableLoading />
                   )}
                 </tbody>
               </table>
