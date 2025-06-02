@@ -10,7 +10,7 @@ export interface Language {
 export const languages: Language[] = [
   {
     code: 'th',
-    name: 'ภาษาไทย',
+    name: 'ไทย',
     isDefault: true,
     status: 1
   },
