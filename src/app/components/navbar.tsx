@@ -391,84 +391,86 @@ export default function Navbar() {
                   </button>
                 }
               >
-                <button
-                  onClick={() => {
-                    setIsDataOpen(false);
-                    router.push('/company');
-                  }}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                    <NavCompanyIcon
-                      className={
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      setIsDataOpen(false);
+                      router.push('/company');
+                    }}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavCompanyIcon
+                        className={
+                          isActivePage('/company')
+                            ? 'text-blue-700'
+                            : 'text-gray-700'
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`transform group-hover:scale-105 ${
                         isActivePage('/company')
-                          ? 'text-blue-700'
-                          : 'text-gray-700'
-                      }
-                    />
-                  </div>
-                  <span
-                    className={`transform group-hover:scale-105 ${
-                      isActivePage('/company')
-                        ? 'text-blue-700 font-medium'
-                        : 'text-gray-700 group-hover:text-blue-600'
-                    }`}
+                          ? 'text-blue-700 font-medium'
+                          : 'text-gray-700 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {translate('company_info')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsDataOpen(false);
+                      router.push('/user');
+                    }}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
                   >
-                    {translate('company_info')}
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    setIsDataOpen(false);
-                    router.push('/user');
-                  }}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                    <NavUserIcon
-                      className={
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavUserIcon
+                        className={
+                          isActivePage('/user')
+                            ? 'text-blue-700'
+                            : 'text-gray-700'
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`transform group-hover:scale-105 ${
                         isActivePage('/user')
-                          ? 'text-blue-700'
-                          : 'text-gray-700'
-                      }
-                    />
-                  </div>
-                  <span
-                    className={`transform group-hover:scale-105 ${
-                      isActivePage('/user')
-                        ? 'text-blue-700 font-medium'
-                        : 'text-gray-700 group-hover:text-blue-600'
-                    }`}
+                          ? 'text-blue-700 font-medium'
+                          : 'text-gray-700 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {translate('user_info')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsDataOpen(false);
+                      router.push('/language');
+                    }}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
                   >
-                    {translate('user_info')}
-                  </span>
-                </button>
-                <button
-                  onClick={() => {
-                    setIsDataOpen(false);
-                    router.push('/language');
-                  }}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                    <NavLanguageManageIcon
-                      className={
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavLanguageManageIcon
+                        className={
+                          isActivePage('/language')
+                            ? 'text-blue-700'
+                            : 'text-gray-700'
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`transform group-hover:scale-105 ${
                         isActivePage('/language')
-                          ? 'text-blue-700'
-                          : 'text-gray-700'
-                      }
-                    />
-                  </div>
-                  <span
-                    className={`transform group-hover:scale-105 ${
-                      isActivePage('/language')
-                        ? 'text-blue-700 font-medium'
-                        : 'text-gray-700 group-hover:text-blue-600'
-                    }`}
-                  >
-                    {translate('language_info')}
-                  </span>
-                </button>
+                          ? 'text-blue-700 font-medium'
+                          : 'text-gray-700 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {translate('language_info')}
+                    </span>
+                  </button>
+                </div>
               </Dropdown>
 
               {/* <Link 
@@ -499,19 +501,19 @@ export default function Navbar() {
                 trigger={
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="group flex items-center gap-2 px-1.5 py-2 rounded-xl text-sm transition-all duration-300"
+                    className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 text-white hover:bg-white/10"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300">
                       {profile?.image ? (
                         <img
                           src={profile.image}
                           alt={profile.fullname}
-                          className="w-9 h-9 rounded-full object-cover"
+                          className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center">
                           <svg
-                            className="w-9 h-9 text-white"
+                            className="w-8 h-8 text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 26 26"
@@ -526,50 +528,54 @@ export default function Navbar() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col min-w-[180px] max-w-[250px]">
+                    <div className="flex flex-col items-start">
                       <span
-                        className="text-left transform group-hover:scale-105 text-sm text-white truncate"
+                        className="text-left transform group-hover:scale-105 text-sm text-white truncate max-w-[180px]"
                         title={profile?.fullname || 'ไม่ระบุชื่อ'}
                       >
                         {profile?.fullname || 'ไม่ระบุชื่อ'}
                       </span>
                       <span
-                        className="text-left transform group-hover:scale-105 text-xs text-white/80 truncate"
+                        className="text-left transform group-hover:scale-105 text-xs text-white/80 truncate max-w-[180px]"
                         title={profile?.email || 'ไม่ระบุอีเมล'}
                       >
                         {profile?.email || 'ไม่ระบุอีเมล'}
                       </span>
                     </div>
-                    <NavArrowDownIcon
-                      className={`text-white transition-transform duration-200 ${
-                        isProfileOpen ? 'rotate-180' : ''
-                      }`}
-                    />
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavArrowDownIcon
+                        className={`text-white transition-transform duration-200 ${
+                          isProfileOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
                   </button>
                 }
               >
-                <button
-                  onClick={handleEditProfile}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                    <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
-                  </div>
-                  <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
-                    {translate('edit_profile')}
-                  </span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
-                >
-                  <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                    <NavLogoutIcon className="text-red-600" />
-                  </div>
-                  <span className="transform group-hover:scale-105 text-red-600">
-                    {translate('logout')}
-                  </span>
-                </button>
+                <div className="py-1">
+                  <button
+                    onClick={handleEditProfile}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
+                    </div>
+                    <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
+                      {translate('edit_profile')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300"
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavLogoutIcon className="text-red-600" />
+                    </div>
+                    <span className="transform group-hover:scale-105 text-red-600">
+                      {translate('logout')}
+                    </span>
+                  </button>
+                </div>
               </Dropdown>
             </div>
 

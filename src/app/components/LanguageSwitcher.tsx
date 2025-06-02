@@ -19,7 +19,7 @@ export default function LanguageSwitcher({
     login:
       'group flex items-center gap-1.5 px-2 py-1.5 text-gray-700 hover:text-blue-600 text-sm transition-all duration-300',
     navbar:
-      'group flex items-center justify-between gap-1.5 px-4 py-2.5 rounded-lg text-sm transition-all duration-300 md:text-white md:hover:bg-white/10 text-gray-700 hover:bg-blue-50/50 w-full md:w-auto',
+      'group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 md:text-white md:hover:bg-white/10 text-gray-700 hover:bg-blue-50/50 w-full md:w-auto',
   };
 
   return (
@@ -32,7 +32,7 @@ export default function LanguageSwitcher({
           onClick={() => setIsOpen(!isOpen)}
           className={buttonStyles[variant]}
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <div
               className={`transform group-hover:scale-110 transition duration-300 ${
                 variant === 'navbar' ? 'md:text-white text-gray-700' : ''
@@ -48,17 +48,17 @@ export default function LanguageSwitcher({
               {languages.find((lang) => lang.code === currentLang)?.name ||
                 currentLang}
             </span>
-          </div>
-          <div
-            className={`transform group-hover:scale-110 transition duration-300 ${
-              variant === 'navbar' ? 'md:text-white text-gray-700' : ''
-            }`}
-          >
-            <NavArrowDownIcon
-              className={`w-5 h-5 transition-transform duration-200 ${
-                isOpen ? 'rotate-180' : ''
+            <div
+              className={`transform group-hover:scale-110 transition duration-300 ${
+                variant === 'navbar' ? 'md:text-white text-gray-700' : ''
               }`}
-            />
+            >
+              <NavArrowDownIcon
+                className={`w-5 h-5 transition-transform duration-200 ${
+                  isOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </div>
           </div>
         </button>
       }
