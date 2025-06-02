@@ -328,25 +328,9 @@ export default function Navbar() {
                 </div>
                 <span className="transform group-hover:scale-105">{translate('my_auctions')}</span>
               </Link>
-              <Link 
-                href="/alerts" 
-                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                  isActivePage('/alerts') 
-                    ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
-                    : 'text-white hover:bg-white/10'
-                } relative`}
-                onClick={() => setNotificationCount(0)}
-              >
-                <div className="transform group-hover:scale-110 transition duration-300">
-                  <NavNotificationIcon />
-                </div>
-                <span className="transform group-hover:scale-105">{translate('notifications')}</span>
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center shadow-md animate-pulse">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link>
+
+              {/* Language Switcher */}
+              <LanguageSwitcher variant="navbar" />
 
               {/* Data Management Dropdown */}
               <Dropdown
@@ -406,8 +390,25 @@ export default function Navbar() {
                 </button>
               </Dropdown>
 
-              {/* Language Switcher */}
-              <LanguageSwitcher variant="navbar" />
+              {/* <Link 
+                href="/alerts" 
+                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
+                  isActivePage('/alerts') 
+                    ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
+                    : 'text-white hover:bg-white/10'
+                } relative`}
+                onClick={() => setNotificationCount(0)}
+              >
+                <div className="transform group-hover:scale-110 transition duration-300">
+                  <NavNotificationIcon />
+                </div>
+                <span className="transform group-hover:scale-105">{translate('notifications')}</span>
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center shadow-md animate-pulse">
+                    {notificationCount}
+                  </span>
+                )}
+              </Link> */}
 
               {/* Profile Dropdown */}
               <Dropdown
@@ -417,18 +418,22 @@ export default function Navbar() {
                 trigger={
                   <button
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                      isActivePage('/profile')
-                        ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
-                        : 'text-white hover:bg-white/10'
-                    }`}
+                    className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300">
-                      <NavProfileIcon />
+                      {profile?.image ? (
+                        <img 
+                          src={profile.image} 
+                          alt={profile.fullname}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                      ) : (
+                        <NavProfileIcon />
+                      )}
                     </div>
                     <div className="flex flex-col items-start ml-1">
-                      <span className="transform group-hover:scale-105 text-sm">{profile?.fullname || 'ไม่ระบุชื่อ'}</span>
-                      <span className="transform group-hover:scale-105 text-xs opacity-80">{profile?.email || 'ไม่ระบุอีเมล'}</span>
+                      <span className="transform group-hover:scale-105 text-sm text-white">{profile?.fullname || 'ไม่ระบุชื่อ'}</span>
+                      <span className="transform group-hover:scale-105 text-xs text-white/80">{profile?.email || 'ไม่ระบุอีเมล'}</span>
                     </div>
                     <div className="transform group-hover:scale-110 transition duration-300 ml-1">
                       <NavArrowDownIcon className={`transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
