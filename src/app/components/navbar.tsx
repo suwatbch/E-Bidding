@@ -29,7 +29,7 @@ import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
 import Container from './ui/Container';
-import UserFormModal from './user/UserFormModal';
+import UserFormModal from './user/FormDataUser';
 import { User } from '@/app/model/dataUser';
 import { useUser } from '@/app/contexts/UserContext';
 

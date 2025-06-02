@@ -6,7 +6,7 @@ import Container from '@/app/components/ui/Container';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import TableLoading from '@/app/components/ui/TableLoading';
 import { LockTableIcon } from '@/app/components/ui/icons';
-import UserFormModal from '@/app/components/user/UserFormModal';
+import UserFormModal from '@/app/components/user/FormDataUser';
 import { useUser } from '@/app/contexts/UserContext';
 
 interface FormData {
