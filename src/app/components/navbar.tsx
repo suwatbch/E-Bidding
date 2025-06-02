@@ -509,10 +509,7 @@ export default function Navbar() {
                           className="w-9 h-9 rounded-full object-cover"
                         />
                       ) : (
-                        <div
-                          className="w-9 h-9 rounded-full flex items-center justify-center"
-                          style={{ margin: '0.9px' }}
-                        >
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center">
                           <svg
                             className="w-9 h-9 text-white"
                             fill="none"
@@ -529,11 +526,17 @@ export default function Navbar() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col min-w-[120px]">
-                      <span className="text-left transform group-hover:scale-105 text-sm text-white truncate">
+                    <div className="flex flex-col min-w-[180px] max-w-[250px]">
+                      <span
+                        className="text-left transform group-hover:scale-105 text-sm text-white truncate"
+                        title={profile?.fullname || 'ไม่ระบุชื่อ'}
+                      >
                         {profile?.fullname || 'ไม่ระบุชื่อ'}
                       </span>
-                      <span className="text-left transform group-hover:scale-105 text-xs text-white/80 truncate">
+                      <span
+                        className="text-left transform group-hover:scale-105 text-xs text-white/80 truncate"
+                        title={profile?.email || 'ไม่ระบุอีเมล'}
+                      >
                         {profile?.email || 'ไม่ระบุอีเมล'}
                       </span>
                     </div>
