@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FC } from 'react';
 import {
   Table,
   TableBody,
@@ -33,6 +33,12 @@ import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
+import DatePicker, { registerLocale } from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { th } from 'date-fns/locale';
+import { format } from 'date-fns';
+
+registerLocale('th', th);
 
 interface AuctionItem {
   no: number;
@@ -59,18 +65,25 @@ const statusMap: Record<number, string> = {
   6: 'ยกเลิกประมูล',
 };
 
+interface CustomInputProps {
+  value?: string;
+  onClick?: () => void;
+  label: string;
+  icon: FC<{ className?: string }>;
+}
+
 export default function AuctionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return today.toISOString().split('T')[0];
+    return today;
   });
   const [endDate, setEndDate] = useState(() => {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
-    return today.toISOString().split('T')[0];
+    return today;
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
@@ -267,11 +280,52 @@ export default function AuctionsPage() {
     setSelectedCategory('ทั้งหมด');
     setSelectedStatus('all');
     const today = new Date();
-    setStartDate(today.toISOString().split('T')[0]);
-    setEndDate(today.toISOString().split('T')[0]);
+    setStartDate(today);
+    setEndDate(today);
     setSearchQuery('');
     setIsFiltering(false);
   };
+
+  // Custom input component for the DatePicker
+  const CustomInput: FC<CustomInputProps> = ({
+    value,
+    onClick,
+    label,
+    icon: Icon,
+  }) => (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Icon className="w-4 h-4 text-gray-500" />
+          {label}
+        </div>
+      </label>
+      <div
+        className="relative w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent cursor-pointer bg-white"
+        onClick={onClick}
+      >
+        <div className="flex items-center justify-between">
+          <span>{value}</span>
+          <div className="absolute inset-y-0 right-0 flex items-center px-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4 text-gray-400 hover:text-blue-500 transition-colors duration-200"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Container className="py-6">
@@ -383,100 +437,40 @@ export default function AuctionsPage() {
             </div>
 
             {/* วันที่เริ่มต้น */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
-                  วันที่เริ่มต้น
-                </div>
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
-                  onClick={(e) => {
-                    const input = e.target as HTMLInputElement;
-                    input.showPicker();
-                  }}
-                />
-                <div
-                  className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const input = e.currentTarget
-                      .previousElementSibling as HTMLInputElement;
-                    if (input) {
-                      input.showPicker();
-                    }
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4 text-gray-400 hover:text-blue-500"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <DatePicker
+              selected={startDate}
+              onChange={(date: Date | null) => date && setStartDate(date)}
+              dateFormat="dd/MM/yyyy"
+              locale="th"
+              customInput={
+                <CustomInput label="วันที่เริ่มต้น" icon={AucStartTimeIcon} />
+              }
+              popperClassName="react-datepicker-left"
+              calendarClassName="custom-calendar"
+              dayClassName={(date) =>
+                date.getTime() === startDate?.getTime()
+                  ? 'bg-blue-500 text-white rounded-full'
+                  : 'text-gray-700 hover:bg-blue-50 rounded-full'
+              }
+            />
 
             {/* วันที่สิ้นสุด */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
-                  วันที่สิ้นสุด
-                </div>
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
-                  onClick={(e) => {
-                    const input = e.target as HTMLInputElement;
-                    input.showPicker();
-                  }}
-                />
-                <div
-                  className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const input = e.currentTarget
-                      .previousElementSibling as HTMLInputElement;
-                    if (input) {
-                      input.showPicker();
-                    }
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4 text-gray-400 hover:text-blue-500"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <DatePicker
+              selected={endDate}
+              onChange={(date: Date | null) => date && setEndDate(date)}
+              dateFormat="dd/MM/yyyy"
+              locale="th"
+              customInput={
+                <CustomInput label="วันที่สิ้นสุด" icon={AucEndTimeIcon} />
+              }
+              popperClassName="react-datepicker-right"
+              calendarClassName="custom-calendar"
+              dayClassName={(date) =>
+                date.getTime() === endDate?.getTime()
+                  ? 'bg-blue-500 text-white rounded-full'
+                  : 'text-gray-700 hover:bg-blue-50 rounded-full'
+              }
+            />
           </div>
 
           {/* Search Bar and Action Buttons */}
@@ -728,4 +722,77 @@ export default function AuctionsPage() {
       </div>
     </Container>
   );
+}
+
+// Add this CSS at the end of the file or in your global CSS
+const styles = `
+.react-datepicker {
+  font-family: 'Kanit', sans-serif;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.react-datepicker__header {
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.react-datepicker__current-month {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+  padding: 0.5rem 0;
+}
+
+.react-datepicker__day-name {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.react-datepicker__day {
+  color: #1f2937;
+  border-radius: 9999px;
+  transition: all 0.2s;
+}
+
+.react-datepicker__day:hover {
+  background-color: #eff6ff;
+  border-radius: 9999px;
+}
+
+.react-datepicker__day--selected {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  border-radius: 9999px;
+}
+
+.react-datepicker__day--keyboard-selected {
+  background-color: #93c5fd;
+  color: white;
+  border-radius: 9999px;
+}
+
+.react-datepicker__navigation {
+  top: 0.75rem;
+}
+
+.react-datepicker__navigation-icon::before {
+  border-color: #6b7280;
+}
+
+.react-datepicker__navigation:hover *::before {
+  border-color: #3b82f6;
+}
+`;
+
+// Add styles to the document
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.type = 'text/css';
+  styleSheet.innerText = styles;
+  document.head.appendChild(styleSheet);
 }
