@@ -12,6 +12,7 @@ export default function TransectionLanguage({
 }: TransectionLanguageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     key: '',
     th: '',
@@ -23,16 +24,38 @@ export default function TransectionLanguage({
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(5);
 
-  // Calculate total items and pages
-  const totalItems = Object.keys(groupedTranslations).length;
-  const totalPages = Math.ceil(totalItems / perPage);
+  // Filter and paginate data
+  const filteredAndPaginatedData = useMemo(() => {
+    // Filter data
+    const filtered = Object.entries(groupedTranslations).filter(
+      ([key, value]) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          key.toLowerCase().includes(searchLower) ||
+          value.th.toLowerCase().includes(searchLower) ||
+          value.en.toLowerCase().includes(searchLower) ||
+          value.zh.toLowerCase().includes(searchLower)
+        );
+      }
+    );
 
-  // Get paginated data
-  const paginatedData = useMemo(() => {
+    // Calculate total pages
+    const total = filtered.length;
     const start = (currentPage - 1) * perPage;
     const end = start + perPage;
-    return Object.entries(groupedTranslations).slice(start, end);
-  }, [currentPage, perPage]);
+
+    return {
+      data: filtered.slice(start, end),
+      total,
+    };
+  }, [searchTerm, currentPage, perPage]);
+
+  const totalPages = Math.ceil(filteredAndPaginatedData.total / perPage);
+
+  // Reset to first page when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Handle per page change
   const handlePerPageChange = (value: number) => {
@@ -111,7 +134,34 @@ export default function TransectionLanguage({
             </div>
             <span>รายการ</span>
           </div>
-          <div>ทั้งหมด {totalItems.toLocaleString()} รายการ</div>
+          <div>
+            ทั้งหมด {filteredAndPaginatedData.total.toLocaleString()} รายการ
+          </div>
+        </div>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg
+              className="h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="ค้นหา"
+            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-50
+              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -331,7 +381,7 @@ export default function TransectionLanguage({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.map(([key, value], index) => (
+                {filteredAndPaginatedData.data.map(([key, value], index) => (
                   <tr
                     key={key}
                     className="hover:bg-gray-50 transition-colors duration-200"
