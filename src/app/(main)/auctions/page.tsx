@@ -677,24 +677,20 @@ export default function AuctionsPage() {
                       {item.no}
                     </TableCell>
                     <TableCell>
-                      <div className="relative group">
-                        <div className="font-medium text-blue-600 hover:text-blue-700 truncate max-w-[400px]">
-                          {item.title}
-                        </div>
+                      <div className="relative">
                         <div
-                          className="invisible group-hover:visible absolute z-50 bg-gray-900 text-white text-sm rounded-lg py-2 px-3 
-                          left-0 top-full mt-1 w-fit max-w-[400px] shadow-lg break-words"
+                          className="text-sm font-medium truncate cursor-pointer"
+                          title={item.title}
                         >
                           {item.title}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="relative group">
-                        <div className="truncate">{item.category}</div>
+                      <div className="relative">
                         <div
-                          className="invisible group-hover:visible absolute z-50 bg-gray-900 text-white text-sm rounded-lg py-2 px-3 
-                          left-0 top-full mt-1 w-fit max-w-[200px] shadow-lg break-words"
+                          className="text-sm truncate cursor-pointer"
+                          title={item.category}
                         >
                           {item.category}
                         </div>

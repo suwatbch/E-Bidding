@@ -674,7 +674,7 @@ export default function CompanyPage() {
                       <td className="px-6 py-4">
                         <div className="relative">
                           <div
-                            className="text-sm font-medium text-gray-900 truncate cursor-help hover:text-blue-600"
+                            className="text-sm font-medium text-gray-900 truncate cursor-pointer"
                             title={company.name}
                           >
                             {company.name}
@@ -684,7 +684,7 @@ export default function CompanyPage() {
                       <td className="px-6 py-4">
                         <div className="relative">
                           <div
-                            className="text-sm text-gray-500 line-clamp-1 cursor-help hover:text-blue-600"
+                            className="text-sm text-gray-500 line-clamp-1 cursor-pointer"
                             title={company.address}
                           >
                             {company.address}
@@ -694,7 +694,7 @@ export default function CompanyPage() {
                       <td className="px-6 py-4">
                         <div className="relative">
                           <div
-                            className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                            className="text-sm text-gray-500 truncate cursor-pointer"
                             title={company.phone}
                           >
                             {company.phone}
@@ -704,7 +704,7 @@ export default function CompanyPage() {
                       <td className="px-6 py-4">
                         <div className="relative">
                           <div
-                            className="text-sm text-gray-500 truncate cursor-help hover:text-blue-600"
+                            className="text-sm text-gray-500 truncate cursor-pointer"
                             title={company.email}
                           >
                             {company.email}
