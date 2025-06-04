@@ -11,36 +11,24 @@ import {
 } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import {
-  CategoryAllIcon,
-  CategoryElectronicsIcon,
-  CategoryFashionIcon,
-  CategoryJewelryIcon,
-  CategoryVehicleIcon,
-  CategoryCollectiblesIcon,
   StatusPendingIcon,
   StatusBiddingIcon,
   StatusEndingSoonIcon,
   StatusEndedIcon,
   StatusCancelledIcon,
-  SearchBarIcon,
-  TimeIcon,
   UserIcon,
+  AucCategoryIcon,
+  AucStartTimeIcon,
+  AucEndTimeIcon,
+  AucUserIcon,
+  AucOpenIcon,
+  AucPendingIcon,
+  AucBiddingIcon,
+  AucEndingSoonIcon,
+  AucEndedIcon,
+  AucCancelledIcon,
+  AucOfferIcon,
 } from '@/app/components/ui/icons';
-import {
-  Gavel,
-  AccessTime,
-  Person,
-  Category,
-  Devices,
-  LocalOffer,
-  Diamond,
-  DirectionsCar,
-  Collections,
-} from '@mui/icons-material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PendingIcon from '@mui/icons-material/Pending';
-import TimerIcon from '@mui/icons-material/Timer';
-import BlockIcon from '@mui/icons-material/Block';
 import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
@@ -61,15 +49,6 @@ interface AuctionItem {
     | 'ended'
     | 'cancelled';
 }
-
-const categories = [
-  { name: 'ทั้งหมด', icon: <CategoryAllIcon /> },
-  { name: 'อิเล็กทรอนิกส์', icon: <CategoryElectronicsIcon /> },
-  { name: 'แฟชั่น', icon: <CategoryFashionIcon /> },
-  { name: 'เครื่องประดับ', icon: <CategoryJewelryIcon /> },
-  { name: 'ยานยนต์', icon: <CategoryVehicleIcon /> },
-  { name: 'ของสะสม', icon: <CategoryCollectiblesIcon /> },
-];
 
 const statusMap: Record<number, string> = {
   1: 'เปิดการประมูล',
@@ -236,7 +215,7 @@ export default function AuctionsPage() {
     }
 
     return {
-      no: idx + 1,
+      no: idx,
       title: `${auction.name} ${formatAuctionId(auction.auction_id)}`,
       category: auctionType?.name || '-',
       startTime: auction.start_dt,
@@ -305,7 +284,7 @@ export default function AuctionsPage() {
             </h3>
             <button
               onClick={handleReset}
-              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-all duration-200"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -313,7 +292,7 @@ export default function AuctionsPage() {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="w-4 h-4"
+                className="w-4 h-4 transition-transform duration-500 hover:rotate-180"
               >
                 <path
                   strokeLinecap="round"
@@ -329,7 +308,7 @@ export default function AuctionsPage() {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Category className="w-4 h-4 text-gray-500" />
+                  <AucCategoryIcon className="w-4 h-4 text-gray-500" />
                   หมวดหมู่
                 </div>
               </label>
@@ -337,7 +316,7 @@ export default function AuctionsPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none focus:border-transparent"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -367,7 +346,7 @@ export default function AuctionsPage() {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <LocalOffer className="w-4 h-4 text-gray-500" />
+                  <AucOfferIcon className="w-4 h-4 text-gray-500" />
                   สถานะ
                 </div>
               </label>
@@ -375,7 +354,7 @@ export default function AuctionsPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none focus:border-transparent"
                 >
                   <option value="all">ทั้งหมด</option>
                   <option value="open">เปิดประมูล</option>
@@ -407,7 +386,7 @@ export default function AuctionsPage() {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <AccessTime className="w-4 h-4 text-gray-500" />
+                  <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
                   วันที่เริ่มต้น
                 </div>
               </label>
@@ -416,7 +395,7 @@ export default function AuctionsPage() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                   <svg
@@ -441,7 +420,7 @@ export default function AuctionsPage() {
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <TimerIcon className="w-4 h-4 text-gray-500" />
+                  <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
                   วันที่สิ้นสุด
                 </div>
               </label>
@@ -450,7 +429,7 @@ export default function AuctionsPage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                   <svg
@@ -472,15 +451,15 @@ export default function AuctionsPage() {
             </div>
           </div>
 
-          {/* Search Bar */}
-          <div className="mt-6">
-            <div className="relative">
+          {/* Search Bar and Action Buttons */}
+          <div className="mt-6 flex items-center gap-3">
+            <div className="relative flex-1">
               <input
                 type="text"
                 placeholder="ค้นหาตามชื่อรายการ..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg
@@ -499,10 +478,7 @@ export default function AuctionsPage() {
                 </svg>
               </div>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-6">
             <button
               onClick={handleSearch}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2"
@@ -552,7 +528,7 @@ export default function AuctionsPage() {
                         : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
                     }`}
                 >
-                  <CheckCircleIcon className="w-4 h-4" />
+                  <AucOpenIcon className="w-4 h-4" />
                   เปิดประมูล
                 </button>
                 <button
@@ -564,7 +540,7 @@ export default function AuctionsPage() {
                         : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
                     }`}
                 >
-                  <PendingIcon className="w-4 h-4" />
+                  <AucPendingIcon className="w-4 h-4" />
                   รอการประมูล
                 </button>
                 <button
@@ -576,7 +552,7 @@ export default function AuctionsPage() {
                         : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                     }`}
                 >
-                  <Gavel className="w-4 h-4" />
+                  <AucBiddingIcon className="w-4 h-4" />
                   กำลังประมูล
                 </button>
                 <button
@@ -588,7 +564,7 @@ export default function AuctionsPage() {
                         : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100'
                     }`}
                 >
-                  <TimerIcon className="w-4 h-4" />
+                  <AucEndingSoonIcon className="w-4 h-4" />
                   ใกล้สิ้นสุด
                 </button>
                 <button
@@ -600,7 +576,7 @@ export default function AuctionsPage() {
                         : 'bg-green-50 text-green-600 hover:bg-green-100'
                     }`}
                 >
-                  <CheckCircleIcon className="w-4 h-4" />
+                  <AucEndedIcon className="w-4 h-4" />
                   สิ้นสุดประมูล
                 </button>
                 <button
@@ -612,7 +588,7 @@ export default function AuctionsPage() {
                         : 'bg-red-50 text-red-600 hover:bg-red-100'
                     }`}
                 >
-                  <BlockIcon className="w-4 h-4" />
+                  <AucCancelledIcon className="w-4 h-4" />
                   ยกเลิกประมูล
                 </button>
               </div>
@@ -629,37 +605,37 @@ export default function AuctionsPage() {
                 </TableHead>
                 <TableHead className="w-[25%]">
                   <div className="flex items-center gap-2">
-                    <Gavel className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                    <AucBiddingIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
                 <TableHead className="w-[14%]">
                   <div className="flex items-center gap-2">
-                    <Category className="w-5 h-5 text-gray-500" />
+                    <AucCategoryIcon className="w-5 h-5 text-gray-500" />
                     หมวดหมู่
                   </div>
                 </TableHead>
                 <TableHead className="w-[16%] text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <AccessTime className="w-5 h-5 text-gray-500" />
+                    <AucStartTimeIcon className="w-5 h-5 text-gray-500" />
                     เวลาเปิด
                   </div>
                 </TableHead>
                 <TableHead className="w-[16%] text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <TimerIcon className="w-5 h-5 text-gray-500" />
+                    <AucEndTimeIcon className="w-5 h-5 text-gray-500" />
                     เวลาปิด
                   </div>
                 </TableHead>
                 <TableHead className="w-[10%] text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <Person className="w-5 h-5 text-gray-500" />
+                    <AucUserIcon className="w-5 h-5 text-gray-500" />
                     ผู้ประมูล
                   </div>
                 </TableHead>
                 <TableHead className="w-[17%] text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <LocalOffer className="w-5 h-5 text-gray-500" />
+                    <AucOfferIcon className="w-5 h-5 text-gray-500" />
                     สถานะ
                   </div>
                 </TableHead>
@@ -674,7 +650,7 @@ export default function AuctionsPage() {
                     className="hover:bg-blue-50/50 cursor-pointer transition-colors"
                   >
                     <TableCell className="font-medium text-center">
-                      {item.no}
+                      {(item.no + 1).toLocaleString('th-TH')}
                     </TableCell>
                     <TableCell>
                       <div className="relative">

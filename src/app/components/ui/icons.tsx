@@ -22,14 +22,34 @@ import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
 import LanguageIcon from '@mui/icons-material/Language';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import { Home, Gavel, LocalOffer, Notifications, AccountCircle, KeyboardArrowDown, Edit, Logout, Menu, Close, Settings, Business, People } from '@mui/icons-material';
+import {
+  Home,
+  Gavel,
+  LocalOffer,
+  Notifications,
+  AccountCircle,
+  KeyboardArrowDown,
+  Edit,
+  Logout,
+  Menu,
+  Close,
+  Settings,
+  Business,
+  People,
+  Category,
+  AccessTime,
+  Timer,
+  CheckCircle,
+  Block,
+  PendingOutlined as Pending,
+} from '@mui/icons-material';
 
 interface IconProps {
   className?: string;
 }
 
 // Large Icons (32px)
-export const LogoIcon = ({ className = "text-blue-600" }: IconProps) => (
+export const LogoIcon = ({ className = 'text-blue-600' }: IconProps) => (
   <GavelIcon style={{ width: '32px', height: '32px' }} className="text-white" />
 );
 
@@ -39,15 +59,24 @@ export const NavLogoIcon = ({ className }: IconProps) => (
 
 // Medium Icons (20px)
 export const FormEmailIcon = () => (
-  <EmailIcon style={{ width: '20px', height: '20px' }} className="text-gray-400" />
+  <EmailIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-gray-400"
+  />
 );
 
 export const FormLockIcon = () => (
-  <LockIcon style={{ width: '20px', height: '20px' }} className="text-gray-400" />
+  <LockIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-gray-400"
+  />
 );
 
 export const FormKeyIcon = () => (
-  <KeyIcon style={{ width: '20px', height: '20px' }} className="text-gray-400" />
+  <KeyIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-gray-400"
+  />
 );
 
 export const ButtonLoginIcon = () => (
@@ -61,11 +90,6 @@ export const ButtonSendIcon = () => (
 // Small Icons (16px)
 export const LinkBackIcon = () => (
   <ArrowBackIcon style={{ width: '16px', height: '16px' }} />
-);
-
-// Category Icons (20px)
-export const CategoryAllIcon = () => (
-  <CategoryIcon style={{ width: '20px', height: '20px' }} />
 );
 
 export const CategoryElectronicsIcon = () => (
@@ -90,36 +114,105 @@ export const CategoryCollectiblesIcon = () => (
 
 // Status Icons (20px)
 export const StatusPendingIcon = () => (
-  <PendingIcon style={{ width: '20px', height: '20px' }} className="text-yellow-500" />
+  <PendingIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-yellow-500"
+  />
 );
 
 export const StatusBiddingIcon = () => (
-  <GavelIcon style={{ width: '20px', height: '20px' }} className="text-blue-500" />
+  <GavelIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-blue-500"
+  />
 );
 
 export const StatusEndingSoonIcon = () => (
-  <TimerIcon style={{ width: '20px', height: '20px' }} className="text-orange-500" />
+  <TimerIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-orange-500"
+  />
 );
 
 export const StatusEndedIcon = () => (
-  <CheckCircleIcon style={{ width: '20px', height: '20px' }} className="text-green-500" />
+  <CheckCircleIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-green-500"
+  />
 );
 
 export const StatusCancelledIcon = () => (
-  <BlockIcon style={{ width: '20px', height: '20px' }} className="text-red-500" />
+  <BlockIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-red-500"
+  />
 );
 
 // Utility Icons (20px)
-export const SearchBarIcon = ({ className = "text-gray-400" }: IconProps) => (
+export const SearchBarIcon = ({ className = 'text-gray-400' }: IconProps) => (
   <Search style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 export const TimeIcon = () => (
-  <AccessTimeIcon style={{ width: '20px', height: '20px' }} className="text-gray-500" />
+  <AccessTimeIcon
+    style={{ width: '20px', height: '20px' }}
+    className="text-gray-500"
+  />
 );
 
 export const UserIcon = () => (
   <Person style={{ width: '20px', height: '20px' }} className="text-gray-500" />
+);
+
+export const AucCategoryIcon: React.FC<IconProps> = ({ className }) => (
+  <Category style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucStartTimeIcon: React.FC<IconProps> = ({ className }) => (
+  <AccessTime style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucEndTimeIcon: React.FC<IconProps> = ({ className }) => (
+  <Timer style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucUserIcon: React.FC<IconProps> = ({ className }) => (
+  <Person style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+// Auction Status Icons
+export const AucOpenIcon: React.FC<IconProps> = ({ className }) => (
+  <CheckCircle
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucPendingIcon: React.FC<IconProps> = ({ className }) => (
+  <Pending style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucBiddingIcon: React.FC<IconProps> = ({ className }) => (
+  <Gavel style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucEndingSoonIcon: React.FC<IconProps> = ({ className }) => (
+  <Timer style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucEndedIcon: React.FC<IconProps> = ({ className }) => (
+  <CheckCircle
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucCancelledIcon: React.FC<IconProps> = ({ className }) => (
+  <Block style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucOfferIcon: React.FC<IconProps> = ({ className }) => (
+  <LocalOffer style={{ width: '16px', height: '16px' }} className={className} />
 );
 
 // Navbar Icons (24px)
@@ -136,7 +229,10 @@ export const NavMyAuctionIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const NavNotificationIcon: React.FC<IconProps> = ({ className }) => (
-  <Notifications style={{ width: '20px', height: '20px' }} className={className} />
+  <Notifications
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
 );
 
 export const NavProfileIcon = () => (
@@ -144,14 +240,17 @@ export const NavProfileIcon = () => (
 );
 
 export const NavArrowDownIcon = ({ className }: IconProps) => (
-  <KeyboardArrowDown style={{ width: '24px', height: '24px' }} className={className} />
+  <KeyboardArrowDown
+    style={{ width: '24px', height: '24px' }}
+    className={className}
+  />
 );
 
-export const NavEditIcon = ({ className = "" }: IconProps) => (
+export const NavEditIcon = ({ className = '' }: IconProps) => (
   <Edit style={{ width: '18px', height: '18px' }} className={className} />
 );
 
-export const NavLogoutIcon = ({ className = "" }: IconProps) => (
+export const NavLogoutIcon = ({ className = '' }: IconProps) => (
   <Logout style={{ width: '18px', height: '18px' }} className={className} />
 );
 
@@ -168,39 +267,52 @@ export const NavDataIcon = () => (
 );
 
 // Company and User Icons for Navbar
-export const NavCompanyIcon = ({ className = "" }: IconProps) => (
+export const NavCompanyIcon = ({ className = '' }: IconProps) => (
   <Business style={{ width: '20px', height: '20px' }} className={className} />
 );
 
-export const NavUserIcon = ({ className = "" }: IconProps) => (
+export const NavUserIcon = ({ className = '' }: IconProps) => (
   <People style={{ width: '20px', height: '20px' }} className={className} />
 );
 
 // Language Icon
-export const NavLanguageIcon = ({ className = "" }: IconProps) => (
-  <LanguageIcon style={{ width: '18px', height: '18px' }} className={className} />
+export const NavLanguageIcon = ({ className = '' }: IconProps) => (
+  <LanguageIcon
+    style={{ width: '18px', height: '18px' }}
+    className={className}
+  />
 );
 
-export const NavLanguageManageIcon = ({ className = "" }: IconProps) => (
-  <LanguageIcon style={{ width: '20px', height: '20px' }} className={className} />
+export const NavLanguageManageIcon = ({ className = '' }: IconProps) => (
+  <LanguageIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
 );
 
-// Additional icons can be added here as needed 
+// Additional icons can be added here as needed
 
-export function NavSaveIcon({ className = "w-5 h-5" }: IconProps) {
+export function NavSaveIcon({ className = 'w-5 h-5' }: IconProps) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="currentColor" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="currentColor"
       className={className}
     >
-      <path fillRule="evenodd" d="M5.478 5.559A1.5 1.5 0 016.912 4.5H9A.75.75 0 009 3H6.912a3 3 0 00-2.868 2.118l-2.411 7.838a3 3 0 00-.133.882V18a3 3 0 003 3h15a3 3 0 003-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0017.088 3H15a.75.75 0 000 1.5h2.088a1.5 1.5 0 011.434 1.059l2.411 7.838a1.5 1.5 0 01.067.441V18a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18v-4.162c0-.147.023-.293.067-.441l2.411-7.838z" clipRule="evenodd" />
+      <path
+        fillRule="evenodd"
+        d="M5.478 5.559A1.5 1.5 0 016.912 4.5H9A.75.75 0 009 3H6.912a3 3 0 00-2.868 2.118l-2.411 7.838a3 3 0 00-.133.882V18a3 3 0 003 3h15a3 3 0 003-3v-4.162c0-.299-.045-.596-.133-.882l-2.412-7.838A3 3 0 0017.088 3H15a.75.75 0 000 1.5h2.088a1.5 1.5 0 011.434 1.059l2.411 7.838a1.5 1.5 0 01.067.441V18a1.5 1.5 0 01-1.5 1.5H3.75A1.5 1.5 0 012.25 18v-4.162c0-.147.023-.293.067-.441l2.411-7.838z"
+        clipRule="evenodd"
+      />
       <path d="M12 2.25a.75.75 0 01.75.75v8.69l3.22-3.22a.75.75 0 111.06 1.06l-4.5 4.5a.75.75 0 01-1.06 0l-4.5-4.5a.75.75 0 111.06-1.06l3.22 3.22V3a.75.75 0 01.75-.75z" />
     </svg>
   );
 }
 
 export const LockTableIcon = () => (
-  <LockIcon style={{ width: '18px', height: '18px' }} className="text-red-400 hover:scale-110 transition-transform duration-200" />
-); 
+  <LockIcon
+    style={{ width: '18px', height: '18px' }}
+    className="text-red-400 hover:scale-110 transition-transform duration-200"
+  />
+);
