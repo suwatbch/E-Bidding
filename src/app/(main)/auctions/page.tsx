@@ -443,6 +443,9 @@ export default function AuctionsPage() {
                 onChange={(date: Date | null) => date && setStartDate(date)}
                 dateFormat="dd/MM/yyyy"
                 locale="th"
+                showYearDropdown
+                scrollableYearDropdown
+                yearDropdownItemNumber={15}
                 customInput={
                   <CustomInput label="วันที่เริ่มต้น" icon={AucStartTimeIcon} />
                 }
@@ -464,6 +467,9 @@ export default function AuctionsPage() {
                 onChange={(date: Date | null) => date && setEndDate(date)}
                 dateFormat="dd/MM/yyyy"
                 locale="th"
+                showYearDropdown
+                scrollableYearDropdown
+                yearDropdownItemNumber={15}
                 customInput={
                   <CustomInput label="วันที่สิ้นสุด" icon={AucEndTimeIcon} />
                 }
@@ -768,6 +774,69 @@ const styles = `
   font-size: 1rem !important;
   color: #1f2937 !important;
   padding: 0.25rem 0 !important;
+}
+
+.react-datepicker__year-dropdown-container {
+  display: inline-block !important;
+  margin: 0 0.5rem !important;
+}
+
+.react-datepicker__year-dropdown {
+  background-color: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  max-height: 200px !important;
+  overflow-y: auto !important;
+  position: absolute !important;
+  z-index: 10000 !important;
+  width: 80px !important;
+  text-align: center !important;
+}
+
+.react-datepicker__year-option {
+  color: #374151 !important;
+  cursor: pointer !important;
+  padding: 0.375rem 0.5rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s !important;
+}
+
+.react-datepicker__year-option:hover {
+  background-color: #eff6ff !important;
+  color: #3b82f6 !important;
+}
+
+.react-datepicker__year-option--selected {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.react-datepicker__year-read-view {
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.25rem !important;
+  padding: 0.25rem 0.5rem !important;
+  background-color: #f9fafb !important;
+  cursor: pointer !important;
+  font-size: 0.875rem !important;
+  color: #374151 !important;
+  transition: all 0.2s !important;
+}
+
+.react-datepicker__year-read-view:hover {
+  background-color: #eff6ff !important;
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+.react-datepicker__year-read-view--down-arrow {
+  border-top: 6px solid #9ca3af !important;
+  border-left: 6px solid transparent !important;
+  border-right: 6px solid transparent !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin-left: 6px !important;
 }
 
 .react-datepicker__day-names {
