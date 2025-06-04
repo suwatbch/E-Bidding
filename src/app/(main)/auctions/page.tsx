@@ -395,16 +395,26 @@ export default function AuctionsPage() {
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <div
+                  className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
+                  onClick={() => {
+                    const input = document.querySelector(
+                      'input[type="date"][value="' + startDate + '"]'
+                    ) as HTMLInputElement;
+                    if (input) {
+                      input.showPicker();
+                    }
+                  }}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-4 h-4 text-gray-400"
+                    className="w-4 h-4 text-gray-400 hover:text-blue-500"
                   >
                     <path
                       strokeLinecap="round"
@@ -429,16 +439,26 @@ export default function AuctionsPage() {
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 />
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                <div
+                  className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
+                  onClick={() => {
+                    const input = document.querySelector(
+                      'input[type="date"][value="' + endDate + '"]'
+                    ) as HTMLInputElement;
+                    if (input) {
+                      input.showPicker();
+                    }
+                  }}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={1.5}
                     stroke="currentColor"
-                    className="w-4 h-4 text-gray-400"
+                    className="w-4 h-4 text-gray-400 hover:text-blue-500"
                   >
                     <path
                       strokeLinecap="round"
