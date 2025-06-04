@@ -248,9 +248,9 @@ export default function AuctionsPage() {
 
   // กรองข้อมูลตามเงื่อนไข
   const filteredItems = auctionTable.filter((item) => {
-    const matchesSearch = item.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
 
     // ตรวจสอบหมวดหมู่
     const matchesCategory =
@@ -501,7 +501,7 @@ export default function AuctionsPage() {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="ค้นหาตามชื่อรายการ..."
+                placeholder="ค้นหาตามชื่อรายการหรือหมวดหมู่..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
