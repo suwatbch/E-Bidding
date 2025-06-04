@@ -53,7 +53,13 @@ interface AuctionItem {
   startTime: string;
   endTime: string;
   bidCount: number;
-  status: 'pending' | 'bidding' | 'ending_soon' | 'ended' | 'cancelled';
+  status:
+    | 'open'
+    | 'pending'
+    | 'bidding'
+    | 'ending_soon'
+    | 'ended'
+    | 'cancelled';
 }
 
 const categories = [
@@ -76,10 +82,19 @@ const statusMap: Record<number, string> = {
 
 export default function AuctionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    return today.toISOString().split('T')[0];
+  });
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<
-    'all' | AuctionItem['status']
-  >('all');
+  const [isFiltering, setIsFiltering] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -125,37 +140,38 @@ export default function AuctionsPage() {
 
   const getStatusInfo = (status: AuctionItem['status']) => {
     switch (status) {
+      case 'open':
+        return {
+          text: 'เปิดประมูล',
+          color: 'text-amber-600',
+          bgColor: 'bg-amber-50',
+        };
       case 'pending':
         return {
-          icon: <StatusPendingIcon />,
           text: 'รอการประมูล',
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-50',
+          color: 'text-orange-600',
+          bgColor: 'bg-orange-50',
         };
       case 'bidding':
         return {
-          icon: <StatusBiddingIcon />,
           text: 'กำลังประมูล',
           color: 'text-blue-600',
           bgColor: 'bg-blue-50',
         };
       case 'ending_soon':
         return {
-          icon: <StatusEndingSoonIcon />,
           text: 'ใกล้สิ้นสุด',
-          color: 'text-yellow-600',
-          bgColor: 'bg-yellow-50',
+          color: 'text-cyan-600',
+          bgColor: 'bg-cyan-50',
         };
       case 'ended':
         return {
-          icon: <StatusEndedIcon />,
           text: 'สิ้นสุดประมูล',
           color: 'text-green-600',
           bgColor: 'bg-green-50',
         };
       case 'cancelled':
         return {
-          icon: <StatusCancelledIcon />,
           text: 'ยกเลิกประมูล',
           color: 'text-red-600',
           bgColor: 'bg-red-50',
@@ -199,6 +215,9 @@ export default function AuctionsPage() {
     // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
     let uiStatus: AuctionItem['status'] = 'pending';
     switch (auction.status) {
+      case 1:
+        uiStatus = 'open';
+        break;
       case 2:
         uiStatus = 'pending';
         break;
@@ -227,75 +246,286 @@ export default function AuctionsPage() {
     } as AuctionItem;
   });
 
-  // กรองและเรียงลำดับข้อมูล
-  const filteredItems = auctionTable
-    .filter((item) => {
-      const matchesSearch =
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase());
+  // ดึงรายการหมวดหมู่จาก dataAuction_Type
+  const categories = [
+    'ทั้งหมด',
+    ...dataAuction_Type
+      .filter((type) => type.status === 1) // เลือกเฉพาะที่ status เป็น 1 (active)
+      .map((type) => type.name),
+  ];
 
-      const matchesStatus =
-        statusFilter === 'all' || item.status === statusFilter;
+  // กรองข้อมูลตามเงื่อนไข
+  const filteredItems = auctionTable.filter((item) => {
+    const matchesSearch = item.title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
 
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      // เรียงตามสถานะ
-      const statusOrder = {
-        pending: 0,
-        bidding: 1,
-        ending_soon: 2,
-        ended: 3,
-        cancelled: 4,
-      };
+    // ตรวจสอบหมวดหมู่
+    const matchesCategory =
+      selectedCategory === 'ทั้งหมด' || item.category === selectedCategory;
 
-      if (statusOrder[a.status] !== statusOrder[b.status]) {
-        return statusOrder[a.status] - statusOrder[b.status];
-      }
+    // ตรวจสอบสถานะ
+    const matchesStatus =
+      selectedStatus === 'all' || item.status === selectedStatus;
 
-      // ถ้าสถานะเดียวกัน เรียงตามเวลา
-      return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
-    });
+    // กรองตามช่วงวันที่
+    const itemDate = new Date(item.startTime);
+    const filterStartDate = new Date(startDate);
+    const filterEndDate = new Date(endDate);
+    filterEndDate.setHours(23, 59, 59, 999);
+    const matchesDate =
+      !isFiltering ||
+      (itemDate >= filterStartDate && itemDate <= filterEndDate);
+
+    return matchesSearch && matchesCategory && matchesStatus && matchesDate;
+  });
+
+  const handleSearch = () => {
+    setIsFiltering(true);
+  };
+
+  const handleReset = () => {
+    setSelectedCategory('ทั้งหมด');
+    setSelectedStatus('all');
+    const today = new Date();
+    setStartDate(today.toISOString().split('T')[0]);
+    setEndDate(today.toISOString().split('T')[0]);
+    setSearchQuery('');
+    setIsFiltering(false);
+  };
 
   return (
-    <Container className="py-8">
-      {/* Hero Section */}
-      <div className="pt-8">
-        <div className="relative rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 overflow-hidden">
-          {/* Background Pattern */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_theme(colors.blue.300/20%),_transparent_50%)]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_theme(colors.blue.300/20%),_transparent_50%)]"></div>
+    <Container className="py-6">
+      <div className="py-8">
+        {/* Filter Section */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-800">
+              ตัวกรองการค้นหา
+            </h3>
+            <button
+              onClick={handleReset}
+              className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
+                />
+              </svg>
+              รีเซ็ตตัวกรอง
+            </button>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* หมวดหมู่ */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Category className="w-4 h-4 text-gray-500" />
+                  หมวดหมู่
+                </div>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                >
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
 
-          {/* Content */}
-          <div className="relative px-8 py-12">
-            <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-4xl font-bold text-white mb-4 tracking-tight">
-                ยินดีต้อนรับสู่ <span className="text-blue-200">E-Bidding</span>
-              </h1>
-              <p className="text-lg text-blue-100 mb-8">
-                ระบบประมูลออนไลน์ที่เชื่อถือได้และใช้งานง่าย
-              </p>
-              <div className="relative max-w-xl mx-auto group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-blue-300 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
-                <div className="relative">
-                  <SearchBarIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหารายการประมูล..."
-                    className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-900 bg-white shadow-md focus:ring-2 focus:ring-blue-300 focus:outline-none transition duration-200"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+            {/* สถานะ */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <LocalOffer className="w-4 h-4 text-gray-500" />
+                  สถานะ
+                </div>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                >
+                  <option value="all">ทั้งหมด</option>
+                  <option value="open">เปิดประมูล</option>
+                  <option value="pending">รอการประมูล</option>
+                  <option value="bidding">กำลังประมูล</option>
+                  <option value="ending_soon">ใกล้สิ้นสุด</option>
+                  <option value="ended">สิ้นสุดประมูล</option>
+                  <option value="cancelled">ยกเลิกประมูล</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* วันที่เริ่มต้น */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <AccessTime className="w-4 h-4 text-gray-500" />
+                  วันที่เริ่มต้น
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4 text-gray-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* วันที่สิ้นสุด */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <TimerIcon className="w-4 h-4 text-gray-500" />
+                  วันที่สิ้นสุด
+                </div>
+              </label>
+              <div className="relative">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4 text-gray-400"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                    />
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="py-8">
+          {/* Search Bar */}
+          <div className="mt-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="ค้นหาตามชื่อรายการ..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4 text-gray-400"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                />
+              </svg>
+              ค้นหา
+            </button>
+          </div>
+        </div>
+
         {/* Auction Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
@@ -303,74 +533,86 @@ export default function AuctionsPage() {
               <h2 className="text-2xl font-semibold">รายการประมูล</h2>
               <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
                 <button
-                  onClick={() => setStatusFilter('all')}
+                  onClick={() => setSelectedStatus('all')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'all'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      selectedStatus === 'all'
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                     }`}
                 >
                   ทั้งหมด
                 </button>
                 <button
-                  onClick={() => setStatusFilter('pending')}
+                  onClick={() => setSelectedStatus('open')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'pending'
-                        ? 'bg-gray-600 text-white'
-                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                      selectedStatus === 'open'
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
                     }`}
                 >
-                  <StatusPendingIcon />
+                  <CheckCircleIcon className="w-4 h-4" />
+                  เปิดประมูล
+                </button>
+                <button
+                  onClick={() => setSelectedStatus('pending')}
+                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
+                    ${
+                      selectedStatus === 'pending'
+                        ? 'bg-orange-600 text-white'
+                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                    }`}
+                >
+                  <PendingIcon className="w-4 h-4" />
                   รอการประมูล
                 </button>
                 <button
-                  onClick={() => setStatusFilter('bidding')}
+                  onClick={() => setSelectedStatus('bidding')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'bidding'
+                      selectedStatus === 'bidding'
                         ? 'bg-blue-600 text-white'
                         : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
                     }`}
                 >
-                  <StatusBiddingIcon />
+                  <Gavel className="w-4 h-4" />
                   กำลังประมูล
                 </button>
                 <button
-                  onClick={() => setStatusFilter('ending_soon')}
+                  onClick={() => setSelectedStatus('ending_soon')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'ending_soon'
-                        ? 'bg-yellow-600 text-white'
-                        : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+                      selectedStatus === 'ending_soon'
+                        ? 'bg-cyan-600 text-white'
+                        : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100'
                     }`}
                 >
-                  <StatusEndingSoonIcon />
+                  <TimerIcon className="w-4 h-4" />
                   ใกล้สิ้นสุด
                 </button>
                 <button
-                  onClick={() => setStatusFilter('ended')}
+                  onClick={() => setSelectedStatus('ended')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'ended'
+                      selectedStatus === 'ended'
                         ? 'bg-green-600 text-white'
                         : 'bg-green-50 text-green-600 hover:bg-green-100'
                     }`}
                 >
-                  <StatusEndedIcon />
+                  <CheckCircleIcon className="w-4 h-4" />
                   สิ้นสุดประมูล
                 </button>
                 <button
-                  onClick={() => setStatusFilter('cancelled')}
+                  onClick={() => setSelectedStatus('cancelled')}
                   className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
                     ${
-                      statusFilter === 'cancelled'
+                      selectedStatus === 'cancelled'
                         ? 'bg-red-600 text-white'
                         : 'bg-red-50 text-red-600 hover:bg-red-100'
                     }`}
                 >
-                  <StatusCancelledIcon />
+                  <BlockIcon className="w-4 h-4" />
                   ยกเลิกประมูล
                 </button>
               </div>
@@ -385,25 +627,25 @@ export default function AuctionsPage() {
                     ลำดับ
                   </div>
                 </TableHead>
-                <TableHead>
+                <TableHead className="w-[25%]">
                   <div className="flex items-center gap-2">
-                    <Gavel className="w-5 h-5 text-gray-500" />
+                    <Gavel className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
-                <TableHead className="w-[15%]">
+                <TableHead className="w-[14%]">
                   <div className="flex items-center gap-2">
                     <Category className="w-5 h-5 text-gray-500" />
                     หมวดหมู่
                   </div>
                 </TableHead>
-                <TableHead className="w-[15%] text-center">
+                <TableHead className="w-[16%] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AccessTime className="w-5 h-5 text-gray-500" />
                     เวลาเปิด
                   </div>
                 </TableHead>
-                <TableHead className="w-[15%] text-center">
+                <TableHead className="w-[16%] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <TimerIcon className="w-5 h-5 text-gray-500" />
                     เวลาปิด
@@ -415,7 +657,7 @@ export default function AuctionsPage() {
                     ผู้ประมูล
                   </div>
                 </TableHead>
-                <TableHead className="w-[15%] text-center">
+                <TableHead className="w-[17%] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <LocalOffer className="w-5 h-5 text-gray-500" />
                     สถานะ
@@ -431,11 +673,33 @@ export default function AuctionsPage() {
                     key={item.no}
                     className="hover:bg-blue-50/50 cursor-pointer transition-colors"
                   >
-                    <TableCell className="font-medium">{item.no}</TableCell>
-                    <TableCell className="font-medium text-blue-600 hover:text-blue-700">
-                      {item.title}
+                    <TableCell className="font-medium text-center">
+                      {item.no}
                     </TableCell>
-                    <TableCell>{item.category}</TableCell>
+                    <TableCell>
+                      <div className="relative group">
+                        <div className="font-medium text-blue-600 hover:text-blue-700 truncate max-w-[400px]">
+                          {item.title}
+                        </div>
+                        <div
+                          className="invisible group-hover:visible absolute z-50 bg-gray-900 text-white text-sm rounded-lg py-2 px-3 
+                          left-0 top-full mt-1 w-fit max-w-[400px] shadow-lg break-words"
+                        >
+                          {item.title}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="relative group">
+                        <div className="truncate">{item.category}</div>
+                        <div
+                          className="invisible group-hover:visible absolute z-50 bg-gray-900 text-white text-sm rounded-lg py-2 px-3 
+                          left-0 top-full mt-1 w-fit max-w-[200px] shadow-lg break-words"
+                        >
+                          {item.category}
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center">
                       {formatDateTime(item.startTime)}
                     </TableCell>
@@ -452,7 +716,6 @@ export default function AuctionsPage() {
                       <span
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}
                       >
-                        {statusInfo.icon}
                         {statusInfo.text}
                       </span>
                     </TableCell>
