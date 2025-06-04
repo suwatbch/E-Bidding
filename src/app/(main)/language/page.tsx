@@ -236,22 +236,7 @@ export default function LanguagePage() {
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    <div className="flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M7 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                        />
-                      </svg>
-                      ลำดับ
-                    </div>
+                    <div className="flex items-center gap-2">ลำดับ</div>
                   </th>
                   <th
                     scope="col"
@@ -494,18 +479,16 @@ export default function LanguagePage() {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md relative">
             {/* Modal Header */}
-            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {editLanguage ? 'แก้ไขภาษา' : 'เพิ่มภาษา'}
-              </h2>
+            <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50 relative">
               <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
+                  hover:bg-gray-100/80 rounded-lg p-1"
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-500 transition-colors duration-200"
               >
                 <svg
-                  className="w-6 h-6"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -518,6 +501,61 @@ export default function LanguagePage() {
                   />
                 </svg>
               </button>
+              <h2 className="text-lg font-bold text-gray-900 pr-8">
+                {editLanguage ? (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-1.5 rounded-lg">
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">
+                        แก้ไขข้อมูลภาษา
+                      </div>
+                      <div className="text-xs text-gray-500 font-normal">
+                        กรุณากรอกข้อมูลที่ต้องการแก้ไข
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-blue-100 p-1.5 rounded-lg">
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">
+                        เพิ่มข้อมูลภาษา
+                      </div>
+                      <div className="text-xs text-gray-500 font-normal">
+                        กรุณากรอกข้อมูลภาษาใหม่
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </h2>
             </div>
 
             {/* Modal Body - Scrollable */}
@@ -531,7 +569,7 @@ export default function LanguagePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -563,7 +601,7 @@ export default function LanguagePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -594,7 +632,7 @@ export default function LanguagePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <div className="flex items-center gap-2">
                       <svg
-                        className="w-5 h-5 text-gray-500"
+                        className="w-5 h-5 text-gray-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -630,7 +668,7 @@ export default function LanguagePage() {
                   />
                   <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
                     <svg
-                      className="w-5 h-5 text-gray-500"
+                      className="w-5 h-5 text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -656,7 +694,7 @@ export default function LanguagePage() {
                   />
                   <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
                     <svg
-                      className="w-5 h-5 text-gray-500"
+                      className="w-5 h-5 text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
