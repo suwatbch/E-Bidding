@@ -301,27 +301,26 @@ export default function AuctionsPage() {
         </div>
       </label>
       <div
-        className="relative w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent cursor-pointer bg-white"
+        className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between"
         onClick={onClick}
+        style={{ minHeight: '42px', maxHeight: '42px' }}
       >
-        <div className="flex items-center justify-between">
-          <span>{value}</span>
-          <div className="absolute inset-y-0 right-0 flex items-center px-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4 text-gray-400 hover:text-blue-500 transition-colors duration-200"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-              />
-            </svg>
-          </div>
+        <span className="flex-1 text-left">{value}</span>
+        <div className="flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-4 h-4 text-gray-400"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+            />
+          </svg>
         </div>
       </div>
     </div>
@@ -452,11 +451,17 @@ export default function AuctionsPage() {
                 popperPlacement="bottom-start"
                 popperClassName="calendar-popper"
                 calendarClassName="shadow-lg"
-                dayClassName={(date) =>
-                  date.getTime() === startDate?.getTime()
-                    ? 'bg-blue-500 text-white rounded-full'
-                    : 'text-gray-700 hover:bg-blue-50 rounded-full'
-                }
+                dayClassName={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const checkDate = new Date(date);
+                  checkDate.setHours(0, 0, 0, 0);
+
+                  if (checkDate.getTime() === today.getTime()) {
+                    return 'bg-blue-500 text-white rounded-full';
+                  }
+                  return 'text-gray-700 hover:bg-blue-50 rounded-full';
+                }}
               />
             </div>
 
@@ -476,11 +481,17 @@ export default function AuctionsPage() {
                 popperPlacement="bottom-start"
                 popperClassName="calendar-popper"
                 calendarClassName="shadow-lg"
-                dayClassName={(date) =>
-                  date.getTime() === endDate?.getTime()
-                    ? 'bg-blue-500 text-white rounded-full'
-                    : 'text-gray-700 hover:bg-blue-50 rounded-full'
-                }
+                dayClassName={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const checkDate = new Date(date);
+                  checkDate.setHours(0, 0, 0, 0);
+
+                  if (checkDate.getTime() === today.getTime()) {
+                    return 'bg-blue-500 text-white rounded-full';
+                  }
+                  return 'text-gray-700 hover:bg-blue-50 rounded-full';
+                }}
               />
             </div>
           </div>
@@ -783,60 +794,86 @@ const styles = `
 
 .react-datepicker__year-dropdown {
   background-color: white !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 0.375rem !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-  max-height: 200px !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  max-height: 250px !important;
   overflow-y: auto !important;
   position: absolute !important;
   z-index: 10000 !important;
-  width: 80px !important;
+  width: 120px !important;
   text-align: center !important;
+  padding: 0.5rem 0 !important;
+  backdrop-filter: blur(8px) !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.react-datepicker__year-dropdown::-webkit-scrollbar {
+  display: none !important;
 }
 
 .react-datepicker__year-option {
-  color: #374151 !important;
+  color: #475569 !important;
   cursor: pointer !important;
-  padding: 0.375rem 0.5rem !important;
+  padding: 0.5rem 1rem !important;
   font-size: 0.875rem !important;
-  transition: all 0.2s !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease-in-out !important;
+  margin: 0.125rem 0.5rem !important;
+  border-radius: 0.375rem !important;
 }
 
 .react-datepicker__year-option:hover {
-  background-color: #eff6ff !important;
+  background-color: #f1f5f9 !important;
   color: #3b82f6 !important;
+  transform: translateX(2px) !important;
 }
 
 .react-datepicker__year-option--selected {
-  background-color: #3b82f6 !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
   color: white !important;
   font-weight: 600 !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
 }
 
 .react-datepicker__year-read-view {
-  border: 1px solid #d1d5db !important;
-  border-radius: 0.25rem !important;
-  padding: 0.25rem 0.5rem !important;
-  background-color: #f9fafb !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.375rem 0.75rem !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
   cursor: pointer !important;
   font-size: 0.875rem !important;
-  color: #374151 !important;
-  transition: all 0.2s !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  transition: all 0.2s ease-in-out !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  min-width: 60px !important;
+  justify-content: center !important;
 }
 
 .react-datepicker__year-read-view:hover {
-  background-color: #eff6ff !important;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
   border-color: #3b82f6 !important;
   color: #3b82f6 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15) !important;
 }
 
 .react-datepicker__year-read-view--down-arrow {
-  border-top: 6px solid #9ca3af !important;
-  border-left: 6px solid transparent !important;
-  border-right: 6px solid transparent !important;
+  border-top: 5px solid currentColor !important;
+  border-left: 4px solid transparent !important;
+  border-right: 4px solid transparent !important;
   width: 0 !important;
   height: 0 !important;
-  margin-left: 6px !important;
+  margin-left: 0 !important;
+  transition: transform 0.2s ease-in-out !important;
+}
+
+.react-datepicker__year-read-view:hover .react-datepicker__year-read-view--down-arrow {
+  transform: rotate(180deg) !important;
 }
 
 .react-datepicker__day-names {
@@ -878,6 +915,12 @@ const styles = `
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  color: #1f2937 !important;
+}
+
+.react-datepicker__day--outside-month {
+  color: #9ca3af !important;
+  opacity: 0.6 !important;
 }
 
 .react-datepicker__day:hover {
