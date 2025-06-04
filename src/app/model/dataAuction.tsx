@@ -6,7 +6,8 @@ export interface Auction {
   start_dt: string;
   end_dt: string;
   reserve_price: number;
-  status: number;
+  status: number; // 1 เปิดการประมูล, 2 รอการประมูล, 3 กำลังประมูล, 4 ใกล้สิ้นสุด, 5 สิ้นสุดประมูล, 6 ยกเลิกประมูล
+  is_deleted: number; // 1 = active, 0 = inactive
   created_dt: string;
   updated_dt: string;
 }
@@ -17,9 +18,10 @@ export const dataAuction: Auction[] = [
     name: 'ประมูลรถยนต์มือสอง',
     auction_type_id: 1,
     start_dt: '2024-03-25 09:00:00',
-    end_dt: '2024-03-26 17:00:00',
+    end_dt: '2024-03-25 09:10:00',
     reserve_price: 500000,
-    status: 1,
+    status: 3,
+    is_deleted: 0,
     created_dt: '2024-03-20 10:00:00',
     updated_dt: '2024-03-20 10:00:00',
   },
@@ -30,7 +32,8 @@ export const dataAuction: Auction[] = [
     start_dt: '2024-03-27 09:00:00',
     end_dt: '2024-03-28 17:00:00',
     reserve_price: 1000000,
-    status: 1,
+    status: 2,
+    is_deleted: 0,
     created_dt: '2024-03-21 10:00:00',
     updated_dt: '2024-03-21 10:00:00',
   },

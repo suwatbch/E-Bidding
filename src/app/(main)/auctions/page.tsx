@@ -42,15 +42,17 @@ import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
 import Container from '@/app/components/ui/Container';
+import { dataAuction, Auction } from '@/app/model/dataAuction';
+import { dataAuction_Type } from '@/app/model/dataAuction_Type';
+import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
 
 interface AuctionItem {
-  id: string;
+  no: number;
   title: string;
   category: string;
-  startPrice: number;
-  currentBid: number;
-  bidCount: number;
+  startTime: string;
   endTime: string;
+  bidCount: number;
   status: 'pending' | 'bidding' | 'ending_soon' | 'ended' | 'cancelled';
 }
 
@@ -63,208 +65,14 @@ const categories = [
   { name: 'ของสะสม', icon: <CategoryCollectiblesIcon /> },
 ];
 
-const auctionItems: AuctionItem[] = [
-  {
-    id: 'A001',
-    title: 'รถยนต์ Toyota Camry 2.5G ปี 2022',
-    category: 'ยานพาหนะ',
-    startPrice: 800000,
-    currentBid: 850000,
-    bidCount: 12,
-    endTime: '2024-03-25 15:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A002',
-    title: 'ที่ดินเปล่า 100 ตร.วา ถ.พระราม 2',
-    category: 'อสังหาริมทรัพย์',
-    startPrice: 2500000,
-    currentBid: 2800000,
-    bidCount: 8,
-    endTime: '2024-03-24 12:00',
-    status: 'ending_soon',
-  },
-  {
-    id: 'A003',
-    title: 'แหวนเพชรน้ำงาม 1 กะรัต',
-    category: 'เครื่องประดับ',
-    startPrice: 150000,
-    currentBid: 180000,
-    bidCount: 15,
-    endTime: '2024-03-26 18:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A004',
-    title: 'MacBook Pro M2 Max 16" 32GB 1TB',
-    category: 'อิเล็กทรอนิกส์',
-    startPrice: 89000,
-    currentBid: 95000,
-    bidCount: 6,
-    endTime: '2024-03-23 20:00',
-    status: 'ended',
-  },
-  {
-    id: 'A005',
-    title: 'เหรียญหลวงพ่อคูณ รุ่นแรก ปี 2512',
-    category: 'พระเครื่อง',
-    startPrice: 500000,
-    currentBid: 580000,
-    bidCount: 20,
-    endTime: '2024-03-27 09:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A006',
-    title: 'คอนโดมิเนียม The Base สุขุมวิท 77',
-    category: 'อสังหาริมทรัพย์',
-    startPrice: 1800000,
-    currentBid: 1950000,
-    bidCount: 10,
-    endTime: '2024-03-25 16:00',
-    status: 'cancelled',
-  },
-  {
-    id: 'A007',
-    title: 'นาฬิกา Rolex Submariner Date',
-    category: 'เครื่องประดับ',
-    startPrice: 450000,
-    currentBid: 480000,
-    bidCount: 9,
-    endTime: '2024-03-24 14:00',
-    status: 'ending_soon',
-  },
-  {
-    id: 'A008',
-    title: 'เครื่องจักรโรงงานอุตสาหกรรม CNC',
-    category: 'อุตสาหกรรม',
-    startPrice: 1200000,
-    currentBid: 1350000,
-    bidCount: 5,
-    endTime: '2024-03-26 11:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A009',
-    title: 'ภาพวาดศิลปินแห่งชาติ เฉลิมชัย',
-    category: 'ศิลปะ',
-    startPrice: 300000,
-    currentBid: 320000,
-    bidCount: 7,
-    endTime: '2024-03-25 13:00',
-    status: 'ended',
-  },
-  {
-    id: 'A010',
-    title: 'รถจักรยานยนต์ Ducati Panigale V4',
-    category: 'ยานพาหนะ',
-    startPrice: 950000,
-    currentBid: 1020000,
-    bidCount: 14,
-    endTime: '2024-03-24 17:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A011',
-    title: 'โน๊ตบุ๊ค ASUS ROG Strix G16 2024',
-    category: 'อิเล็กทรอนิกส์',
-    startPrice: 55000,
-    currentBid: 62000,
-    bidCount: 8,
-    endTime: '2024-03-28 10:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A012',
-    title: 'ทาวน์โฮม 3 ชั้น หลังมุม',
-    category: 'อสังหาริมทรัพย์',
-    startPrice: 3500000,
-    currentBid: 3750000,
-    bidCount: 4,
-    endTime: '2024-03-29 15:00',
-    status: 'cancelled',
-  },
-  {
-    id: 'A013',
-    title: 'กล้อง Sony A7R V Mirrorless',
-    category: 'อิเล็กทรอนิกส์',
-    startPrice: 125000,
-    currentBid: 138000,
-    bidCount: 11,
-    endTime: '2024-03-26 14:00',
-    status: 'ending_soon',
-  },
-  {
-    id: 'A014',
-    title: 'พระสมเด็จวัดระฆัง รุ่นอนุสรณ์ 100 ปี',
-    category: 'พระเครื่อง',
-    startPrice: 250000,
-    currentBid: 285000,
-    bidCount: 16,
-    endTime: '2024-03-23 11:00',
-    status: 'ended',
-  },
-  {
-    id: 'A015',
-    title: 'เพชรน้ำงาม GIA Certified 2 กะรัต',
-    category: 'เครื่องประดับ',
-    startPrice: 850000,
-    currentBid: 920000,
-    bidCount: 7,
-    endTime: '2024-03-27 16:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A016',
-    title: 'รถ Porsche 911 GT3 ปี 2023',
-    category: 'ยานพาหนะ',
-    startPrice: 12500000,
-    currentBid: 13200000,
-    bidCount: 5,
-    endTime: '2024-03-30 12:00',
-    status: 'bidding',
-  },
-  {
-    id: 'A017',
-    title: 'ที่ดินติดทะเล 2 ไร่ หัวหิน',
-    category: 'อสังหาริมทรัพย์',
-    startPrice: 15000000,
-    currentBid: 16500000,
-    bidCount: 9,
-    endTime: '2024-03-25 09:00',
-    status: 'ending_soon',
-  },
-  {
-    id: 'A018',
-    title: 'เครื่องบินเล็ก Cessna 172',
-    category: 'ยานพาหนะ',
-    startPrice: 8500000,
-    currentBid: 8900000,
-    bidCount: 3,
-    endTime: '2024-03-22 10:00',
-    status: 'ended',
-  },
-  {
-    id: 'A019',
-    title: 'ตู้เซฟโบราณ อายุ 100 ปี',
-    category: 'ของสะสม',
-    startPrice: 180000,
-    currentBid: 195000,
-    bidCount: 6,
-    endTime: '2024-03-28 13:00',
-    status: 'cancelled',
-  },
-  {
-    id: 'A020',
-    title: 'ภาพวาดสีน้ำมัน Vincent van Gogh',
-    category: 'ศิลปะ',
-    startPrice: 450000,
-    currentBid: 520000,
-    bidCount: 13,
-    endTime: '2024-03-29 17:00',
-    status: 'bidding',
-  },
-];
+const statusMap: Record<number, string> = {
+  1: 'เปิดการประมูล',
+  2: 'รอการประมูล',
+  3: 'กำลังประมูล',
+  4: 'ใกล้สิ้นสุด',
+  5: 'สิ้นสุดประมูล',
+  6: 'ยกเลิกประมูล',
+};
 
 export default function AuctionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
@@ -355,35 +163,99 @@ export default function AuctionsPage() {
     }
   };
 
-  // เรียงลำดับรายการตามสถานะและเวลา
-  const sortedAuctions = [...auctionItems].sort((a, b) => {
-    // เรียงตามสถานะ
-    const statusOrder = {
-      pending: 0,
-      bidding: 1,
-      ending_soon: 2,
-      ended: 3,
-      cancelled: 4,
-    };
+  const formatDateTime = (dateTimeStr: string) => {
+    const date = new Date(dateTimeStr);
+    return date
+      .toLocaleString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+      .replace(/(\d+)\/(\d+)\/(\d+)/, '$1-$2-$3');
+  };
 
-    if (statusOrder[a.status] !== statusOrder[b.status]) {
-      return statusOrder[a.status] - statusOrder[b.status];
+  const formatAuctionId = (id: number) => {
+    const currentYear = new Date().getFullYear();
+    // แปลงเลขไอดีให้เป็นสตริงและเติม 0 ข้างหน้าให้ครบ 4 หลัก
+    const paddedId = id.toString().padStart(4, '0');
+    return `[${currentYear}${paddedId}]`;
+  };
+
+  // ดึงข้อมูลตลาดประมูลที่ไม่ถูกลบ
+  const auctions = dataAuction.filter((a) => a.is_deleted === 0);
+
+  // สร้างข้อมูลสำหรับแสดงผล
+  const auctionTable = auctions.map((auction, idx) => {
+    const auctionType = dataAuction_Type.find(
+      (t) => t.auction_type_id === auction.auction_type_id
+    );
+    const participantCount = dataAuction_Participant.filter(
+      (p) => p.auction_id === auction.auction_id
+    ).length;
+
+    // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
+    let uiStatus: AuctionItem['status'] = 'pending';
+    switch (auction.status) {
+      case 2:
+        uiStatus = 'pending';
+        break;
+      case 3:
+        uiStatus = 'bidding';
+        break;
+      case 4:
+        uiStatus = 'ending_soon';
+        break;
+      case 5:
+        uiStatus = 'ended';
+        break;
+      case 6:
+        uiStatus = 'cancelled';
+        break;
     }
 
-    // ถ้าสถานะเดียวกัน เรียงตามเวลา
-    return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+    return {
+      no: idx + 1,
+      title: `${auction.name} ${formatAuctionId(auction.auction_id)}`,
+      category: auctionType?.name || '-',
+      startTime: auction.start_dt,
+      endTime: auction.end_dt,
+      bidCount: participantCount,
+      status: uiStatus,
+    } as AuctionItem;
   });
 
-  const filteredItems = sortedAuctions.filter((item) => {
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+  // กรองและเรียงลำดับข้อมูล
+  const filteredItems = auctionTable
+    .filter((item) => {
+      const matchesSearch =
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === 'all' || item.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'all' || item.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      // เรียงตามสถานะ
+      const statusOrder = {
+        pending: 0,
+        bidding: 1,
+        ending_soon: 2,
+        ended: 3,
+        cancelled: 4,
+      };
+
+      if (statusOrder[a.status] !== statusOrder[b.status]) {
+        return statusOrder[a.status] - statusOrder[b.status];
+      }
+
+      // ถ้าสถานะเดียวกัน เรียงตามเวลา
+      return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+    });
 
   return (
     <Container className="py-8">
@@ -424,32 +296,11 @@ export default function AuctionsPage() {
       </div>
 
       <div className="py-8">
-        {/* Categories */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">หมวดหมู่</h2>
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {categories.map((category) => (
-              <button
-                key={category.name}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`flex items-center px-6 py-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 text-gray-700 hover:text-blue-600 min-w-max cursor-pointer ${
-                  selectedCategory === category.name
-                    ? 'border-blue-500 text-blue-600'
-                    : ''
-                }`}
-              >
-                <span className="mr-2">{category.icon}</span>
-                {category.name}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Auction Table */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-2xl font-semibold">รายการประมูลทั้งหมด</h2>
+              <h2 className="text-2xl font-semibold">รายการประมูล</h2>
               <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
                 <button
                   onClick={() => setStatusFilter('all')}
@@ -529,14 +380,47 @@ export default function AuctionsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>รหัส</TableHead>
-                <TableHead>ชื่อรายการ</TableHead>
-                <TableHead>หมวดหมู่</TableHead>
-                <TableHead className="text-right">ราคาเริ่มต้น</TableHead>
-                <TableHead className="text-right">ราคาปัจจุบัน</TableHead>
-                <TableHead className="text-center">จำนวนผู้ประมูล</TableHead>
-                <TableHead className="text-center">เวลาที่เหลือ</TableHead>
-                <TableHead className="text-center">สถานะ</TableHead>
+                <TableHead className="w-[5%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    ลำดับ
+                  </div>
+                </TableHead>
+                <TableHead>
+                  <div className="flex items-center gap-2">
+                    <Gavel className="w-5 h-5 text-gray-500" />
+                    ชื่อตลาด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%]">
+                  <div className="flex items-center gap-2">
+                    <Category className="w-5 h-5 text-gray-500" />
+                    หมวดหมู่
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <AccessTime className="w-5 h-5 text-gray-500" />
+                    เวลาเปิด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <TimerIcon className="w-5 h-5 text-gray-500" />
+                    เวลาปิด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Person className="w-5 h-5 text-gray-500" />
+                    ผู้ประมูล
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <LocalOffer className="w-5 h-5 text-gray-500" />
+                    สถานะ
+                  </div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -544,30 +428,24 @@ export default function AuctionsPage() {
                 const statusInfo = getStatusInfo(item.status);
                 return (
                   <TableRow
-                    key={item.id}
+                    key={item.no}
                     className="hover:bg-blue-50/50 cursor-pointer transition-colors"
                   >
-                    <TableCell className="font-medium">{item.id}</TableCell>
+                    <TableCell className="font-medium">{item.no}</TableCell>
                     <TableCell className="font-medium text-blue-600 hover:text-blue-700">
                       {item.title}
                     </TableCell>
                     <TableCell>{item.category}</TableCell>
-                    <TableCell className="text-right text-gray-600">
-                      {formatPrice(item.startPrice)}
+                    <TableCell className="text-center">
+                      {formatDateTime(item.startTime)}
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-blue-600">
-                      {formatPrice(item.currentBid)}
+                    <TableCell className="text-center">
+                      {formatDateTime(item.endTime)}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-1 text-gray-600">
                         <UserIcon />
                         {item.bidCount}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-gray-600">
-                        <TimeIcon />
-                        {getTimeRemaining(item.endTime)}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

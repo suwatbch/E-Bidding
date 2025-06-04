@@ -10,24 +10,23 @@ export interface AuctionType {
 export const dataAuction_Type: AuctionType[] = [
   {
     auction_type_id: 1,
-    code: 'sealed',
-    name: 'ประมูลปิด',
-    description: 'การประมูลแบบปิด โดยผู้ประมูลจะไม่เห็นราคาของผู้อื่น',
+    code: 'raw_material',
+    name: 'วัตถุดิบ',
+    description: 'วัตถุดิบ ผสมกับสินค้าอื่นๆ',
     status: 1,
   },
   {
     auction_type_id: 2,
-    code: 'reverse',
-    name: 'ประมูลย้อนกลับ',
-    description: 'การประมูลแบบย้อนกลับ โดยผู้ประมูลจะเสนอราคาต่ำสุด',
+    code: 'animal_food',
+    name: 'อาหารสัตว์',
+    description: 'อาหารสัตว์ สำหรับสัตว์ทั่วไป',
     status: 1,
   },
   {
     auction_type_id: 3,
-    code: 'live',
-    name: 'ประมูลสด',
-    description:
-      'การประมูลแบบสด โดยผู้ประมูลจะเห็นราคาของผู้อื่นและสามารถเสนอราคาใหม่ได้',
+    code: 'office_supplies',
+    name: 'สินค้าสำนักงาน',
+    description: 'สินค้าสำนักงาน สำหรับสำนักงานทั่วไป',
     status: 1,
   },
 ];
