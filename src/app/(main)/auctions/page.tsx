@@ -396,13 +396,17 @@ export default function AuctionsPage() {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                  onClick={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    input.showPicker();
+                  }}
                 />
                 <div
                   className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
-                  onClick={() => {
-                    const input = document.querySelector(
-                      'input[type="date"][value="' + startDate + '"]'
-                    ) as HTMLInputElement;
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
                     if (input) {
                       input.showPicker();
                     }
@@ -440,13 +444,17 @@ export default function AuctionsPage() {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
+                  onClick={(e) => {
+                    const input = e.target as HTMLInputElement;
+                    input.showPicker();
+                  }}
                 />
                 <div
                   className="absolute inset-y-0 right-0 flex items-center px-2 cursor-pointer hover:text-blue-500 transition-colors duration-200"
-                  onClick={() => {
-                    const input = document.querySelector(
-                      'input[type="date"][value="' + endDate + '"]'
-                    ) as HTMLInputElement;
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
                     if (input) {
                       input.showPicker();
                     }
