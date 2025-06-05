@@ -161,6 +161,17 @@ const datePickerStyles = `
     transform: none;
   }
   
+  .react-datepicker__day--outside-month {
+    color: #9ca3af !important;
+    opacity: 0.6;
+  }
+  
+  .react-datepicker__day--outside-month:hover {
+    background: #f3f4f6;
+    color: #6b7280 !important;
+    transform: none;
+  }
+  
   .react-datepicker__navigation {
     position: absolute;
     top: 50%;
@@ -530,6 +541,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
         dateFormat="dd/MM/yyyy"
         locale="th"
         dropdownMode="select"
+        calendarStartDay={0}
         minDate={defaultMinDate}
         maxDate={defaultMaxDate}
         disabled={disabled}
