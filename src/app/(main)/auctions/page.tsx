@@ -759,7 +759,7 @@ export default function AuctionsPage() {
                   colSpan={7}
                 />
               ) : (
-                currentItems.map((item) => {
+                currentItems.map((item, index) => {
                   const statusInfo = getStatusDisplay(item.status);
                   return (
                     <TableRow
@@ -767,7 +767,7 @@ export default function AuctionsPage() {
                       className="hover:bg-blue-50/50 cursor-pointer transition-colors"
                     >
                       <TableCell className="font-medium text-center">
-                        {(item.no + 1).toLocaleString('th-TH')}
+                        {(startIndex + index + 1).toLocaleString('th-TH')}
                       </TableCell>
                       <TableCell>
                         <div className="relative">
@@ -803,7 +803,7 @@ export default function AuctionsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm`}
                         >
                           {statusInfo.text}
                         </span>

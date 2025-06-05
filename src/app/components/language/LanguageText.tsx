@@ -57,6 +57,9 @@ export default function TransectionLanguage({
 
   const totalPages = Math.ceil(filteredAndPaginatedData.total / perPage);
 
+  // Calculate pagination indices like Company page
+  const startIndex = (currentPage - 1) * perPage;
+
   // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
@@ -299,7 +302,7 @@ export default function TransectionLanguage({
                       className="hover:bg-gray-50 transition-colors duration-200"
                     >
                       <td className="px-6 py-4 text-center text-sm text-gray-500">
-                        {(currentPage - 1) * perPage + index + 1}
+                        {(startIndex + index + 1).toLocaleString('th-TH')}
                       </td>
                       <td className="px-6 py-4">
                         <div
