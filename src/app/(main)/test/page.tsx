@@ -541,6 +541,7 @@ export default function TestPage() {
                 scrollableYearDropdown
                 yearDropdownItemNumber={20}
                 showMonthDropdown
+                dateFormat="dd/MM/yyyy"
                 dropdownMode="select"
                 minDate={minDate}
                 maxDate={maxDate}
@@ -668,8 +669,8 @@ export default function TestPage() {
                     <span className="text-lg font-medium text-white mt-2">
                       {monthDate.toLocaleString('th-TH', {
                         month: 'long',
-                        year: 'numeric',
-                      })}
+                      })}{' '}
+                      {monthDate.getFullYear() + 543}
                     </span>
                   </div>
                 )}
@@ -849,8 +850,8 @@ export default function TestPage() {
                     <span className="text-lg font-medium text-white mt-2">
                       {monthDate.toLocaleString('th-TH', {
                         month: 'long',
-                        year: 'numeric',
-                      })}
+                      })}{' '}
+                      {monthDate.getFullYear() + 543}
                     </span>
                   </div>
                 )}
