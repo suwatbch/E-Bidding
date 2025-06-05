@@ -278,7 +278,7 @@ const datePickerStyles = `
   }
   
   .react-datepicker__time-list {
-    height: 200px !important;
+    height: 320px !important;
     overflow-y: auto;
     padding: 8px;
     background: #f8fafc;
@@ -301,7 +301,6 @@ const datePickerStyles = `
     background: #dbeafe;
     color: #1d4ed8;
     border-color: #3b82f6;
-    transform: translateX(2px);
   }
   
   .react-datepicker__time-list-item--selected {
@@ -378,6 +377,62 @@ export default function TestPage() {
       const minutes = date.getMinutes().toString().padStart(2, '0');
 
       return `${day}-${month}-${year} ${hours}:${minutes}`;
+    } catch (error) {
+      return 'วันที่ไม่ถูกต้อง';
+    }
+  };
+
+  // ฟังก์ชันสำหรับแสดงผลในหน้าจอ (พ.ศ. วัน/เดือน/ปี)
+  const formatDateTimeForDisplay = (date: Date) => {
+    try {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear() + 543; // แปลงเป็นพุทธศักราช
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (error) {
+      return 'วันที่ไม่ถูกต้อง';
+    }
+  };
+
+  // ฟังก์ชันสำหรับแสดงเฉพาะวันที่ (พ.ศ. วัน/เดือน/ปี)
+  const formatDateOnlyForDisplay = (date: Date) => {
+    try {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear() + 543; // แปลงเป็นพุทธศักราช
+
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return 'วันที่ไม่ถูกต้อง';
+    }
+  };
+
+  // ฟังก์ชันสำหรับใช้งานจริง (ค.ศ. ปี/เดือน/วัน)
+  const formatDateTimeForData = (date: Date) => {
+    try {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear(); // ใช้ ค.ศ.
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+
+      return `${year}/${month}/${day} ${hours}:${minutes}`;
+    } catch (error) {
+      return 'วันที่ไม่ถูกต้อง';
+    }
+  };
+
+  // ฟังก์ชันสำหรับใช้งานจริง เฉพาะวันที่ (ค.ศ. ปี/เดือน/วัน)
+  const formatDateOnlyForData = (date: Date) => {
+    try {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear(); // ใช้ ค.ศ.
+
+      return `${year}/${month}/${day}`;
     } catch (error) {
       return 'วันที่ไม่ถูกต้อง';
     }
@@ -491,7 +546,7 @@ export default function TestPage() {
                 maxDate={maxDate}
                 customInput={
                   <CustomDateInput
-                    value={selectedDate.toLocaleDateString('th-TH')}
+                    value={formatDateOnlyForDisplay(selectedDate)}
                     onClick={() => {}}
                     label="เลือกวันที่"
                     placeholder="กรุณาเลือกวันที่"
@@ -623,8 +678,12 @@ export default function TestPage() {
 
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
-                <strong>วันที่ที่เลือก:</strong>{' '}
-                {selectedDate.toLocaleDateString('th-TH')}
+                <strong>วันที่ที่เลือก (แสดงผล):</strong>{' '}
+                {formatDateOnlyForDisplay(selectedDate)}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                <strong>วันที่สำหรับใช้งาน (ค.ศ.):</strong>{' '}
+                {formatDateOnlyForData(selectedDate)}
               </p>
             </div>
           </div>
@@ -668,7 +727,7 @@ export default function TestPage() {
                 maxDate={maxDate}
                 customInput={
                   <CustomDateInput
-                    value={formatDateTime(selectedDateTime)}
+                    value={formatDateTimeForDisplay(selectedDateTime)}
                     onClick={() => {}}
                     label="เลือกวันและเวลา"
                     placeholder="กรุณาเลือกวันและเวลา"
@@ -800,8 +859,12 @@ export default function TestPage() {
 
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">
-                <strong>วันเวลาที่เลือก:</strong>{' '}
-                {formatDateTime(selectedDateTime)}
+                <strong>วันเวลาที่เลือก (แสดงผล):</strong>{' '}
+                {formatDateTimeForDisplay(selectedDateTime)}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                <strong>วันเวลาสำหรับใช้งาน (ค.ศ.):</strong>{' '}
+                {formatDateTimeForData(selectedDateTime)}
               </p>
             </div>
           </div>
