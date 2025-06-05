@@ -49,18 +49,6 @@ export default function LanguagePage() {
   // Remove search filtering
   const filteredLanguages = languages;
 
-  const openAddModal = () => {
-    setEditLanguage(null);
-    setForm({
-      language_code: '',
-      language_name: '',
-      flag: '',
-      is_default: false,
-      status: 1,
-    });
-    setIsModalOpen(true);
-  };
-
   const openEditModal = (language: Language) => {
     setEditLanguage(language);
     setForm({
@@ -134,16 +122,6 @@ export default function LanguagePage() {
           )
         );
       }
-    } else {
-      // If adding new language as default, unset others
-      if (languageData.is_default) {
-        setLanguages([
-          ...languages.map((l) => ({ ...l, is_default: false })),
-          languageData,
-        ]);
-      } else {
-        setLanguages([...languages, languageData]);
-      }
     }
     closeModal();
   };
@@ -165,41 +143,10 @@ export default function LanguagePage() {
       <div className="flex-1 py-8 flex flex-col">
         {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-3 rounded-xl">
-                <svg
-                  className="w-8 h-8 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">
-                  จัดการภาษา
-                </h1>
-                <p className="mt-1 text-sm text-gray-500">
-                  จัดการข้อมูลภาษาในระบบ
-                </p>
-              </div>
-            </div>
-            {/* <button
-              onClick={openAddModal}
-              className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
-                  active:scale-[0.98] whitespace-nowrap gap-2"
-            >
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 p-3 rounded-xl">
               <svg
-                className="w-5 h-5"
+                className="w-8 h-8 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -208,11 +155,18 @@ export default function LanguagePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
                 />
               </svg>
-              เพิ่มภาษา
-            </button> */}
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">
+                จัดการภาษา
+              </h1>
+              <p className="mt-1 text-sm text-gray-500">
+                จัดการข้อมูลภาษาในระบบ
+              </p>
+            </div>
           </div>
         </div>
 
@@ -468,11 +422,6 @@ export default function LanguagePage() {
           onEdit={(key) => {
             console.log('Edit:', key);
           }}
-          onDelete={(key) => {
-            if (window.confirm('คุณต้องการลบข้อความนี้ใช่หรือไม่?')) {
-              console.log('Delete:', key);
-            }
-          }}
         />
       </div>
 
@@ -502,59 +451,31 @@ export default function LanguagePage() {
                 </svg>
               </button>
               <h2 className="text-lg font-bold text-gray-900 pr-8">
-                {editLanguage ? (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-yellow-100 p-1.5 rounded-lg">
-                      <svg
-                        className="w-5 h-5 text-yellow-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                <div className="flex items-center gap-2">
+                  <div className="bg-yellow-100 p-1.5 rounded-lg">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      แก้ไขข้อมูลภาษา
                     </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        แก้ไขข้อมูลภาษา
-                      </div>
-                      <div className="text-xs text-gray-500 font-normal">
-                        กรุณากรอกข้อมูลที่ต้องการแก้ไข
-                      </div>
+                    <div className="text-xs text-gray-500 font-normal">
+                      กรุณากรอกข้อมูลที่ต้องการแก้ไข
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 p-1.5 rounded-lg">
-                      <svg
-                        className="w-5 h-5 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        เพิ่มข้อมูลภาษา
-                      </div>
-                      <div className="text-xs text-gray-500 font-normal">
-                        กรุณากรอกข้อมูลภาษาใหม่
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
               </h2>
             </div>
 
@@ -593,7 +514,7 @@ export default function LanguagePage() {
                       focus:ring-blue-500 focus:border-transparent"
                     placeholder="th"
                     required
-                    disabled={editLanguage !== null}
+                    disabled
                   />
                 </div>
 
@@ -748,41 +669,20 @@ export default function LanguagePage() {
                     transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-center gap-1.5">
-                    {editLanguage ? (
-                      <>
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        บันทึกการแก้ไข
-                      </>
-                    ) : (
-                      <>
-                        <svg
-                          className="w-4 h-4 text-white"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                          />
-                        </svg>
-                        เพิ่มภาษา
-                      </>
-                    )}
+                    <svg
+                      className="w-4 h-4 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    บันทึกการแก้ไข
                   </div>
                 </button>
               </div>

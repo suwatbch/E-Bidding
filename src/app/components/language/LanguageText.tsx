@@ -3,15 +3,14 @@ import { groupedTranslations } from '@/app/model/dataLanguageTextTemp';
 import Pagination from '@/app/components/ui/Pagination';
 import LoadingState from '@/app/components/ui/LoadingState';
 import EmptyState from '@/app/components/ui/EmptyState';
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 interface TransectionLanguageProps {
   onEdit?: (key: string) => void;
-  onDelete?: (key: string) => void;
 }
 
 export default function TransectionLanguage({
   onEdit,
-  onDelete,
 }: TransectionLanguageProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editKey, setEditKey] = useState<string | null>(null);
@@ -25,7 +24,7 @@ export default function TransectionLanguage({
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(5);
+  const [perPage, setPerPage] = useLocalStorage('languageTextPerPage', 5);
 
   // Loading and mounting states
   const [isLoading, setIsLoading] = useState(true);
@@ -67,12 +66,6 @@ export default function TransectionLanguage({
   const handlePerPageChange = (value: number) => {
     setPerPage(value);
     setCurrentPage(1); // Reset to first page when changing items per page
-  };
-
-  const openAddModal = () => {
-    setEditKey(null);
-    setForm({ key: '', th: '', en: '', zh: '' });
-    setIsModalOpen(true);
   };
 
   const openEditModal = (key: string) => {
@@ -124,46 +117,7 @@ export default function TransectionLanguage({
     <div className="space-y-4 mt-10">
       {/* Table Info Section */}
       <div className="flex justify-between items-center m-4">
-        <div className="flex items-center gap-4 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <span>แสดง</span>
-            <div className="relative">
-              <select
-                value={perPage}
-                onChange={(e) => handlePerPageChange(Number(e.target.value))}
-                className="border border-gray-200 rounded-lg text-sm px-3 py-1.5 pr-8 focus:outline-none focus:ring-2 
-                  focus:ring-blue-500 focus:border-transparent bg-gray-50/50 appearance-none cursor-pointer"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                <svg
-                  className="h-4 w-4 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
-            </div>
-            <span>รายการ</span>
-          </div>
-          <div>
-            ทั้งหมด{' '}
-            {mounted ? filteredAndPaginatedData.total.toLocaleString() : '-'}{' '}
-            รายการ
-          </div>
-        </div>
+        <div className="flex"></div>
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -190,27 +144,6 @@ export default function TransectionLanguage({
                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
-              hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
-              focus:ring-offset-2 transition-all duration-200 shadow-md text-sm gap-2"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            เพิ่มข้อความ
-          </button>
         </div>
       </div>
 
@@ -408,13 +341,6 @@ export default function TransectionLanguage({
                         >
                           แก้ไข
                         </button>
-                        <button
-                          onClick={() => onDelete?.(key)}
-                          className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
-                            hover:bg-red-200 transition-colors duration-200"
-                        >
-                          ลบ
-                        </button>
                       </td>
                     </tr>
                   ))
@@ -451,59 +377,31 @@ export default function TransectionLanguage({
                 </svg>
               </button>
               <h2 className="text-lg font-bold text-gray-900">
-                {editKey ? (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-yellow-100 p-1.5 rounded-lg">
-                      <svg
-                        className="w-5 h-5 text-yellow-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
+                <div className="flex items-center gap-2">
+                  <div className="bg-yellow-100 p-1.5 rounded-lg">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      แก้ไขข้อความ
                     </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        แก้ไขข้อความ
-                      </div>
-                      <div className="text-xs text-gray-500 font-normal">
-                        กรุณากรอกข้อมูลที่ต้องการแก้ไข
-                      </div>
+                    <div className="text-xs text-gray-500 font-normal">
+                      กรุณากรอกข้อมูลที่ต้องการแก้ไข
                     </div>
                   </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="bg-blue-100 p-1.5 rounded-lg">
-                      <svg
-                        className="w-5 h-5 text-blue-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-gray-900">
-                        เพิ่มข้อความ
-                      </div>
-                      <div className="text-xs text-gray-500 font-normal">
-                        กรุณากรอกข้อมูลข้อความใหม่
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
               </h2>
             </div>
 
@@ -539,7 +437,7 @@ export default function TransectionLanguage({
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                       focus:ring-blue-500 focus:border-transparent"
                     required
-                    disabled={!!editKey}
+                    disabled
                   />
                 </div>
                 <div>
@@ -618,41 +516,20 @@ export default function TransectionLanguage({
                       transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     <div className="flex items-center gap-1.5">
-                      {editKey ? (
-                        <>
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                          บันทึกการแก้ไข
-                        </>
-                      ) : (
-                        <>
-                          <svg
-                            className="w-4 h-4 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                            />
-                          </svg>
-                          เพิ่มข้อความ
-                        </>
-                      )}
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      บันทึกการแก้ไข
                     </div>
                   </button>
                 </div>
