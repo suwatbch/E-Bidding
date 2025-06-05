@@ -8,7 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../components/ui/AucTable';
+} from '@/app/components/ui/AucTable';
 import {
   StatusPendingIcon,
   StatusBiddingIcon,
@@ -612,6 +612,11 @@ export default function AuctionsPage() {
           </div>
         </div>
 
+        <div className="flex justify-between items-center m-4">
+          <div className="flex"></div>
+          <div className="flex items-right gap-4">เพิ่มตลาด</div>
+        </div>
+
         {/* Table Info Section */}
         <Pagination
           currentPage={currentPage}
@@ -625,7 +630,7 @@ export default function AuctionsPage() {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-2xl font-semibold">รายการประมูล</h2>
+              <h2 className="text-2xl font-semibold">รายการตลาดประมูล</h2>
               <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
                 <button
                   onClick={() => setSelectedStatus('all')}

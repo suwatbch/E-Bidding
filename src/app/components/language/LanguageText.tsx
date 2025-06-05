@@ -118,7 +118,6 @@ export default function TransectionLanguage({
 
   return (
     <div className="space-y-4 mt-10">
-      {/* Table Info Section */}
       <div className="flex justify-between items-center m-4">
         <div className="flex"></div>
         <div className="flex items-center gap-4">
