@@ -32,12 +32,7 @@ import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
-import {
-  statusConfig,
-  getStatusById,
-  getStatusDescription,
-  getStatusCode,
-} from '@/app/model/dataConfig';
+import { statusConfig, getStatusById } from '@/app/model/dataConfig';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { th } from 'date-fns/locale';
@@ -620,7 +615,7 @@ export default function AuctionsPage() {
         <div className="flex justify-between items-center m-4">
           <div className="flex"></div>
           <Link
-            href="/auctionform"
+            href="/auctionform?id=0"
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
             <svg
