@@ -1,5 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { groupedTranslations } from '@/app/model/dataLanguageTextTemp';
+import Pagination from '@/app/components/ui/Pagination';
+import LoadingState from '@/app/components/ui/LoadingState';
+import EmptyState from '@/app/components/ui/EmptyState';
 
 interface TransectionLanguageProps {
   onEdit?: (key: string) => void;
@@ -24,20 +27,23 @@ export default function TransectionLanguage({
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useState(5);
 
+  // Loading and mounting states
+  const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
+  const [translations, setTranslations] = useState(groupedTranslations);
+
   // Filter and paginate data
   const filteredAndPaginatedData = useMemo(() => {
     // Filter data
-    const filtered = Object.entries(groupedTranslations).filter(
-      ([key, value]) => {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          key.toLowerCase().includes(searchLower) ||
-          value.th.toLowerCase().includes(searchLower) ||
-          value.en.toLowerCase().includes(searchLower) ||
-          value.zh.toLowerCase().includes(searchLower)
-        );
-      }
-    );
+    const filtered = Object.entries(translations).filter(([key, value]) => {
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        key.toLowerCase().includes(searchLower) ||
+        value.th.toLowerCase().includes(searchLower) ||
+        value.en.toLowerCase().includes(searchLower) ||
+        value.zh.toLowerCase().includes(searchLower)
+      );
+    });
 
     // Calculate total pages
     const total = filtered.length;
@@ -48,12 +54,12 @@ export default function TransectionLanguage({
       data: filtered.slice(start, end),
       total,
     };
-  }, [searchTerm, currentPage, perPage]);
+  }, [translations, searchTerm, currentPage, perPage]);
 
   const totalPages = Math.ceil(filteredAndPaginatedData.total / perPage);
 
   // Reset to first page when search term changes
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
 
@@ -73,9 +79,9 @@ export default function TransectionLanguage({
     setEditKey(key);
     setForm({
       key,
-      th: groupedTranslations[key].th,
-      en: groupedTranslations[key].en,
-      zh: groupedTranslations[key].zh,
+      th: translations[key].th,
+      en: translations[key].en,
+      zh: translations[key].zh,
     });
     setIsModalOpen(true);
   };
@@ -95,6 +101,24 @@ export default function TransectionLanguage({
     // Handle form submission logic here
     closeModal();
   };
+
+  // Loading effect
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // จำลองการโหลดข้อมูลจริง
+        setTranslations(groupedTranslations);
+      } catch (error) {
+        console.error('Error loading translations:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+    setMounted(true);
+  }, []);
 
   return (
     <div className="space-y-4 mt-10">
@@ -135,13 +159,45 @@ export default function TransectionLanguage({
             <span>รายการ</span>
           </div>
           <div>
-            ทั้งหมด {filteredAndPaginatedData.total.toLocaleString()} รายการ
+            ทั้งหมด{' '}
+            {mounted ? filteredAndPaginatedData.total.toLocaleString() : '-'}{' '}
+            รายการ
           </div>
         </div>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg
+                className="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="ค้นหาข้อความ..."
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-50
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={openAddModal}
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+              hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+              focus:ring-offset-2 transition-all duration-200 shadow-md text-sm gap-2"
+          >
             <svg
-              className="h-5 w-5 text-gray-400"
+              className="w-4 h-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -150,108 +206,22 @@ export default function TransectionLanguage({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
               />
             </svg>
-          </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="ค้นหา"
-            className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-50
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage(1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-              hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-          >
-            หน้าแรก
-          </button>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-              hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-          >
-            ก่อนหน้า
-          </button>
-          <div className="flex items-center gap-1">
-            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-                if (i === 4)
-                  return (
-                    <span key="dots" className="px-2">
-                      ...
-                    </span>
-                  );
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - (4 - i);
-                if (i === 0)
-                  return (
-                    <span key="dots" className="px-2">
-                      ...
-                    </span>
-                  );
-              } else {
-                if (i === 0)
-                  return (
-                    <span key="dots1" className="px-2">
-                      ...
-                    </span>
-                  );
-                if (i === 4)
-                  return (
-                    <span key="dots2" className="px-2">
-                      ...
-                    </span>
-                  );
-                pageNum = currentPage + (i - 2);
-              }
-              return (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
-                    ${
-                      currentPage === pageNum
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-          </div>
-          <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-              hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-          >
-            ถัดไป
-          </button>
-          <button
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-              hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
-          >
-            หน้าสุดท้าย
+            เพิ่มข้อความ
           </button>
         </div>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalItems={filteredAndPaginatedData.total}
+        perPage={perPage}
+        onPageChange={setCurrentPage}
+        onPerPageChange={handlePerPageChange}
+        mounted={mounted}
+      />
 
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="flex flex-col">
@@ -381,64 +351,74 @@ export default function TransectionLanguage({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAndPaginatedData.data.map(([key, value], index) => (
-                  <tr
-                    key={key}
-                    className="hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4 text-center text-sm text-gray-500">
-                      {(currentPage - 1) * perPage + index + 1}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="text-sm font-medium text-gray-900 truncate"
-                        title={key}
-                      >
-                        {key}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="text-sm text-gray-500 truncate"
-                        title={value.th}
-                      >
-                        {value.th}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="text-sm text-gray-500 truncate"
-                        title={value.en}
-                      >
-                        {value.en}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div
-                        className="text-sm text-gray-500 truncate"
-                        title={value.zh}
-                      >
-                        {value.zh}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-center space-x-1">
-                      <button
-                        onClick={() => openEditModal(key)}
-                        className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
-                          hover:bg-yellow-200 transition-colors duration-200"
-                      >
-                        แก้ไข
-                      </button>
-                      <button
-                        onClick={() => onDelete?.(key)}
-                        className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
-                          hover:bg-red-200 transition-colors duration-200"
-                      >
-                        ลบ
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {isLoading ? (
+                  <LoadingState colSpan={6} />
+                ) : filteredAndPaginatedData.data.length === 0 ? (
+                  <EmptyState
+                    title="ไม่พบข้อมูล"
+                    description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
+                    colSpan={6}
+                  />
+                ) : (
+                  filteredAndPaginatedData.data.map(([key, value], index) => (
+                    <tr
+                      key={key}
+                      className="hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <td className="px-6 py-4 text-center text-sm text-gray-500">
+                        {(currentPage - 1) * perPage + index + 1}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div
+                          className="text-sm font-medium text-gray-900 truncate"
+                          title={key}
+                        >
+                          {key}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div
+                          className="text-sm text-gray-500 truncate"
+                          title={value.th}
+                        >
+                          {value.th}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div
+                          className="text-sm text-gray-500 truncate"
+                          title={value.en}
+                        >
+                          {value.en}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div
+                          className="text-sm text-gray-500 truncate"
+                          title={value.zh}
+                        >
+                          {value.zh}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center space-x-1">
+                        <button
+                          onClick={() => openEditModal(key)}
+                          className="text-yellow-600 hover:text-yellow-900 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold
+                            hover:bg-yellow-200 transition-colors duration-200"
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          onClick={() => onDelete?.(key)}
+                          className="text-red-600 hover:text-red-900 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold
+                            hover:bg-red-200 transition-colors duration-200"
+                        >
+                          ลบ
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

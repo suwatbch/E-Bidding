@@ -191,7 +191,7 @@ export default function LanguagePage() {
                 </p>
               </div>
             </div>
-            <button
+            {/* <button
               onClick={openAddModal}
               className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
                   hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
@@ -212,7 +212,7 @@ export default function LanguagePage() {
                 />
               </svg>
               เพิ่มภาษา
-            </button>
+            </button> */}
           </div>
         </div>
 
