@@ -56,7 +56,7 @@ interface AuctionItem {
   startTime: string;
   endTime: string;
   bidCount: number;
-  status: number; // เปลี่ยนเป็น number เพื่อใช้กับ statusConfig
+  status: number;
 }
 
 interface CustomInputProps {
@@ -186,6 +186,10 @@ export default function AuctionsPage() {
         uiStatus = 6;
         break;
     }
+
+    // Note: currency and remark fields are available in auction object but not displayed in UI
+    // auction.currency - currency ID (1=THB, 2=USD, etc.)
+    // auction.remark - additional notes/remarks
 
     return {
       no: idx,

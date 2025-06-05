@@ -23,10 +23,12 @@ interface AuctionFormData {
   start_dt: Date;
   end_dt: Date;
   reserve_price: number;
+  currency: number;
   status: number;
   description?: string;
   starting_price?: number;
   terms_conditions?: string;
+  remark?: string;
 }
 
 interface CustomInputProps {
@@ -50,10 +52,12 @@ export default function AuctionFormPage() {
     start_dt: new Date(),
     end_dt: new Date(),
     reserve_price: 0,
+    currency: 1,
     status: 1,
     description: '',
     starting_price: 0,
     terms_conditions: '',
+    remark: '',
   });
 
   useEffect(() => {
@@ -79,10 +83,12 @@ export default function AuctionFormPage() {
           start_dt: new Date(auction.start_dt),
           end_dt: new Date(auction.end_dt),
           reserve_price: auction.reserve_price,
+          currency: auction.currency || 1,
           status: auction.status,
           description: '',
           starting_price: auction.reserve_price,
           terms_conditions: '',
+          remark: auction.remark || '',
         });
       }
     } catch (error) {
