@@ -33,16 +33,12 @@ import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
 import { statusConfig, getStatusById } from '@/app/model/dataConfig';
-import DatePicker, { registerLocale } from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import { th } from 'date-fns/locale';
+import ThaiDatePicker from '@/app/components/ui/DatePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import LoadingState from '@/app/components/ui/LoadingState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import Link from 'next/link';
-
-registerLocale('th', th);
 
 interface AuctionItem {
   no: number;
@@ -52,13 +48,6 @@ interface AuctionItem {
   endTime: string;
   bidCount: number;
   status: number;
-}
-
-interface CustomInputProps {
-  value?: string;
-  onClick?: () => void;
-  label: string;
-  icon: FC<{ className?: string }>;
 }
 
 export default function AuctionsPage() {
@@ -333,48 +322,8 @@ export default function AuctionsPage() {
     }
   };
 
-  // Custom input component for the DatePicker
-  const CustomInput: FC<CustomInputProps> = ({
-    value,
-    onClick,
-    label,
-    icon: Icon,
-  }) => (
-    <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
-        <div className="flex items-center gap-2 mb-1.5">
-          <Icon className="w-4 h-4 text-gray-500" />
-          {label}
-        </div>
-      </label>
-      <div
-        className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between"
-        onClick={onClick}
-        style={{ minHeight: '42px', maxHeight: '42px' }}
-      >
-        <span className="flex-1 text-left">{value}</span>
-        <div className="flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4 text-gray-400"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-            />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <Container className="py-6">
+    <Container>
       <div className="py-8">
         {/* Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
@@ -483,81 +432,22 @@ export default function AuctionsPage() {
 
             {/* วันที่เริ่มต้น */}
             <div className="relative w-full">
-              {mounted ? (
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date: Date | null) => date && setStartDate(date)}
-                  dateFormat="dd/MM/yyyy"
-                  locale="th"
-                  showYearDropdown
-                  scrollableYearDropdown
-                  yearDropdownItemNumber={15}
-                  customInput={
-                    <CustomInput
-                      label="วันที่เริ่มต้น"
-                      icon={AucStartTimeIcon}
-                    />
-                  }
-                  popperPlacement="bottom-start"
-                  popperClassName="calendar-popper"
-                  calendarClassName="shadow-lg"
-                  dayClassName={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const checkDate = new Date(date);
-                    checkDate.setHours(0, 0, 0, 0);
-
-                    if (checkDate.getTime() === today.getTime()) {
-                      return 'bg-blue-500 text-white rounded-full';
-                    }
-                    return 'text-gray-700 hover:bg-blue-50 rounded-full';
-                  }}
-                />
-              ) : (
-                <CustomInput
-                  label="วันที่เริ่มต้น"
-                  icon={AucStartTimeIcon}
-                  value={startDate.toLocaleDateString('en-GB')}
-                />
-              )}
+              <ThaiDatePicker
+                selected={startDate}
+                onChange={(date) => date && setStartDate(date)}
+                label="วันที่เริ่มต้น"
+                placeholder="เลือกวันที่เริ่มต้น"
+              />
             </div>
 
             {/* วันที่สิ้นสุด */}
             <div className="relative">
-              {mounted ? (
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date: Date | null) => date && setEndDate(date)}
-                  dateFormat="dd/MM/yyyy"
-                  locale="th"
-                  showYearDropdown
-                  scrollableYearDropdown
-                  yearDropdownItemNumber={15}
-                  customInput={
-                    <CustomInput label="วันที่สิ้นสุด" icon={AucEndTimeIcon} />
-                  }
-                  popperPlacement="bottom-start"
-                  popperClassName="calendar-popper"
-                  calendarClassName="shadow-lg"
-                  dayClassName={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const checkDate = new Date(date);
-                    checkDate.setHours(0, 0, 0, 0);
-
-                    if (checkDate.getTime() === today.getTime()) {
-                      return 'bg-blue-500 text-white rounded-full';
-                    }
-                    return 'text-gray-700 hover:bg-blue-50 rounded-full';
-                  }}
-                />
-              ) : (
-                <CustomInput
-                  label="วันที่สิ้นสุด"
-                  icon={AucEndTimeIcon}
-                  value={endDate.toLocaleDateString('en-GB')}
-                />
-              )}
+              <ThaiDatePicker
+                selected={endDate}
+                onChange={(date) => date && setEndDate(date)}
+                label="วันที่สิ้นสุด"
+                placeholder="เลือกวันที่สิ้นสุด"
+              />
             </div>
           </div>
 
@@ -838,7 +728,7 @@ export default function AuctionsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1 text-gray-600">
-                          <AucUserIcon />
+                          <AucUserIcon className="w-4 h-4" />
                           {item.bidCount}
                         </div>
                       </TableCell>
@@ -940,223 +830,4 @@ export default function AuctionsPage() {
       </div>
     </Container>
   );
-}
-
-// Add this CSS at the end of the file or in your global CSS
-const styles = `
-.calendar-popper {
-  z-index: 9999 !important;
-  position: absolute !important;
-  top: 0% !important;
-  left: 0 !important;
-  margin-top: 0px !important;
-  width: max-content !important;
-}
-
-.react-datepicker-wrapper,
-.react-datepicker__input-container {
-  display: block !important;
-  width: 100% !important;
-}
-
-.react-datepicker {
-  font-family: 'Kanit', sans-serif !important;
-  border: none !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  background-color: white !important;
-}
-
-.react-datepicker__header {
-  background-color: white !important;
-  border-bottom: 1px solid #e5e7eb !important;
-  border-top-left-radius: 0.5rem !important;
-  border-top-right-radius: 0.5rem !important;
-  padding-top: 0.75rem !important;
-}
-
-.react-datepicker__current-month {
-  font-weight: 600 !important;
-  font-size: 1rem !important;
-  color: #1f2937 !important;
-  padding: 0.25rem 0 !important;
-}
-
-.react-datepicker__year-dropdown-container {
-  display: inline-block !important;
-  margin: 0 0.5rem !important;
-}
-
-.react-datepicker__year-dropdown {
-  background-color: white !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 0.5rem !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-  max-height: 250px !important;
-  overflow-y: auto !important;
-  position: absolute !important;
-  z-index: 10000 !important;
-  width: 120px !important;
-  text-align: center !important;
-  padding: 0.5rem 0 !important;
-  backdrop-filter: blur(8px) !important;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-}
-
-.react-datepicker__year-dropdown::-webkit-scrollbar {
-  display: none !important;
-}
-
-.react-datepicker__year-option {
-  color: #475569 !important;
-  cursor: pointer !important;
-  padding: 0.5rem 1rem !important;
-  font-size: 0.875rem !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease-in-out !important;
-  margin: 0.125rem 0.5rem !important;
-  border-radius: 0.375rem !important;
-}
-
-.react-datepicker__year-option:hover {
-  background-color: #f1f5f9 !important;
-  color: #3b82f6 !important;
-  transform: translateX(2px) !important;
-}
-
-.react-datepicker__year-option--selected {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
-  color: white !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3) !important;
-}
-
-.react-datepicker__year-read-view {
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 0.375rem !important;
-  padding: 0.375rem 0.75rem !important;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
-  cursor: pointer !important;
-  font-size: 0.875rem !important;
-  font-weight: 600 !important;
-  color: #475569 !important;
-  transition: all 0.2s ease-in-out !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.375rem !important;
-  min-width: 60px !important;
-  justify-content: center !important;
-}
-
-.react-datepicker__year-read-view:hover {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
-  border-color: #3b82f6 !important;
-  color: #3b82f6 !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15) !important;
-}
-
-.react-datepicker__year-read-view--down-arrow {
-  border-top: 5px solid currentColor !important;
-  border-left: 4px solid transparent !important;
-  border-right: 4px solid transparent !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin-left: 0 !important;
-  transition: transform 0.2s ease-in-out !important;
-}
-
-.react-datepicker__year-read-view:hover .react-datepicker__year-read-view--down-arrow {
-  transform: rotate(180deg) !important;
-}
-
-.react-datepicker__day-names {
-  border-top: 1px solid #f3f4f6 !important;
-  padding-top: 0.5rem !important;
-  display: flex !important;
-  justify-content: space-around !important;
-}
-
-.react-datepicker__day-name {
-  color: #6b7280 !important;
-  font-weight: 500 !important;
-  width: 2rem !important;
-  margin: 0.2rem !important;
-  text-align: center !important;
-}
-
-.react-datepicker__month {
-  margin: 0 !important;
-  padding: 0.5rem !important;
-}
-
-.react-datepicker__month-container {
-  float: none !important;
-  width: 280px !important;
-}
-
-.react-datepicker__week {
-  display: flex !important;
-  justify-content: space-around !important;
-}
-
-.react-datepicker__day {
-  width: 2rem !important;
-  line-height: 2rem !important;
-  margin: 0.2rem !important;
-  border-radius: 9999px !important;
-  transition: all 0.2s !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: #1f2937 !important;
-}
-
-.react-datepicker__day--outside-month {
-  color: #9ca3af !important;
-  opacity: 0.6 !important;
-}
-
-.react-datepicker__day:hover {
-  background-color: #eff6ff !important;
-}
-
-.react-datepicker__day--selected {
-  background-color: #3b82f6 !important;
-  color: white !important;
-  font-weight: 600 !important;
-}
-
-.react-datepicker__day--keyboard-selected {
-  background-color: #93c5fd !important;
-  color: white !important;
-}
-
-.react-datepicker__navigation {
-  top: 0.75rem !important;
-}
-
-.react-datepicker__navigation-icon::before {
-  border-color: #6b7280 !important;
-  border-width: 2px 2px 0 0 !important;
-  width: 7px !important;
-  height: 7px !important;
-}
-
-.react-datepicker__navigation:hover *::before {
-  border-color: #3b82f6 !important;
-}
-
-.react-datepicker__triangle {
-  display: none !important;
-}
-`;
-
-// Add styles to the document
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement('style');
-  styleSheet.type = 'text/css';
-  styleSheet.innerText = styles;
-  document.head.appendChild(styleSheet);
 }
