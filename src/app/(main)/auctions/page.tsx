@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FC } from 'react';
+import { useState, FC, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -36,7 +36,10 @@ import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { th } from 'date-fns/locale';
-import { format } from 'date-fns';
+import Pagination from '@/app/components/ui/Pagination';
+import EmptyState from '@/app/components/ui/EmptyState';
+import LoadingState from '@/app/components/ui/LoadingState';
+import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 registerLocale('th', th);
 
@@ -73,6 +76,7 @@ interface CustomInputProps {
 }
 
 export default function AuctionsPage() {
+  const [auctions, setAuctions] = useState<Auction[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [startDate, setStartDate] = useState(() => {
@@ -87,6 +91,12 @@ export default function AuctionsPage() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 5);
+  const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -193,10 +203,10 @@ export default function AuctionsPage() {
   };
 
   // ดึงข้อมูลตลาดประมูลที่ไม่ถูกลบ
-  const auctions = dataAuction.filter((a) => a.is_deleted === 0);
+  const filteredAuctions = dataAuction.filter((a) => a.is_deleted === 0);
 
   // สร้างข้อมูลสำหรับแสดงผล
-  const auctionTable = auctions.map((auction, idx) => {
+  const auctionTable = filteredAuctions.map((auction, idx) => {
     const auctionType = dataAuction_Type.find(
       (t) => t.auction_type_id === auction.auction_type_id
     );
@@ -286,6 +296,40 @@ export default function AuctionsPage() {
     setIsFiltering(false);
   };
 
+  // Pagination handlers
+  const handlePerPageChange = (newPerPage: number) => {
+    setPerPage(newPerPage);
+    setCurrentPage(1);
+  };
+
+  // Mount effect
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Loading effect
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        // จำลองการโหลดข้อมูลจริง
+        setAuctions(dataAuction.filter((a) => a.is_deleted === 0));
+      } catch (error) {
+        console.error('Error loading auctions:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredItems.length / perPage);
+  const startIndex = (currentPage - 1) * perPage;
+  const endIndex = startIndex + perPage;
+  const currentItems = filteredItems.slice(startIndex, endIndex);
+
   // Custom input component for the DatePicker
   const CustomInput: FC<CustomInputProps> = ({
     value,
@@ -330,7 +374,7 @@ export default function AuctionsPage() {
     <Container className="py-6">
       <div className="py-8">
         {/* Filter Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-800">
               ตัวกรองการค้นหา
@@ -436,63 +480,82 @@ export default function AuctionsPage() {
             </div>
 
             {/* วันที่เริ่มต้น */}
-            <div className="relative">
-              <DatePicker
-                selected={startDate}
-                onChange={(date: Date | null) => date && setStartDate(date)}
-                dateFormat="dd/MM/yyyy"
-                locale="th"
-                showYearDropdown
-                scrollableYearDropdown
-                yearDropdownItemNumber={15}
-                customInput={
-                  <CustomInput label="วันที่เริ่มต้น" icon={AucStartTimeIcon} />
-                }
-                popperPlacement="bottom-start"
-                popperClassName="calendar-popper"
-                calendarClassName="shadow-lg"
-                dayClassName={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const checkDate = new Date(date);
-                  checkDate.setHours(0, 0, 0, 0);
-
-                  if (checkDate.getTime() === today.getTime()) {
-                    return 'bg-blue-500 text-white rounded-full';
+            <div className="relative w-full">
+              {mounted ? (
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date: Date | null) => date && setStartDate(date)}
+                  dateFormat="dd/MM/yyyy"
+                  locale="th"
+                  showYearDropdown
+                  scrollableYearDropdown
+                  yearDropdownItemNumber={15}
+                  customInput={
+                    <CustomInput
+                      label="วันที่เริ่มต้น"
+                      icon={AucStartTimeIcon}
+                    />
                   }
-                  return 'text-gray-700 hover:bg-blue-50 rounded-full';
-                }}
-              />
+                  popperPlacement="bottom-start"
+                  popperClassName="calendar-popper"
+                  calendarClassName="shadow-lg"
+                  dayClassName={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const checkDate = new Date(date);
+                    checkDate.setHours(0, 0, 0, 0);
+
+                    if (checkDate.getTime() === today.getTime()) {
+                      return 'bg-blue-500 text-white rounded-full';
+                    }
+                    return 'text-gray-700 hover:bg-blue-50 rounded-full';
+                  }}
+                />
+              ) : (
+                <CustomInput
+                  label="วันที่เริ่มต้น"
+                  icon={AucStartTimeIcon}
+                  value={startDate.toLocaleDateString('en-GB')}
+                />
+              )}
             </div>
 
             {/* วันที่สิ้นสุด */}
             <div className="relative">
-              <DatePicker
-                selected={endDate}
-                onChange={(date: Date | null) => date && setEndDate(date)}
-                dateFormat="dd/MM/yyyy"
-                locale="th"
-                showYearDropdown
-                scrollableYearDropdown
-                yearDropdownItemNumber={15}
-                customInput={
-                  <CustomInput label="วันที่สิ้นสุด" icon={AucEndTimeIcon} />
-                }
-                popperPlacement="bottom-start"
-                popperClassName="calendar-popper"
-                calendarClassName="shadow-lg"
-                dayClassName={(date) => {
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const checkDate = new Date(date);
-                  checkDate.setHours(0, 0, 0, 0);
-
-                  if (checkDate.getTime() === today.getTime()) {
-                    return 'bg-blue-500 text-white rounded-full';
+              {mounted ? (
+                <DatePicker
+                  selected={endDate}
+                  onChange={(date: Date | null) => date && setEndDate(date)}
+                  dateFormat="dd/MM/yyyy"
+                  locale="th"
+                  showYearDropdown
+                  scrollableYearDropdown
+                  yearDropdownItemNumber={15}
+                  customInput={
+                    <CustomInput label="วันที่สิ้นสุด" icon={AucEndTimeIcon} />
                   }
-                  return 'text-gray-700 hover:bg-blue-50 rounded-full';
-                }}
-              />
+                  popperPlacement="bottom-start"
+                  popperClassName="calendar-popper"
+                  calendarClassName="shadow-lg"
+                  dayClassName={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const checkDate = new Date(date);
+                    checkDate.setHours(0, 0, 0, 0);
+
+                    if (checkDate.getTime() === today.getTime()) {
+                      return 'bg-blue-500 text-white rounded-full';
+                    }
+                    return 'text-gray-700 hover:bg-blue-50 rounded-full';
+                  }}
+                />
+              ) : (
+                <CustomInput
+                  label="วันที่สิ้นสุด"
+                  icon={AucEndTimeIcon}
+                  value={endDate.toLocaleDateString('en-GB')}
+                />
+              )}
             </div>
           </div>
 
@@ -501,7 +564,7 @@ export default function AuctionsPage() {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="ค้นหาตามชื่อรายการหรือหมวดหมู่..."
+                placeholder="ค้นหาตามชื่อตลาดหรือหมวดหมู่..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -547,7 +610,16 @@ export default function AuctionsPage() {
           </div>
         </div>
 
-        {/* Auction Table */}
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredItems.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -687,58 +759,68 @@ export default function AuctionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredItems.map((item) => {
-                const statusInfo = getStatusInfo(item.status);
-                return (
-                  <TableRow
-                    key={item.no}
-                    className="hover:bg-blue-50/50 cursor-pointer transition-colors"
-                  >
-                    <TableCell className="font-medium text-center">
-                      {(item.no + 1).toLocaleString('th-TH')}
-                    </TableCell>
-                    <TableCell>
-                      <div className="relative">
-                        <div
-                          className="text-sm font-medium truncate cursor-pointer"
-                          title={item.title}
-                        >
-                          {item.title}
+              {isLoading ? (
+                <LoadingState colSpan={7} />
+              ) : currentItems.length === 0 ? (
+                <EmptyState
+                  title="ไม่พบข้อมูล"
+                  description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
+                  colSpan={7}
+                />
+              ) : (
+                currentItems.map((item) => {
+                  const statusInfo = getStatusInfo(item.status);
+                  return (
+                    <TableRow
+                      key={item.no}
+                      className="hover:bg-blue-50/50 cursor-pointer transition-colors"
+                    >
+                      <TableCell className="font-medium text-center">
+                        {(item.no + 1).toLocaleString('th-TH')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="relative">
+                          <div
+                            className="text-sm font-medium truncate cursor-pointer"
+                            title={item.title}
+                          >
+                            {item.title}
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="relative">
-                        <div
-                          className="text-sm truncate cursor-pointer"
-                          title={item.category}
-                        >
-                          {item.category}
+                      </TableCell>
+                      <TableCell>
+                        <div className="relative">
+                          <div
+                            className="text-sm truncate cursor-pointer"
+                            title={item.category}
+                          >
+                            {item.category}
+                          </div>
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDateTime(item.startTime)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDateTime(item.endTime)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-gray-600">
-                        <UserIcon />
-                        {item.bidCount}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}
-                      >
-                        {statusInfo.text}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {formatDateTime(item.startTime)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {formatDateTime(item.endTime)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1 text-gray-600">
+                          <UserIcon />
+                          {item.bidCount}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.color}`}
+                        >
+                          {statusInfo.text}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>
