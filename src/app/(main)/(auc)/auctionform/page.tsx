@@ -206,10 +206,10 @@ export default function AuctionFormPage() {
             </div>
             <button
               onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="flex items-center gap-1 text-gray-500 hover:text-blue-700 transition-colors"
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -218,9 +218,10 @@ export default function AuctionFormPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
+              <span className="text-sm font-medium">ย้อนกลับ</span>
             </button>
           </div>
         </div>
