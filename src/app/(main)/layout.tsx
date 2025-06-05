@@ -1,4 +1,4 @@
-import Navbar from '../components/navbar';
+import Navbar from '@/app/components/navbar';
 
 export default function MainLayout({
   children,
@@ -8,9 +8,7 @@ export default function MainLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <main>
-        {children}
-      </main>
+      <main>{children}</main>
     </div>
   );
-} 
+}

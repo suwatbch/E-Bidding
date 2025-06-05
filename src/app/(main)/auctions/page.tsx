@@ -8,8 +8,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
+} from '../../components/ui/AucTable';
 import {
   StatusPendingIcon,
   StatusBiddingIcon,
