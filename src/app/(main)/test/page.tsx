@@ -98,7 +98,7 @@ const datePickerStyles = `
   }
   
   .react-datepicker__day-name {
-    color: rgba(255, 255, 255, 0.8);
+    color: white;
     font-weight: 500;
     font-size: 12px;
     width: 2rem;
