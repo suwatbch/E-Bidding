@@ -1,0 +1,148 @@
+# Date Utilities Documentation
+
+ชุด utility functions สำหรับจัดการวันที่และเวลาในแอปพลิเคชัน E-Bidding
+
+## ภาพรวม
+
+ไฟล์ `dateUtils.ts` ประกอบด้วยฟังก์ชันต่าง ๆ ที่ช่วยในการจัดการวันที่และเวลา โดยเฉพาะการใช้งานร่วมกับ `ThaiDatePicker` component
+
+## ฟังก์ชันหลัก
+
+### 1. `formatDateForData(date: Date): string`
+
+แปลง Date object เป็น string สำหรับเก็บข้อมูลในฐานข้อมูล
+
+**รูปแบบผลลัพธ์:** `"YYYY-MM-DD HH:mm:ss"`
+
+```typescript
+const dateString = formatDateForData(new Date());
+// ผลลัพธ์: "2025-06-20 14:30:00"
+```
+
+### 2. `formatDateForDisplay(date: Date, includeTime?: boolean): string`
+
+แปลง Date object เป็น string สำหรับแสดงผลให้ผู้ใช้
+
+**รูปแบบผลลัพธ์:**
+
+- `includeTime = false`: `"DD/MM/YYYY"`
+- `includeTime = true`: `"DD/MM/YYYY HH:mm"`
+
+```typescript
+const date = new Date();
+formatDateForDisplay(date, false); // "20/06/2025"
+formatDateForDisplay(date, true); // "20/06/2025 14:30"
+```
+
+### 3. `safeParseDate(dateString: string): Date`
+
+แปลง string เป็น Date object พร้อมจัดการ timezone และข้อผิดพลาด
+
+```typescript
+// ใช้กับ ThaiDatePicker
+<ThaiDatePicker selected={safeParseDate(formData.event_date)} />
+```
+
+### 4. `createDateChangeHandler(setFormData, updateTimestampField?): Function`
+
+สร้าง handler function สำหรับจัดการการเปลี่ยนแปลงวันที่ในฟอร์ม
+
+```typescript
+const [formData, setFormData] = useState(initialData);
+const handleDateChange = createDateChangeHandler(setFormData);
+
+// ใช้กับ ThaiDatePicker
+<ThaiDatePicker
+  selected={safeParseDate(formData.start_date)}
+  onChange={(date) => handleDateChange('start_date', date)}
+/>;
+```
+
+### 5. `getCurrentDateTime(): string`
+
+สร้าง timestamp ปัจจุบันในรูปแบบ string
+
+```typescript
+const now = getCurrentDateTime(); // "2025-06-20 14:30:00"
+```
+
+### 6. `isValidDate(date: Date): boolean`
+
+ตรวจสอบว่า Date object ถูกต้องหรือไม่
+
+```typescript
+const isValid = isValidDate(new Date()); // true
+```
+
+## การใช้งานในหน้าต่าง ๆ
+
+### หน้าฟอร์ม (เช่น auctionform)
+
+```typescript
+import {
+  createDateChangeHandler,
+  safeParseDate,
+  getCurrentDateTime,
+} from '@/app/utils/dateUtils';
+
+const [formData, setFormData] = useState({
+  name: '',
+  start_dt: getCurrentDateTime(),
+  end_dt: getCurrentDateTime(),
+  updated_dt: getCurrentDateTime(),
+});
+
+const handleDateChange = createDateChangeHandler(setFormData);
+
+return (
+  <ThaiDatePicker
+    selected={safeParseDate(formData.start_dt)}
+    onChange={(date) => handleDateChange('start_dt', date)}
+    showTimeSelect={true}
+  />
+);
+```
+
+### หน้าแสดงรายการ (เช่น auctions)
+
+```typescript
+import { formatDateForDisplay, safeParseDate } from '@/app/utils/dateUtils';
+
+const formatDateTime = (dateTimeStr: string) => {
+  return formatDateForDisplay(safeParseDate(dateTimeStr), true);
+};
+
+// ในการแสดงผล
+<td>{formatDateTime(auction.start_dt)}</td>;
+```
+
+## ข้อดีของการใช้ Utility Functions
+
+1. **ความสอดคล้อง:** รูปแบบการจัดการวันที่เหมือนกันทั่วทั้งแอป
+2. **ลดการซ้ำซ้อนของโค้ด:** ไม่ต้องเขียนโค้ดเดิม ๆ ซ้ำ
+3. **จัดการ Timezone:** แก้ไขปัญหาการเปลี่ยน timezone อัตโนมัติ
+4. **ป้องกันข้อผิดพลาด:** จัดการกรณีที่วันที่ไม่ถูกต้อง
+5. **ง่ายต่อการบำรุงรักษา:** แก้ไขการทำงานได้ที่เดียว
+
+## ไฟล์ที่ใช้งาน
+
+- ✅ `src/app/(main)/(auc)/auctionform/page.tsx` - ใช้ครบทุกฟังก์ชัน
+- ✅ `src/app/(main)/(auc)/auctions/page.tsx` - ใช้ formatDateForDisplay, safeParseDate
+- ✅ `src/app/(main)/(auc)/example-usage/page.tsx` - ตัวอย่างการใช้งานทั้งหมด
+
+## หมายเหตุสำคัญ
+
+1. **Timezone:** ทุกฟังก์ชันใช้ local timezone ของผู้ใช้
+2. **Format เก็บข้อมูล:** ใช้ `"YYYY-MM-DD HH:mm:ss"` สำหรับฐานข้อมูล
+3. **Format แสดงผล:** ใช้ `"DD/MM/YYYY HH:mm"` สำหรับ UI
+4. **Error Handling:** ทุกฟังก์ชันจัดการกรณี input ผิดพลาด
+
+## ตัวอย่างผลลัพธ์
+
+| ฟังก์ชัน                           | Input                             | Output                  |
+| ---------------------------------- | --------------------------------- | ----------------------- |
+| `formatDateForData`                | `new Date('2025-06-20T14:30:00')` | `"2025-06-20 14:30:00"` |
+| `formatDateForDisplay` (ไม่มีเวลา) | `new Date('2025-06-20T14:30:00')` | `"20/06/2025"`          |
+| `formatDateForDisplay` (มีเวลา)    | `new Date('2025-06-20T14:30:00')` | `"20/06/2025 14:30"`    |
+| `safeParseDate`                    | `"2025-06-20 14:30:00"`           | `Date object`           |
+| `getCurrentDateTime`               | -                                 | `"2025-06-20 14:30:00"` |

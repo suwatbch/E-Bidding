@@ -15,7 +15,6 @@ import {
   StatusEndingSoonIcon,
   StatusEndedIcon,
   StatusCancelledIcon,
-  UserIcon,
   AucCategoryIcon,
   AucStartTimeIcon,
   AucEndTimeIcon,
@@ -38,6 +37,11 @@ import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import LoadingState from '@/app/components/ui/LoadingState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import {
+  formatDateForDisplay,
+  safeParseDate,
+  getCurrentDateTime,
+} from '@/app/utils/fungtions';
 import Link from 'next/link';
 
 interface AuctionItem {
@@ -100,7 +104,7 @@ export default function AuctionsPage() {
   };
 
   const getTimeRemaining = (endTime: string) => {
-    const end = new Date(endTime);
+    const end = safeParseDate(endTime);
     const now = new Date();
     const diff = end.getTime() - now.getTime();
 
@@ -116,17 +120,7 @@ export default function AuctionsPage() {
   };
 
   const formatDateTime = (dateTimeStr: string) => {
-    const date = new Date(dateTimeStr);
-    return date
-      .toLocaleString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-      .replace(/(\d+)\/(\d+)\/(\d+)/, '$1-$2-$3');
+    return formatDateForDisplay(safeParseDate(dateTimeStr), true);
   };
 
   const formatAuctionId = (id: number) => {
@@ -209,10 +203,9 @@ export default function AuctionsPage() {
       selectedStatus === 'all' || item.status === parseInt(selectedStatus);
 
     // กรองตามช่วงวันที่
-    const itemDate = new Date(item.startTime);
-    const filterStartDate = new Date(startDate);
-    const filterEndDate = new Date(endDate);
-    filterEndDate.setHours(23, 59, 59, 999);
+    const itemDate = safeParseDate(item.startTime);
+    const filterStartDate = safeParseDate(startDate.toISOString());
+    const filterEndDate = safeParseDate(endDate.toISOString());
     const matchesDate =
       !isFiltering ||
       (itemDate >= filterStartDate && itemDate <= filterEndDate);

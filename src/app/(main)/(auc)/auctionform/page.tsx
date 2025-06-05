@@ -13,6 +13,12 @@ import {
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { statusConfig, currencyConfig } from '@/app/model/dataConfig';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
+import {
+  formatDateForData,
+  safeParseDate,
+  createDateChangeHandler,
+  getCurrentDateTime,
+} from '@/app/utils/fungtions';
 
 export default function AuctionFormPage() {
   const router = useRouter();
@@ -25,15 +31,15 @@ export default function AuctionFormPage() {
     auction_id: 0,
     name: '',
     auction_type_id: 1,
-    start_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-    end_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+    start_dt: getCurrentDateTime(),
+    end_dt: getCurrentDateTime(),
     reserve_price: 0,
     currency: 1,
     status: 1,
     is_deleted: 0,
     remark: '',
-    created_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
-    updated_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+    created_dt: getCurrentDateTime(),
+    updated_dt: getCurrentDateTime(),
   });
 
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function AuctionFormPage() {
         setFormData({
           ...auction,
           // อัพเดท updated_dt เมื่อแก้ไข
-          updated_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+          updated_dt: getCurrentDateTime(),
         });
       } else {
         alert('ไม่พบข้อมูลตลาดที่ต้องการแก้ไข');
@@ -72,27 +78,12 @@ export default function AuctionFormPage() {
       ...prev,
       [field]: value,
       // อัพเดท updated_dt ทุกครั้งที่มีการเปลี่ยนแปลง
-      updated_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      updated_dt: getCurrentDateTime(),
     }));
   };
 
-  const handleDateChange = (
-    field: 'start_dt' | 'end_dt',
-    date: Date | null
-  ) => {
-    if (date) {
-      // ใช้ local timezone แทน UTC เพื่อป้องกันปัญหาการเปลี่ยนเวลา
-      const year = date.getFullYear();
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const day = date.getDate().toString().padStart(2, '0');
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      const seconds = date.getSeconds().toString().padStart(2, '0');
-
-      const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      handleInputChange(field, formattedDate);
-    }
-  };
+  // ใช้ utility function สำหรับจัดการการเปลี่ยนแปลงวันที่
+  const handleDateChange = createDateChangeHandler(setFormData);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,17 +113,14 @@ export default function AuctionFormPage() {
       // เตรียมข้อมูลสำหรับบันทึก
       const saveData = {
         ...formData,
-        updated_dt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        updated_dt: getCurrentDateTime(),
       };
 
       if (!isEdit) {
         // สำหรับเพิ่มใหม่ ให้สร้าง auction_id ใหม่
         const maxId = Math.max(...dataAuction.map((a) => a.auction_id), 0);
         saveData.auction_id = maxId + 1;
-        saveData.created_dt = new Date()
-          .toISOString()
-          .slice(0, 19)
-          .replace('T', ' ');
+        saveData.created_dt = getCurrentDateTime();
       }
 
       // จำลองการบันทึกข้อมูล (ในการใช้งานจริงจะเรียก API)
@@ -417,7 +405,7 @@ export default function AuctionFormPage() {
               <div className="relative w-full">
                 <div className="w-full">
                   <ThaiDatePicker
-                    selected={new Date(formData.start_dt)}
+                    selected={safeParseDate(formData.start_dt)}
                     onChange={(date) => handleDateChange('start_dt', date)}
                     label="วันเวลาเริ่มต้น"
                     placeholder="เลือกวันเวลาเริ่มต้น"
@@ -437,13 +425,13 @@ export default function AuctionFormPage() {
               <div className="relative w-full">
                 <div className="w-full">
                   <ThaiDatePicker
-                    selected={new Date(formData.end_dt)}
+                    selected={safeParseDate(formData.end_dt)}
                     onChange={(date) => handleDateChange('end_dt', date)}
                     label="วันเวลาสิ้นสุด"
                     placeholder="เลือกวันเวลาสิ้นสุด"
                     showTimeSelect={true}
                     timeCaption="เวลา"
-                    minDate={new Date(formData.start_dt)}
+                    minDate={safeParseDate(formData.start_dt)}
                     maxDate={
                       new Date(
                         new Date().setFullYear(new Date().getFullYear() + 5)
@@ -491,7 +479,7 @@ export default function AuctionFormPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                       />
                     </svg>
                     ราคาประกัน <span className="text-red-500">*</span>
@@ -525,7 +513,7 @@ export default function AuctionFormPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H3.75v-.75h-.75c-.621 0-1.125.504-1.125 1.125v.375c0 .621.504 1.125 1.125 1.125H3c.621 0 1.125-.504 1.125-1.125M3.75 6.75v-.75m.75 0h-.75m.75 0v.75"
+                        d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
                       />
                     </svg>
                     หน่วยเงิน <span className="text-red-500">*</span>
