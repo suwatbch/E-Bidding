@@ -177,7 +177,7 @@ export const AucEndTimeIcon: React.FC<IconProps> = ({ className }) => (
 );
 
 export const AucUserIcon: React.FC<IconProps> = ({ className }) => (
-  <Person style={{ width: '16px', height: '16px' }} className={className} />
+  <Person style={{ width: '18px', height: '18px' }} className={className} />
 );
 
 // Auction Status Icons

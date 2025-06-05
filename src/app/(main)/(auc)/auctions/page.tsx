@@ -45,6 +45,7 @@ import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import LoadingState from '@/app/components/ui/LoadingState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import Link from 'next/link';
 
 registerLocale('th', th);
 
@@ -614,7 +615,26 @@ export default function AuctionsPage() {
 
         <div className="flex justify-between items-center m-4">
           <div className="flex"></div>
-          <div className="flex items-right gap-4">เพิ่มตลาด</div>
+          <Link
+            href="/auctionform"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4.5v15m7.5-7.5h-15"
+              />
+            </svg>
+            เพิ่มตลาด
+          </Link>
         </div>
 
         {/* Table Info Section */}
@@ -715,13 +735,13 @@ export default function AuctionsPage() {
                     ลำดับ
                   </div>
                 </TableHead>
-                <TableHead className="w-[25%]">
+                <TableHead className="min-w-[100px]">
                   <div className="flex items-center gap-2">
                     <AucBiddingIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
-                <TableHead className="w-[14%]">
+                <TableHead className="w-[15%]">
                   <div className="flex items-center gap-2">
                     <AucCategoryIcon className="w-5 h-5 text-gray-500" />
                     หมวดหมู่
@@ -742,25 +762,43 @@ export default function AuctionsPage() {
                 <TableHead className="w-[10%] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucUserIcon className="w-5 h-5 text-gray-500" />
-                    ผู้ประมูล
+                    เข้าร่วม
                   </div>
                 </TableHead>
-                <TableHead className="w-[17%] text-center">
+                <TableHead className="w-[8%] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucOfferIcon className="w-5 h-5 text-gray-500" />
                     สถานะ
+                  </div>
+                </TableHead>
+                <TableHead className="w-[8%] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                      />
+                    </svg>
+                    จัดการ
                   </div>
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <LoadingState colSpan={7} />
+                <LoadingState colSpan={8} />
               ) : currentItems.length === 0 ? (
                 <EmptyState
                   title="ไม่พบข้อมูล"
                   description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
-                  colSpan={7}
+                  colSpan={8}
                 />
               ) : (
                 currentItems.map((item, index) => {
@@ -801,16 +839,97 @@ export default function AuctionsPage() {
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1 text-gray-600">
-                          <UserIcon />
+                          <AucUserIcon />
                           {item.bidCount}
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm`}
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
                         >
-                          {statusInfo.text}
+                          {(() => {
+                            switch (item.status) {
+                              case 1:
+                                return <AucOpenIcon className="w-4 h-4" />;
+                              case 2:
+                                return <AucPendingIcon className="w-4 h-4" />;
+                              case 3:
+                                return <AucBiddingIcon className="w-4 h-4" />;
+                              case 4:
+                                return (
+                                  <AucEndingSoonIcon className="w-4 h-4" />
+                                );
+                              case 5:
+                                return <AucEndedIcon className="w-4 h-4" />;
+                              case 6:
+                                return <AucCancelledIcon className="w-4 h-4" />;
+                              default:
+                                return null;
+                            }
+                          })()}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Link
+                            href={`/auctionform?id=${
+                              filteredAuctions[item.no]?.auction_id || ''
+                            }`}
+                            className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="แก้ไข"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
+                              />
+                            </svg>
+                          </Link>
+                          <button
+                            onClick={() => {
+                              const auctionName =
+                                filteredAuctions[item.no]?.name || 'ตลาดนี้';
+                              if (
+                                confirm(
+                                  `คุณต้องการลบ "${auctionName}" หรือไม่?`
+                                )
+                              ) {
+                                // จำลองการลบข้อมูล
+                                console.log(
+                                  'Delete auction:',
+                                  filteredAuctions[item.no]?.auction_id
+                                );
+                                alert('ลบข้อมูลเรียบร้อยแล้ว');
+                                // ในการใช้งานจริงจะเรียก API เพื่อลบข้อมูล
+                              }
+                            }}
+                            className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                            title="ลบ"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
