@@ -190,7 +190,7 @@ export default function AuctionFormPage() {
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
         <div className="flex items-center gap-2 mb-1.5">
-          <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+          <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
           {label} <span className="text-red-500">*</span>
         </div>
       </label>
@@ -238,15 +238,40 @@ export default function AuctionFormPage() {
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">
-                {isEdit ? 'แก้ไขข้อมูลตลาด' : 'เพิ่มตลาดใหม่'}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                {isEdit
-                  ? `แก้ไขข้อมูลตลาดประมูล ID: ${formData.auction_id}`
-                  : 'กรอกข้อมูลเพื่อสร้างตลาดประมูลใหม่'}
-              </p>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-8 h-8 text-blue-600"
+                >
+                  {isEdit ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  )}
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900">
+                  {isEdit ? 'แก้ไขข้อมูลตลาด' : 'เพิ่มตลาดใหม่'}
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  {isEdit
+                    ? `แก้ไขข้อมูลตลาดประมูล ID: ${formData.auction_id}`
+                    : 'กรอกข้อมูลเพื่อสร้างตลาดประมูลใหม่'}
+                </p>
+              </div>
             </div>
             <button
               onClick={handleCancel}
@@ -283,16 +308,50 @@ export default function AuctionFormPage() {
               {/* ชื่อตลาด */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ชื่อตลาด <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.001 3.001 0 01-.621-1.72c0-.966.459-1.82 1.17-2.36a3.001 3.001 0 012.7 0 2.974 2.974 0 011.17 2.36 3.001 3.001 0 01-.621 1.72m12.96 0a3.001 3.001 0 01-.621-1.72c0-.966.459-1.82 1.17-2.36a3.001 3.001 0 012.7 0 2.974 2.974 0 011.17 2.36 3.001 3.001 0 01-.621 1.72m-2.35 0a3.001 3.001 0 01-1.85-.875A3.001 3.001 0 0114.25 16.5a3.001 3.001 0 01-2.4 1.125c-.84 0-1.59-.327-2.15-.875a3.001 3.001 0 01-2.4 1.125"
+                      />
+                    </svg>
+                    ชื่อตลาด <span className="text-red-500">*</span>
+                  </div>
                 </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="กรอกชื่อตลาด"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="กรอกชื่อตลาด"
+                    required
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4 text-gray-400"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119.993z"
+                      />
+                    </svg>
+                  </div>
+                </div>
               </div>
 
               {/* หมวดหมู่ */}
@@ -347,7 +406,10 @@ export default function AuctionFormPage() {
               {/* สถานะ */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  สถานะ <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-2">
+                    <AucOfferIcon className="w-4 h-4 text-gray-500" />
+                    สถานะ <span className="text-red-500">*</span>
+                  </div>
                 </label>
                 <div className="relative">
                   <select
@@ -408,10 +470,39 @@ export default function AuctionFormPage() {
                     scrollableYearDropdown
                     yearDropdownItemNumber={15}
                     customInput={
-                      <CustomDateInput
-                        label="วันเวลาเริ่มต้น"
-                        placeholder="เลือกวันเวลาเริ่มต้น"
-                      />
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+                            วันเวลาเริ่มต้น{' '}
+                            <span className="text-red-500">*</span>
+                          </div>
+                        </label>
+                        <div
+                          className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20"
+                          style={{ minHeight: '42px', maxHeight: '42px' }}
+                        >
+                          <span className="flex-1 text-left text-gray-900">
+                            {formatDateTime(formData.start_dt)}
+                          </span>
+                          <div className="flex items-center justify-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4 text-gray-400"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
                     }
                     popperPlacement="bottom-start"
                     popperClassName="calendar-popper"
@@ -430,10 +521,19 @@ export default function AuctionFormPage() {
                     minDate={new Date()}
                   />
                 ) : (
-                  <CustomDateInput
-                    label="วันเวลาเริ่มต้น"
-                    value={formatDateTime(formData.start_dt)}
-                  />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+                        วันเวลาเริ่มต้น <span className="text-red-500">*</span>
+                      </div>
+                    </label>
+                    <div className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between">
+                      <span className="flex-1 text-left text-gray-900">
+                        {formatDateTime(formData.start_dt)}
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -453,10 +553,39 @@ export default function AuctionFormPage() {
                     scrollableYearDropdown
                     yearDropdownItemNumber={15}
                     customInput={
-                      <CustomDateInput
-                        label="วันเวลาสิ้นสุด"
-                        placeholder="เลือกวันเวลาสิ้นสุด"
-                      />
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
+                            วันเวลาสิ้นสุด{' '}
+                            <span className="text-red-500">*</span>
+                          </div>
+                        </label>
+                        <div
+                          className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20"
+                          style={{ minHeight: '42px', maxHeight: '42px' }}
+                        >
+                          <span className="flex-1 text-left text-gray-900">
+                            {formatDateTime(formData.end_dt)}
+                          </span>
+                          <div className="flex items-center justify-center">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-4 h-4 text-gray-400"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
                     }
                     popperPlacement="bottom-start"
                     popperClassName="calendar-popper"
@@ -475,10 +604,19 @@ export default function AuctionFormPage() {
                     minDate={new Date(formData.start_dt)}
                   />
                 ) : (
-                  <CustomDateInput
-                    label="วันเวลาสิ้นสุด"
-                    value={formatDateTime(formData.end_dt)}
-                  />
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
+                        วันเวลาสิ้นสุด <span className="text-red-500">*</span>
+                      </div>
+                    </label>
+                    <div className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between">
+                      <span className="flex-1 text-left text-gray-900">
+                        {formatDateTime(formData.end_dt)}
+                      </span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -487,7 +625,20 @@ export default function AuctionFormPage() {
           {/* Pricing */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <AucOfferIcon className="w-5 h-5 text-blue-600" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 text-blue-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 15.75V18a.75.75 0 01-.75.75h-9a.75.75 0 01-.75-.75V9A.75.75 0 016 8.25h2.25M15.75 15.75V12A2.25 2.25 0 0013.5 9.75h-6.75M15.75 15.75L19.5 12M19.5 12l1.5-1.5M19.5 12l1.5 1.5M10.5 9.75L8.25 12M8.25 12L6.75 10.5M8.25 12L6.75 13.5"
+                />
+              </svg>
               ราคาและเงินตรา
             </h2>
 
@@ -495,7 +646,23 @@ export default function AuctionFormPage() {
               {/* ราคาประกัน */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ราคาประกัน <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    ราคาประกัน <span className="text-red-500">*</span>
+                  </div>
                 </label>
                 <input
                   type="text"
@@ -513,7 +680,23 @@ export default function AuctionFormPage() {
               {/* หน่วยเงิน */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  หน่วยเงิน <span className="text-red-500">*</span>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4 text-gray-500"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H3.75v-.75h-.75c-.621 0-1.125.504-1.125 1.125v.375c0 .621.504 1.125 1.125 1.125H3c.621 0 1.125-.504 1.125-1.125M3.75 6.75v-.75m.75 0h-.75m.75 0v.75"
+                      />
+                    </svg>
+                    หน่วยเงิน <span className="text-red-500">*</span>
+                  </div>
                 </label>
                 <div className="relative">
                   <select
@@ -552,17 +735,49 @@ export default function AuctionFormPage() {
 
           {/* Remark */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 text-blue-600"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+                />
+              </svg>
               หมายเหตุ
             </h2>
 
-            <textarea
-              value={formData.remark || ''}
-              onChange={(e) => handleInputChange('remark', e.target.value)}
-              rows={5}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="กรอกหมายเหตุเพิ่มเติม"
-            />
+            <div className="relative">
+              <textarea
+                value={formData.remark || ''}
+                onChange={(e) => handleInputChange('remark', e.target.value)}
+                rows={5}
+                className="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="กรอกหมายเหตุเพิ่มเติม"
+              />
+              <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4 text-gray-400"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+                  />
+                </svg>
+              </div>
+            </div>
           </div>
 
           {/* Action Buttons */}
@@ -571,8 +786,22 @@ export default function AuctionFormPage() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
                 ยกเลิก
               </button>
               <button
@@ -582,6 +811,30 @@ export default function AuctionFormPage() {
               >
                 {isLoading && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
+                {!isLoading && (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    {isEdit ? (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.5 3.75a1.125 1.125 0 011.125 1.125v8.252c0 .36-.148.7-.398.938l-5.057 4.786a2.25 2.25 0 01-3.084 0l-5.057-4.786a1.125 1.125 0 01-.398-.938V4.875A1.125 1.125 0 015.625 3.75h10.875z"
+                      />
+                    ) : (
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4.5v15m7.5-7.5h-15"
+                      />
+                    )}
+                  </svg>
                 )}
                 {isEdit ? 'บันทึกการแก้ไข' : 'เพิ่มตลาด'}
               </button>
