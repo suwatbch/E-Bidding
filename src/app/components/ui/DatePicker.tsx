@@ -538,7 +538,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
         scrollableYearDropdown
         yearDropdownItemNumber={20}
         showMonthDropdown
-        dateFormat="dd/MM/yyyy"
+        dateFormat={showTimeSelect ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy'}
         locale="th"
         dropdownMode="select"
         calendarStartDay={0}
