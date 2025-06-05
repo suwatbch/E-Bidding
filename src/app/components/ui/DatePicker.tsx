@@ -22,31 +22,31 @@ const datePickerStyles = `
     background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     border-bottom: none;
     border-radius: 8px 8px 0 0;
-    padding: 8px;
+    padding: 6px;
     position: relative;
   }
   
   .react-datepicker__current-month {
     color: white;
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 12px;
+    margin-bottom: 2px;
     text-align: center;
   }
   
   .react-datepicker__time__header{
     color: white !important;
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     margin-top: 0;
   }
   
   .react-datepicker__header__dropdown {
-    margin: 4px 0 8px 0;
+    margin: 2px 0 4px 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
   }
   
   .react-datepicker__month-dropdown-container,
@@ -58,18 +58,18 @@ const datePickerStyles = `
   .react-datepicker__year-read-view {
     background: rgba(255, 255, 255, 0.15);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
-    padding: 4px 8px;
+    border-radius: 4px;
+    padding: 2px 6px;
     color: white;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
-    min-width: 60px;
+    min-width: 50px;
     text-align: center;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 12px;
+    font-size: 10px;
   }
   
   .react-datepicker__month-read-view:hover,
@@ -81,10 +81,10 @@ const datePickerStyles = `
   
   .react-datepicker__month-read-view--down-arrow,
   .react-datepicker__year-read-view--down-arrow {
-    border-top: 3px solid white;
-    border-left: 2px solid transparent;
-    border-right: 2px solid transparent;
-    margin-left: 6px;
+    border-top: 2px solid white;
+    border-left: 1.5px solid transparent;
+    border-right: 1.5px solid transparent;
+    margin-left: 4px;
     transition: transform 0.2s ease;
   }
   
@@ -94,16 +94,16 @@ const datePickerStyles = `
   }
   
   .react-datepicker__day-names {
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
   
   .react-datepicker__day-name {
     color: white;
     font-weight: 500;
-    font-size: 11px;
+    font-size: 10px;
     width: 1.75rem;
-    height: 1.75rem;
-    line-height: 1.75rem;
+    height: 1.4rem;
+    line-height: 1.4rem;
   }
   
   .react-datepicker__month-container {
@@ -576,7 +576,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                 >
                   <path
                     strokeLinecap="round"
@@ -596,7 +596,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                 >
                   <path
                     strokeLinecap="round"
@@ -617,7 +617,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                 >
                   <path
                     strokeLinecap="round"
@@ -637,7 +637,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                 >
                   <path
                     strokeLinecap="round"
