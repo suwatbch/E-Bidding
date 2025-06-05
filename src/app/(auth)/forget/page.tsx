@@ -2,14 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
+import {
   LogoIcon,
   FormEmailIcon,
   FormLockIcon,
   FormKeyIcon,
   ButtonSendIcon,
-  LinkBackIcon
-} from '@/app/components/ui/icons';
+  LinkBackIcon,
+} from '@/app/components/ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
@@ -56,8 +56,12 @@ export default function ForgetPasswordPage() {
                   <LogoIcon />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">{translate('forget_title')}</h2>
-              <p className="mt-2 text-sm text-gray-600">{translate('forget_subtitle')}</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {translate('forget_title')}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {translate('forget_subtitle')}
+              </p>
             </div>
 
             {/* Forget Password Form */}
@@ -147,8 +151,8 @@ export default function ForgetPasswordPage() {
 
               {/* Back to Login Link */}
               <div className="text-center">
-                <Link 
-                  href="/login" 
+                <Link
+                  href="/login"
                   className="inline-flex items-center text-blue-600 hover:underline gap-1"
                 >
                   <LinkBackIcon />

@@ -28,7 +28,7 @@ import {
   AucEndedIcon,
   AucCancelledIcon,
   AucOfferIcon,
-} from '@/app/components/ui/icons';
+} from '@/app/components/ui/Icons';
 import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
@@ -252,12 +252,7 @@ export default function AuctionsPage() {
     setCurrentPage(1);
   };
 
-  // Mount effect
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Loading effect
+  // Mount and Loading effect - รวมเป็นอันเดียวเหมือนหน้า Company
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -272,6 +267,7 @@ export default function AuctionsPage() {
     };
 
     loadData();
+    setMounted(true);
   }, []);
 
   // Calculate pagination

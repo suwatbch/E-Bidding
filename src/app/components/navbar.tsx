@@ -19,7 +19,7 @@ import {
   NavUserIcon,
   NavHomeIcon,
   NavLanguageManageIcon,
-} from '@/app/components/ui/icons';
+} from '@/app/components/ui/Icons';
 import {
   connectSocket,
   disconnectSocket,

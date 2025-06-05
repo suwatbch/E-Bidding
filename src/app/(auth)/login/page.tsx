@@ -2,12 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
+import {
   LogoIcon,
   FormEmailIcon,
   FormLockIcon,
-  ButtonLoginIcon
-} from '@/app/components/ui/icons';
+  ButtonLoginIcon,
+} from '@/app/components/ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
@@ -48,8 +48,12 @@ export default function LoginPage() {
                   <LogoIcon />
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">{translate('login_title')}</h2>
-              <p className="mt-2 text-sm text-gray-600">{translate('login_subtitle')}</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {translate('login_title')}
+              </h2>
+              <p className="mt-2 text-sm text-gray-600">
+                {translate('login_subtitle')}
+              </p>
             </div>
 
             {/* Login Form */}
@@ -57,7 +61,9 @@ export default function LoginPage() {
               <div className="space-y-4">
                 {/* Email Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{translate('email_label')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {translate('email_label')}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormEmailIcon />
@@ -74,7 +80,9 @@ export default function LoginPage() {
 
                 {/* Password Input */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{translate('password_label')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {translate('password_label')}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormLockIcon />
@@ -98,7 +106,10 @@ export default function LoginPage() {
                     id="remember-me"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     {translate('remember_me')}
                   </label>
                 </div>

@@ -77,56 +77,58 @@ export default function Pagination({
           ก่อนหน้า
         </button>
         <div className="flex items-center gap-1">
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-              if (i === 4)
-                return (
-                  <span key="dots" className="px-2">
-                    ...
-                  </span>
-                );
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - (4 - i);
-              if (i === 0)
-                return (
-                  <span key="dots" className="px-2">
-                    ...
-                  </span>
-                );
-            } else {
-              if (i === 0)
-                return (
-                  <span key="dots1" className="px-2">
-                    ...
-                  </span>
-                );
-              if (i === 4)
-                return (
-                  <span key="dots2" className="px-2">
-                    ...
-                  </span>
-                );
-              pageNum = currentPage + (i - 2);
-            }
-            return (
-              <button
-                key={i}
-                onClick={() => onPageChange(pageNum)}
-                className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
+          {mounted &&
+            totalPages > 0 &&
+            Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+                if (i === 4)
+                  return (
+                    <span key="dots" className="px-2">
+                      ...
+                    </span>
+                  );
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - (4 - i);
+                if (i === 0)
+                  return (
+                    <span key="dots" className="px-2">
+                      ...
+                    </span>
+                  );
+              } else {
+                if (i === 0)
+                  return (
+                    <span key="dots1" className="px-2">
+                      ...
+                    </span>
+                  );
+                if (i === 4)
+                  return (
+                    <span key="dots2" className="px-2">
+                      ...
+                    </span>
+                  );
+                pageNum = currentPage + (i - 2);
+              }
+              return (
+                <button
+                  key={i}
+                  onClick={() => onPageChange(pageNum)}
+                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
                   ${
                     currentPage === pageNum
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
         </div>
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}

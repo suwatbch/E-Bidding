@@ -7,8 +7,6 @@ import {
   languages as initialLanguages,
   LanguageCode,
 } from '@/app/model/dataLanguageTemp';
-import { groupedTranslations } from '@/app/model/dataLanguageTextTemp';
-import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import TransectionLanguage from '@/app/components/language/LanguageText';
 
 interface FormData {
@@ -389,7 +387,9 @@ export default function LanguagePage() {
                       className="hover:bg-gray-50 transition-colors duration-200"
                     >
                       <td className="px-6 py-4 text-center">
-                        <div className="text-sm text-gray-500">{index + 1}</div>
+                        <div className="text-sm text-gray-500">
+                          {(index + 1).toLocaleString('th-TH')}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="relative">
