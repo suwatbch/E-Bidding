@@ -32,7 +32,6 @@ export default function AuctionFormPage() {
   const isEdit = auctionId !== '0' && !!auctionId;
 
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState<Auction>({
     auction_id: 0,
     name: '',
@@ -49,7 +48,6 @@ export default function AuctionFormPage() {
   });
 
   useEffect(() => {
-    setMounted(true);
     if (isEdit && auctionId && auctionId !== '0') {
       // โหลดข้อมูลตลาดที่ต้องการแก้ไข
       loadAuctionData(parseInt(auctionId));
@@ -168,29 +166,31 @@ export default function AuctionFormPage() {
   };
 
   const formatDateTime = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date
-      .toLocaleString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      })
-      .replace(/(\d+)\/(\d+)\/(\d+)/, '$1-$2-$3');
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return 'วันที่ไม่ถูกต้อง';
+      }
+
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+
+      return `${day}-${month}-${year} ${hours}:${minutes}`;
+    } catch (error) {
+      return 'วันที่ไม่ถูกต้อง';
+    }
   };
 
-  const CustomDateInput: React.FC<CustomInputProps> = ({
-    value,
-    onClick,
-    label,
-    placeholder,
-  }) => (
+  const CustomDateInput: React.FC<
+    CustomInputProps & { icon?: React.ReactNode }
+  > = ({ value, onClick, label, placeholder, icon }) => (
     <div className="space-y-2">
       <label className="block text-sm font-medium text-gray-700">
         <div className="flex items-center gap-2 mb-1.5">
-          <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
+          {icon}
           {label} <span className="text-red-500">*</span>
         </div>
       </label>
@@ -456,7 +456,7 @@ export default function AuctionFormPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* วันที่เริ่มต้น */}
               <div className="relative w-full">
-                {mounted ? (
+                <div className="w-full">
                   <DatePicker
                     selected={new Date(formData.start_dt)}
                     onChange={(date) => handleDateChange('start_dt', date)}
@@ -470,39 +470,15 @@ export default function AuctionFormPage() {
                     scrollableYearDropdown
                     yearDropdownItemNumber={15}
                     customInput={
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
-                            วันเวลาเริ่มต้น{' '}
-                            <span className="text-red-500">*</span>
-                          </div>
-                        </label>
-                        <div
-                          className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20"
-                          style={{ minHeight: '42px', maxHeight: '42px' }}
-                        >
-                          <span className="flex-1 text-left text-gray-900">
-                            {formatDateTime(formData.start_dt)}
-                          </span>
-                          <div className="flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4 text-gray-400"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      <CustomDateInput
+                        value={formatDateTime(formData.start_dt)}
+                        onClick={() => {}}
+                        label="วันเวลาเริ่มต้น"
+                        placeholder="วันเวลาเริ่มต้น"
+                        icon={
+                          <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+                        }
+                      />
                     }
                     popperPlacement="bottom-start"
                     popperClassName="calendar-popper"
@@ -519,27 +495,14 @@ export default function AuctionFormPage() {
                       return 'text-gray-700 hover:bg-blue-50 rounded-full';
                     }}
                     minDate={new Date()}
+                    wrapperClassName="w-full"
                   />
-                ) : (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
-                        วันเวลาเริ่มต้น <span className="text-red-500">*</span>
-                      </div>
-                    </label>
-                    <div className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between">
-                      <span className="flex-1 text-left text-gray-900">
-                        {formatDateTime(formData.start_dt)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
               {/* วันที่สิ้นสุด */}
               <div className="relative w-full">
-                {mounted ? (
+                <div className="w-full">
                   <DatePicker
                     selected={new Date(formData.end_dt)}
                     onChange={(date) => handleDateChange('end_dt', date)}
@@ -553,39 +516,15 @@ export default function AuctionFormPage() {
                     scrollableYearDropdown
                     yearDropdownItemNumber={15}
                     customInput={
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
-                            วันเวลาสิ้นสุด{' '}
-                            <span className="text-red-500">*</span>
-                          </div>
-                        </label>
-                        <div
-                          className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20"
-                          style={{ minHeight: '42px', maxHeight: '42px' }}
-                        >
-                          <span className="flex-1 text-left text-gray-900">
-                            {formatDateTime(formData.end_dt)}
-                          </span>
-                          <div className="flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4 text-gray-400"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      <CustomDateInput
+                        value={formatDateTime(formData.end_dt)}
+                        onClick={() => {}}
+                        label="วันเวลาสิ้นสุด"
+                        placeholder="วันเวลาสิ้นสุด"
+                        icon={
+                          <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
+                        }
+                      />
                     }
                     popperPlacement="bottom-start"
                     popperClassName="calendar-popper"
@@ -602,22 +541,9 @@ export default function AuctionFormPage() {
                       return 'text-gray-700 hover:bg-blue-50 rounded-full';
                     }}
                     minDate={new Date(formData.start_dt)}
+                    wrapperClassName="w-full"
                   />
-                ) : (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <AucEndTimeIcon className="w-4 h-4 text-gray-500" />
-                        วันเวลาสิ้นสุด <span className="text-red-500">*</span>
-                      </div>
-                    </label>
-                    <div className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between">
-                      <span className="flex-1 text-left text-gray-900">
-                        {formatDateTime(formData.end_dt)}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
@@ -736,20 +662,6 @@ export default function AuctionFormPage() {
           {/* Remark */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-blue-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                />
-              </svg>
               หมายเหตุ
             </h2>
 
@@ -802,7 +714,7 @@ export default function AuctionFormPage() {
                     d="M6 18L18 6M6 6l12 12"
                   />
                 </svg>
-                ยกเลิก
+                ย้อนกลับ
               </button>
               <button
                 type="submit"
