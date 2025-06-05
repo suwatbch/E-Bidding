@@ -33,6 +33,12 @@ import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
+import {
+  statusConfig,
+  getStatusById,
+  getStatusDescription,
+  getStatusCode,
+} from '@/app/model/dataConfig';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { th } from 'date-fns/locale';
@@ -50,23 +56,8 @@ interface AuctionItem {
   startTime: string;
   endTime: string;
   bidCount: number;
-  status:
-    | 'open'
-    | 'pending'
-    | 'bidding'
-    | 'ending_soon'
-    | 'ended'
-    | 'cancelled';
+  status: number; // เปลี่ยนเป็น number เพื่อใช้กับ statusConfig
 }
-
-const statusMap: Record<number, string> = {
-  1: 'เปิดการประมูล',
-  2: 'รอการประมูล',
-  3: 'กำลังประมูล',
-  4: 'ใกล้สิ้นสุด',
-  5: 'สิ้นสุดประมูล',
-  6: 'ยกเลิกประมูล',
-};
 
 interface CustomInputProps {
   value?: string;
@@ -140,47 +131,6 @@ export default function AuctionsPage() {
     }
   };
 
-  const getStatusInfo = (status: AuctionItem['status']) => {
-    switch (status) {
-      case 'open':
-        return {
-          text: 'เปิดประมูล',
-          color: 'text-amber-600',
-          bgColor: 'bg-amber-50',
-        };
-      case 'pending':
-        return {
-          text: 'รอการประมูล',
-          color: 'text-orange-600',
-          bgColor: 'bg-orange-50',
-        };
-      case 'bidding':
-        return {
-          text: 'กำลังประมูล',
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-        };
-      case 'ending_soon':
-        return {
-          text: 'ใกล้สิ้นสุด',
-          color: 'text-cyan-600',
-          bgColor: 'bg-cyan-50',
-        };
-      case 'ended':
-        return {
-          text: 'สิ้นสุดประมูล',
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-        };
-      case 'cancelled':
-        return {
-          text: 'ยกเลิกประมูล',
-          color: 'text-red-600',
-          bgColor: 'bg-red-50',
-        };
-    }
-  };
-
   const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr);
     return date
@@ -215,25 +165,25 @@ export default function AuctionsPage() {
     ).length;
 
     // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
-    let uiStatus: AuctionItem['status'] = 'pending';
+    let uiStatus: AuctionItem['status'] = 2;
     switch (auction.status) {
       case 1:
-        uiStatus = 'open';
+        uiStatus = 1;
         break;
       case 2:
-        uiStatus = 'pending';
+        uiStatus = 2;
         break;
       case 3:
-        uiStatus = 'bidding';
+        uiStatus = 3;
         break;
       case 4:
-        uiStatus = 'ending_soon';
+        uiStatus = 4;
         break;
       case 5:
-        uiStatus = 'ended';
+        uiStatus = 5;
         break;
       case 6:
-        uiStatus = 'cancelled';
+        uiStatus = 6;
         break;
     }
 
@@ -266,9 +216,9 @@ export default function AuctionsPage() {
     const matchesCategory =
       selectedCategory === 'ทั้งหมด' || item.category === selectedCategory;
 
-    // ตรวจสอบสถานะ
+    // ตรวจสอบสถานะ - แปลง selectedStatus เป็น number เพื่อเปรียบเทียบ
     const matchesStatus =
-      selectedStatus === 'all' || item.status === selectedStatus;
+      selectedStatus === 'all' || item.status === parseInt(selectedStatus);
 
     // กรองตามช่วงวันที่
     const itemDate = new Date(item.startTime);
@@ -329,6 +279,64 @@ export default function AuctionsPage() {
   const startIndex = (currentPage - 1) * perPage;
   const endIndex = startIndex + perPage;
   const currentItems = filteredItems.slice(startIndex, endIndex);
+
+  // ใช้ statusConfig แทน getStatusInfo function เดิม
+  const getStatusDisplay = (statusId: number) => {
+    const statusInfo = getStatusById(statusId);
+    if (!statusInfo) {
+      return {
+        text: 'ไม่ทราบสถานะ',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+      };
+    }
+
+    // แปลง statusConfig เป็น format ที่ UI ต้องการ
+    switch (statusId) {
+      case 1:
+        return {
+          text: statusInfo.description,
+          color: 'text-amber-600',
+          bgColor: 'bg-amber-50',
+        };
+      case 2:
+        return {
+          text: statusInfo.description,
+          color: 'text-orange-600',
+          bgColor: 'bg-orange-50',
+        };
+      case 3:
+        return {
+          text: statusInfo.description,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+        };
+      case 4:
+        return {
+          text: statusInfo.description,
+          color: 'text-cyan-600',
+          bgColor: 'bg-cyan-50',
+        };
+      case 5:
+        return {
+          text: statusInfo.description,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+        };
+      case 6:
+        return {
+          text: statusInfo.description,
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+        };
+      default:
+        return {
+          text: statusInfo.description,
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+        };
+    }
+  };
 
   // Custom input component for the DatePicker
   const CustomInput: FC<CustomInputProps> = ({
@@ -454,12 +462,11 @@ export default function AuctionsPage() {
                   className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none focus:border-transparent"
                 >
                   <option value="all">ทั้งหมด</option>
-                  <option value="open">เปิดประมูล</option>
-                  <option value="pending">รอการประมูล</option>
-                  <option value="bidding">กำลังประมูล</option>
-                  <option value="ending_soon">ใกล้สิ้นสุด</option>
-                  <option value="ended">สิ้นสุดประมูล</option>
-                  <option value="cancelled">ยกเลิกประมูล</option>
+                  {Object.values(statusConfig).map((status) => (
+                    <option key={status.id} value={status.id.toString()}>
+                      {status.description}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                   <svg
@@ -636,78 +643,66 @@ export default function AuctionsPage() {
                 >
                   ทั้งหมด
                 </button>
-                <button
-                  onClick={() => setSelectedStatus('open')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'open'
+                {Object.values(statusConfig).map((status) => {
+                  const isSelected = selectedStatus === status.id.toString();
+                  let buttonClass = '';
+                  let IconComponent = null;
+
+                  // กำหนดสีและไอคอนตาม status
+                  switch (status.id) {
+                    case 1:
+                      buttonClass = isSelected
                         ? 'bg-amber-600 text-white'
-                        : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
-                    }`}
-                >
-                  <AucOpenIcon className="w-4 h-4" />
-                  เปิดประมูล
-                </button>
-                <button
-                  onClick={() => setSelectedStatus('pending')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'pending'
+                        : 'bg-amber-50 text-amber-600 hover:bg-amber-100';
+                      IconComponent = AucOpenIcon;
+                      break;
+                    case 2:
+                      buttonClass = isSelected
                         ? 'bg-orange-600 text-white'
-                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
-                    }`}
-                >
-                  <AucPendingIcon className="w-4 h-4" />
-                  รอการประมูล
-                </button>
-                <button
-                  onClick={() => setSelectedStatus('bidding')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'bidding'
+                        : 'bg-orange-50 text-orange-600 hover:bg-orange-100';
+                      IconComponent = AucPendingIcon;
+                      break;
+                    case 3:
+                      buttonClass = isSelected
                         ? 'bg-blue-600 text-white'
-                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    }`}
-                >
-                  <AucBiddingIcon className="w-4 h-4" />
-                  กำลังประมูล
-                </button>
-                <button
-                  onClick={() => setSelectedStatus('ending_soon')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'ending_soon'
+                        : 'bg-blue-50 text-blue-600 hover:bg-blue-100';
+                      IconComponent = AucBiddingIcon;
+                      break;
+                    case 4:
+                      buttonClass = isSelected
                         ? 'bg-cyan-600 text-white'
-                        : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100'
-                    }`}
-                >
-                  <AucEndingSoonIcon className="w-4 h-4" />
-                  ใกล้สิ้นสุด
-                </button>
-                <button
-                  onClick={() => setSelectedStatus('ended')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'ended'
+                        : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100';
+                      IconComponent = AucEndingSoonIcon;
+                      break;
+                    case 5:
+                      buttonClass = isSelected
                         ? 'bg-green-600 text-white'
-                        : 'bg-green-50 text-green-600 hover:bg-green-100'
-                    }`}
-                >
-                  <AucEndedIcon className="w-4 h-4" />
-                  สิ้นสุดประมูล
-                </button>
-                <button
-                  onClick={() => setSelectedStatus('cancelled')}
-                  className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer
-                    ${
-                      selectedStatus === 'cancelled'
+                        : 'bg-green-50 text-green-600 hover:bg-green-100';
+                      IconComponent = AucEndedIcon;
+                      break;
+                    case 6:
+                      buttonClass = isSelected
                         ? 'bg-red-600 text-white'
-                        : 'bg-red-50 text-red-600 hover:bg-red-100'
-                    }`}
-                >
-                  <AucCancelledIcon className="w-4 h-4" />
-                  ยกเลิกประมูล
-                </button>
+                        : 'bg-red-50 text-red-600 hover:bg-red-100';
+                      IconComponent = AucCancelledIcon;
+                      break;
+                    default:
+                      buttonClass = isSelected
+                        ? 'bg-gray-600 text-white'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100';
+                  }
+
+                  return (
+                    <button
+                      key={status.id}
+                      onClick={() => setSelectedStatus(status.id.toString())}
+                      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${buttonClass}`}
+                    >
+                      {IconComponent && <IconComponent className="w-4 h-4" />}
+                      {status.description}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -769,7 +764,7 @@ export default function AuctionsPage() {
                 />
               ) : (
                 currentItems.map((item) => {
-                  const statusInfo = getStatusInfo(item.status);
+                  const statusInfo = getStatusDisplay(item.status);
                   return (
                     <TableRow
                       key={item.no}

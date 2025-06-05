@@ -81,7 +81,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentLang, languages, translate, changeLanguage } = useLanguage();
-  const { profile, updateProfile, updateUser } = useUser();
+  const { profile, updateProfile, updateUser, isProfileLoading } = useUser();
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -529,18 +529,27 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="flex flex-col items-start">
-                      <span
-                        className="text-left transform group-hover:scale-105 text-sm text-white truncate max-w-[180px]"
-                        title={profile?.fullname || 'ไม่ระบุชื่อ'}
-                      >
-                        {profile?.fullname || 'ไม่ระบุชื่อ'}
-                      </span>
-                      <span
-                        className="text-left transform group-hover:scale-105 text-xs text-white/80 truncate max-w-[180px]"
-                        title={profile?.email || 'ไม่ระบุอีเมล'}
-                      >
-                        {profile?.email || 'ไม่ระบุอีเมล'}
-                      </span>
+                      {isProfileLoading ? (
+                        <>
+                          <div className="h-4 w-[140px] bg-white/20 rounded animate-pulse"></div>
+                          <div className="h-3 w-[140px] bg-white/20 rounded animate-pulse mt-1"></div>
+                        </>
+                      ) : (
+                        <>
+                          <span
+                            className="text-left text-sm text-white truncate w-[140px] transform group-hover:scale-105 transition duration-300"
+                            title={profile?.fullname || 'ไม่ระบุชื่อ'}
+                          >
+                            {profile?.fullname || 'ไม่ระบุชื่อ'}
+                          </span>
+                          <span
+                            className="text-left text-xs text-white/80 truncate w-[140px] transform group-hover:scale-105 transition duration-300"
+                            title={profile?.email || 'ไม่ระบุอีเมล'}
+                          >
+                            {profile?.email || 'ไม่ระบุอีเมล'}
+                          </span>
+                        </>
+                      )}
                     </div>
                     <div className="transform group-hover:scale-110 transition duration-300">
                       <NavArrowDownIcon
