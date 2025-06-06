@@ -695,12 +695,15 @@ export default function AuctionsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="relative">
-                          <div
-                            className="text-sm font-medium truncate cursor-pointer"
+                          <Link
+                            href={`/auction/${
+                              filteredAuctions[item.no]?.auction_id || ''
+                            }`}
+                            className="text-sm font-medium truncate cursor-pointer hover:text-blue-700 transition-colors block"
                             title={item.title}
                           >
                             {item.title}
-                          </div>
+                          </Link>
                         </div>
                       </TableCell>
                       <TableCell>
