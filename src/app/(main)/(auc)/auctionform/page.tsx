@@ -311,7 +311,7 @@ export default function AuctionFormPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-lg">
                 <svg
@@ -349,7 +349,7 @@ export default function AuctionFormPage() {
             </div>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <svg
                 className="w-5 h-5"
