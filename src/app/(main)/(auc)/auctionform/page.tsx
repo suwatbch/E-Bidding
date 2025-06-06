@@ -16,9 +16,9 @@ import { dataAuction, Auction } from '@/app/model/dataAuction';
 import {
   formatDateForData,
   safeParseDate,
-  createDateChangeHandler,
   getCurrentDateTime,
-} from '@/app/utils/fungtions';
+  createDateChangeHandler,
+} from '@/app/utils/globalFunction';
 
 export default function AuctionFormPage() {
   const router = useRouter();

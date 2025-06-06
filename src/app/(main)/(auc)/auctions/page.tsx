@@ -41,7 +41,8 @@ import {
   formatDateForDisplay,
   safeParseDate,
   getCurrentDateTime,
-} from '@/app/utils/fungtions';
+  getActiveParticipantCount,
+} from '@/app/utils/globalFunction';
 import Link from 'next/link';
 
 interface AuctionItem {
@@ -59,14 +60,14 @@ export default function AuctionsPage() {
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [startDate, setStartDate] = useState(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    const pastDate = new Date('2025-01-01');
+    pastDate.setHours(0, 0, 0, 0);
+    return pastDate;
   });
   const [endDate, setEndDate] = useState(() => {
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return today;
+    const futureDate = new Date('2025-12-31');
+    futureDate.setHours(23, 59, 59, 999);
+    return futureDate;
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
@@ -138,9 +139,8 @@ export default function AuctionsPage() {
     const auctionType = dataAuction_Type.find(
       (t) => t.auction_type_id === auction.auction_type_id
     );
-    const participantCount = dataAuction_Participant.filter(
-      (p) => p.auction_id === auction.auction_id
-    ).length;
+    // ใช้ utility function สำหรับนับผู้เข้าร่วม
+    const participantCount = getActiveParticipantCount(auction.auction_id);
 
     // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
     let uiStatus: AuctionItem['status'] = 2;
@@ -202,13 +202,14 @@ export default function AuctionsPage() {
     const matchesStatus =
       selectedStatus === 'all' || item.status === parseInt(selectedStatus);
 
-    // กรองตามช่วงวันที่
-    const itemDate = safeParseDate(item.startTime);
-    const filterStartDate = safeParseDate(startDate.toISOString());
-    const filterEndDate = safeParseDate(endDate.toISOString());
-    const matchesDate =
-      !isFiltering ||
-      (itemDate >= filterStartDate && itemDate <= filterEndDate);
+    // กรองตามช่วงวันที่ - แสดงทั้งหมดถ้าไม่ได้กรอง หรือกรองตามช่วงที่เลือก
+    let matchesDate = true;
+    if (isFiltering) {
+      const itemDate = safeParseDate(item.startTime);
+      const filterStartDate = safeParseDate(startDate.toISOString());
+      const filterEndDate = safeParseDate(endDate.toISOString());
+      matchesDate = itemDate >= filterStartDate && itemDate <= filterEndDate;
+    }
 
     return matchesSearch && matchesCategory && matchesStatus && matchesDate;
   });
@@ -220,9 +221,12 @@ export default function AuctionsPage() {
   const handleReset = () => {
     setSelectedCategory('ทั้งหมด');
     setSelectedStatus('all');
-    const today = new Date();
-    setStartDate(today);
-    setEndDate(today);
+    const pastDate = new Date('2025-01-01');
+    pastDate.setHours(0, 0, 0, 0);
+    const futureDate = new Date('2025-12-31');
+    futureDate.setHours(23, 59, 59, 999);
+    setStartDate(pastDate);
+    setEndDate(futureDate);
     setSearchQuery('');
     setIsFiltering(false);
   };
@@ -470,11 +474,36 @@ export default function AuctionsPage() {
                   />
                 </svg>
               </div>
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
 
             <button
               onClick={handleSearch}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2"
+              className={`px-4 py-2 text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2 transition-colors ${
+                isFiltering
+                  ? 'text-white bg-blue-600 hover:bg-blue-700'
+                  : 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+              }`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -487,12 +516,63 @@ export default function AuctionsPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                  d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
                 />
               </svg>
-              ค้นหา
+              {isFiltering ? 'กำลังกรองตามวันที่' : 'กรองตามวันที่'}
             </button>
           </div>
+
+          {/* Search Results Info */}
+          {(searchQuery ||
+            selectedCategory !== 'ทั้งหมด' ||
+            selectedStatus !== 'all' ||
+            isFiltering) && (
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    />
+                  </svg>
+                  <span>
+                    พบ <strong>{filteredItems.length}</strong> รายการ
+                    {searchQuery && ` จากการค้นหา "${searchQuery}"`}
+                    {selectedCategory !== 'ทั้งหมด' &&
+                      ` ในหมวดหมู่ "${selectedCategory}"`}
+                    {selectedStatus !== 'all' &&
+                      ` สถานะ "${
+                        Object.values(statusConfig).find(
+                          (s) => s.id.toString() === selectedStatus
+                        )?.description
+                      }"`}
+                    {isFiltering &&
+                      ` ในช่วงวันที่ ${formatDateForDisplay(
+                        safeParseDate(startDate.toISOString())
+                      )} - ${formatDateForDisplay(
+                        safeParseDate(endDate.toISOString())
+                      )}`}
+                  </span>
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  ล้างตัวกรอง
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between items-center m-4">
@@ -695,12 +775,15 @@ export default function AuctionsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="relative">
-                          <div
-                            className="text-sm font-medium truncate cursor-pointer"
+                          <Link
+                            href={`/auction/${
+                              filteredAuctions[item.no]?.auction_id || ''
+                            }`}
+                            className="text-sm font-medium truncate cursor-pointer hover:text-blue-700 transition-colors block"
                             title={item.title}
                           >
                             {item.title}
-                          </div>
+                          </Link>
                         </div>
                       </TableCell>
                       <TableCell>
