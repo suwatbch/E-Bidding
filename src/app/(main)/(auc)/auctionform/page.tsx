@@ -27,6 +27,8 @@ export default function AuctionFormPage() {
   const isEdit = auctionId !== '0' && !!auctionId;
 
   const [isLoading, setIsLoading] = useState(false);
+  const [hasPermission, setHasPermission] = useState(true);
+  const [permissionError, setPermissionError] = useState('');
   const [formData, setFormData] = useState<Auction>({
     auction_id: 0,
     name: '',
@@ -42,10 +44,81 @@ export default function AuctionFormPage() {
     updated_dt: getCurrentDateTime(),
   });
 
+  // ฟังก์ชันตรวจสอบสิทธิ์การเข้าถึง
+  const checkPermission = (auctionData: Auction | undefined) => {
+    if (!auctionData) {
+      setHasPermission(false);
+      setPermissionError('ไม่พบข้อมูลตลาดที่ต้องการแก้ไข');
+      return false;
+    }
+
+    // ตรวจสอบว่าตลาดถูกลบแล้วหรือไม่
+    if (auctionData.is_deleted === 1) {
+      setHasPermission(false);
+      setPermissionError('ไม่สามารถแก้ไขตลาดที่ถูกลบแล้ว');
+      return false;
+    }
+
+    // ตรวจสอบสถานะตลาด - ไม่ให้แก้ไขถ้าตลาดสิ้นสุดแล้ว
+    if (auctionData.status === 5 || auctionData.status === 6) {
+      setHasPermission(false);
+      setPermissionError('ไม่สามารถแก้ไขตลาดที่สิ้นสุดหรือยกเลิกแล้ว');
+      return false;
+    }
+
+    // ตรวจสอบว่าเวลาเริ่มต้นผ่านไปแล้วหรือไม่
+    const startDate = new Date(auctionData.start_dt);
+    const now = new Date();
+    if (startDate <= now && auctionData.status >= 3) {
+      setHasPermission(false);
+      setPermissionError('ไม่สามารถแก้ไขตลาดที่เริ่มต้นแล้ว');
+      return false;
+    }
+
+    // TODO: เพิ่มการตรวจสอบสิทธิ์ของ user
+    // เช่น ตรวจสอบว่า user เป็นเจ้าของตลาดหรือมี role ที่เหมาะสม
+    // const currentUser = getCurrentUser();
+    // if (auctionData.created_by !== currentUser.id && !currentUser.isAdmin) {
+    //   setHasPermission(false);
+    //   setPermissionError('คุณไม่มีสิทธิ์แก้ไขตลาดนี้');
+    //   return false;
+    // }
+
+    return true;
+  };
+
+  // ฟังก์ชันตรวจสอบ ID ที่ส่งมา
+  const validateAuctionId = (id: string): number | null => {
+    // ตรวจสอบว่าเป็นตัวเลขหรือไม่
+    const numericId = parseInt(id);
+    if (isNaN(numericId) || numericId < 0) {
+      return null;
+    }
+
+    // ตรวจสอบว่า ID มีอยู่ในระบบหรือไม่
+    const exists = dataAuction.some(
+      (auction) => auction.auction_id === numericId
+    );
+    if (!exists && numericId !== 0) {
+      return null;
+    }
+
+    return numericId;
+  };
+
   useEffect(() => {
     if (isEdit && auctionId && auctionId !== '0') {
+      // ตรวจสอบ ID ที่ส่งมา
+      const validatedId = validateAuctionId(auctionId);
+
+      if (validatedId === null) {
+        setHasPermission(false);
+        setPermissionError('รหัสตลาดไม่ถูกต้องหรือไม่มีอยู่ในระบบ');
+        return;
+      }
+
       // โหลดข้อมูลตลาดที่ต้องการแก้ไข
-      loadAuctionData(parseInt(auctionId));
+      loadAuctionData(validatedId);
     }
   }, [isEdit, auctionId]);
 
@@ -55,19 +128,24 @@ export default function AuctionFormPage() {
       // ดึงข้อมูลจาก dataAuction ตาม auction_id
       const auction = dataAuction.find((a) => a.auction_id === id);
 
+      // ตรวจสอบสิทธิ์การเข้าถึง
+      if (!checkPermission(auction)) {
+        return;
+      }
+
       if (auction) {
         setFormData({
           ...auction,
           // อัพเดท updated_dt เมื่อแก้ไข
           updated_dt: getCurrentDateTime(),
         });
-      } else {
-        alert('ไม่พบข้อมูลตลาดที่ต้องการแก้ไข');
-        router.push('/auctions');
+        setHasPermission(true);
+        setPermissionError('');
       }
     } catch (error) {
       console.error('Error loading auction data:', error);
-      alert('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      setHasPermission(false);
+      setPermissionError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
       setIsLoading(false);
     }
@@ -169,11 +247,60 @@ export default function AuctionFormPage() {
     }
   };
 
+  // แสดงหน้า Error ถ้าไม่มีสิทธิ์
+  if (!hasPermission) {
+    return (
+      <Container className="py-6">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl shadow-sm border border-red-200 p-8 text-center">
+            <div className="mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-16 h-16 text-red-500 mx-auto"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+              ไม่สามารถเข้าถึงได้
+            </h1>
+            <p className="text-gray-600 mb-6">{permissionError}</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => router.push('/auctions')}
+                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                กลับไปหน้ารายการตลาด
+              </button>
+              <button
+                onClick={() => router.push('/auctionform?id=0')}
+                className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              >
+                สร้างตลาดใหม่
+              </button>
+            </div>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
   if (isLoading && isEdit) {
     return (
       <Container className="py-6">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...</p>
+          </div>
         </div>
       </Container>
     );
