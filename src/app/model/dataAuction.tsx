@@ -9,7 +9,7 @@ export interface Auction {
   currency: number; // 1 = THB (default), 2 = USD, 3 = EUR, etc. (refer to currencyConfig)
   status: number; // 1 เปิดการประมูล, 2 รอการประมูล, 3 กำลังประมูล, 4 ใกล้สิ้นสุด, 5 สิ้นสุดประมูล, 6 ยกเลิกประมูล
   is_deleted: number; // 1 = active, 0 = inactive
-  remark?: string; // หมายเหตุเพิ่มเติม
+  remark?: string | null; // หมายเหตุเพิ่มเติม
   created_dt: string;
   updated_dt: string;
 }
@@ -67,6 +67,7 @@ export const dataAuction: Auction[] = [
     currency: 2, // THB
     status: 5, // สิ้นสุดประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-25 13:00:00',
     updated_dt: '2025-06-01 15:00:00',
   },
@@ -108,6 +109,7 @@ export const dataAuction: Auction[] = [
     currency: 1, // THB
     status: 2, // รอการประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-27 10:00:00',
     updated_dt: '2025-05-27 10:00:00',
   },
@@ -135,6 +137,7 @@ export const dataAuction: Auction[] = [
     currency: 1, // THB
     status: 5, // สิ้นสุดประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-25 14:00:00',
     updated_dt: '2025-06-02 11:00:00',
   },
@@ -176,6 +179,7 @@ export const dataAuction: Auction[] = [
     currency: 1, // THB
     status: 2, // รอการประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-28 10:00:00',
     updated_dt: '2025-05-28 10:00:00',
   },
@@ -203,6 +207,7 @@ export const dataAuction: Auction[] = [
     currency: 1, // THB
     status: 5, // สิ้นสุดประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-25 15:00:00',
     updated_dt: '2025-06-01 12:00:00',
   },
@@ -244,6 +249,7 @@ export const dataAuction: Auction[] = [
     currency: 1, // THB
     status: 2, // รอการประมูล
     is_deleted: 0,
+    remark: null,
     created_dt: '2025-05-29 10:00:00',
     updated_dt: '2025-05-29 10:00:00',
   },

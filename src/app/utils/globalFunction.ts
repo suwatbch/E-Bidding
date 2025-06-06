@@ -7,6 +7,28 @@ import {
   dataAuction_Participant,
   AuctionParticipant,
 } from '@/app/model/dataAuction_Participant';
+import {
+  dataAuction_Bid,
+  AuctionBid,
+  getBidStatusText,
+  getBidStatusColor,
+} from '@/app/model/dataAuction_Bid';
+import { initialCompanies } from '@/app/model/dataCompany';
+import {
+  dataUser_Company,
+  getCompanyByUserId,
+  getUserRole,
+  canUserBid,
+  getPrimaryCompanyByUserId,
+  getAllCompaniesByUserId,
+  getUserRoleInCompany,
+  canUserBidInCompany,
+  isUserAdmin,
+  isUserAdminInCompany,
+  getUserCompanyRelations,
+  hasUserCompanyRelation,
+  getRoleDisplayName,
+} from '@/app/model/dataUser_Company';
 
 // =============================================================================
 // DATE & TIME UTILITIES
@@ -142,6 +164,27 @@ export const createDateChangeHandler = (
       }));
     }
   };
+};
+
+/**
+ * ฟอร์แมตเวลาคงเหลือ
+ */
+export const formatTimeRemaining = (
+  timeRemaining: ReturnType<typeof calculateTimeRemaining>
+): string => {
+  if (timeRemaining.isExpired) {
+    return 'หมดเวลา';
+  }
+
+  if (timeRemaining.days > 0) {
+    return `${timeRemaining.days} วัน ${timeRemaining.hours} ชม.`;
+  } else if (timeRemaining.hours > 0) {
+    return `${timeRemaining.hours} ชม. ${timeRemaining.minutes} นาที`;
+  } else if (timeRemaining.minutes > 0) {
+    return `${timeRemaining.minutes} นาที`;
+  } else {
+    return `${timeRemaining.seconds} วินาที`;
+  }
 };
 
 // =============================================================================
@@ -462,6 +505,523 @@ export const removeLocalStorage = (key: string): void => {
 };
 
 // =============================================================================
+// BID UTILITIES
+// =============================================================================
+
+/**
+ * ดึงการเสนอราคาทั้งหมดในประมูล (เฉพาะที่ยอมรับแล้ว)
+ */
+export const getAuctionBids = (auctionId: number): AuctionBid[] => {
+  return dataAuction_Bid
+    .filter((bid) => bid.auction_id === auctionId && bid.status === 'accept')
+    .sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+};
+
+/**
+ * ดึงการเสนอราคาทั้งหมดในประมูล (รวมทุกสถานะ)
+ */
+export const getAllAuctionBids = (auctionId: number): AuctionBid[] => {
+  return dataAuction_Bid
+    .filter((bid) => bid.auction_id === auctionId)
+    .sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+};
+
+/**
+ * ดึงการเสนอราคาล่าสุดของแต่ละบริษัท (เฉพาะที่ยอมรับ)
+ */
+export const getLatestBidByCompany = (auctionId: number): AuctionBid[] => {
+  const bids = getAuctionBids(auctionId);
+  const latestBids: { [companyId: number]: AuctionBid } = {};
+
+  bids.forEach((bid) => {
+    const companyId = getCompanyByUserId(bid.user_id);
+    if (companyId) {
+      if (
+        !latestBids[companyId] ||
+        new Date(bid.bid_time) > new Date(latestBids[companyId].bid_time)
+      ) {
+        latestBids[companyId] = bid;
+      }
+    }
+  });
+
+  return Object.values(latestBids).sort((a, b) => a.bid_amount - b.bid_amount);
+};
+
+/**
+ * ดึงราคาเสนอต่ำสุดในประมูล
+ */
+export const getLowestBid = (auctionId: number): AuctionBid | null => {
+  const latestBids = getLatestBidByCompany(auctionId);
+  return latestBids.length > 0 ? latestBids[0] : null;
+};
+
+/**
+ * ดึงราคาเสนอที่ชนะ (is_winning = true)
+ */
+export const getWinningBid = (auctionId: number): AuctionBid | null => {
+  const bids = dataAuction_Bid.filter(
+    (bid) => bid.auction_id === auctionId && bid.is_winning
+  );
+  return bids.length > 0 ? bids[0] : null;
+};
+
+/**
+ * ดึงจำนวนการเสนอราคาในประมูล (เฉพาะที่ยอมรับ)
+ */
+export const getBidCount = (auctionId: number): number => {
+  return getAuctionBids(auctionId).length;
+};
+
+/**
+ * ดึงจำนวนการเสนอราคาทั้งหมด (รวมทุกสถานะ)
+ */
+export const getTotalBidCount = (auctionId: number): number => {
+  return getAllAuctionBids(auctionId).length;
+};
+
+/**
+ * ดึงการเสนอราคาของผู้ใช้ในประมูล
+ */
+export const getUserBids = (
+  auctionId: number,
+  userId: number
+): AuctionBid[] => {
+  return dataAuction_Bid
+    .filter((bid) => bid.auction_id === auctionId && bid.user_id === userId)
+    .sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+};
+
+/**
+ * ดึงการเสนอราคาล่าสุดของผู้ใช้
+ */
+export const getLatestUserBid = (
+  auctionId: number,
+  userId: number
+): AuctionBid | null => {
+  const bids = getUserBids(auctionId, userId);
+  const acceptedBids = bids.filter((bid) => bid.status === 'accept');
+  return acceptedBids.length > 0 ? acceptedBids[0] : null;
+};
+
+/**
+ * ดึงการเสนอราคาของบริษัทในประมูล
+ */
+export const getCompanyBids = (
+  auctionId: number,
+  companyId: number
+): AuctionBid[] => {
+  return dataAuction_Bid
+    .filter((bid) => {
+      const bidCompanyId = getCompanyByUserId(bid.user_id);
+      return (
+        bid.auction_id === auctionId &&
+        bidCompanyId === companyId &&
+        bid.status === 'accept'
+      );
+    })
+    .sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+};
+
+/**
+ * ดึงการเสนอราคาล่าสุดของบริษัท
+ */
+export const getLatestCompanyBid = (
+  auctionId: number,
+  companyId: number
+): AuctionBid | null => {
+  const bids = getCompanyBids(auctionId, companyId);
+  return bids.length > 0 ? bids[0] : null;
+};
+
+/**
+ * คำนวณความต่างจากราคาตั้งต้น
+ */
+export const calculatePriceDifference = (
+  reservePrice: number,
+  bidAmount: number
+): number => {
+  return reservePrice - bidAmount;
+};
+
+/**
+ * คำนวณเปอร์เซ็นต์ความต่างจากราคาตั้งต้น
+ */
+export const calculatePriceDifferencePercentage = (
+  reservePrice: number,
+  bidAmount: number
+): number => {
+  if (reservePrice === 0) return 0;
+  return ((reservePrice - bidAmount) / reservePrice) * 100;
+};
+
+/**
+ * ตรวจสอบว่าบริษัทเสนอราคาในประมูลหรือไม่
+ */
+export const hasCompanyBid = (
+  auctionId: number,
+  companyId: number
+): boolean => {
+  return dataAuction_Bid.some((bid) => {
+    const bidCompanyId = getCompanyByUserId(bid.user_id);
+    return (
+      bid.auction_id === auctionId &&
+      bidCompanyId === companyId &&
+      bid.status === 'accept'
+    );
+  });
+};
+
+/**
+ * ตรวจสอบว่าผู้ใช้เสนอราคาในประมูลหรือไม่
+ */
+export const hasUserBid = (auctionId: number, userId: number): boolean => {
+  return dataAuction_Bid.some(
+    (bid) =>
+      bid.auction_id === auctionId &&
+      bid.user_id === userId &&
+      bid.status === 'accept'
+  );
+};
+
+/**
+ * ดึงข้อมูลบริษัทจาก ID
+ */
+export const getCompanyById = (companyId: number) => {
+  return initialCompanies.find((company) => company.id === companyId) || null;
+};
+
+/**
+ * ดึงชื่อบริษัทจาก ID
+ */
+export const getCompanyName = (companyId: number): string => {
+  const company = getCompanyById(companyId);
+  return company ? company.name : `บริษัท #${companyId}`;
+};
+
+/**
+ * ดึงข้อมูลบริษัทจาก user_id
+ */
+export const getCompanyByUser = (userId: number) => {
+  const companyId = getCompanyByUserId(userId);
+  return companyId ? getCompanyById(companyId) : null;
+};
+
+/**
+ * ดึงชื่อบริษัทจาก user_id
+ */
+export const getCompanyNameByUser = (userId: number): string => {
+  const companyId = getCompanyByUserId(userId);
+  return companyId ? getCompanyName(companyId) : `ผู้ใช้ #${userId}`;
+};
+
+/**
+ * ดึงจำนวนการพยายามเสนอราคาของผู้ใช้
+ */
+export const getUserBidAttempts = (
+  auctionId: number,
+  userId: number
+): number => {
+  const bids = getUserBids(auctionId, userId);
+  return bids.length;
+};
+
+/**
+ * ดึงสถิติการเสนอราคาตามสถานะ
+ */
+export const getBidStatsByStatus = (auctionId: number) => {
+  const allBids = getAllAuctionBids(auctionId);
+
+  return {
+    accept: allBids.filter((bid) => bid.status === 'accept').length,
+    rejected: allBids.filter((bid) => bid.status === 'rejected').length,
+    canceled: allBids.filter((bid) => bid.status === 'canceled').length,
+    total: allBids.length,
+  };
+};
+
+/**
+ * ดึงการเสนอราคาตามสถานะ
+ */
+export const getBidsByStatus = (
+  auctionId: number,
+  status: string
+): AuctionBid[] => {
+  return dataAuction_Bid
+    .filter((bid) => bid.auction_id === auctionId && bid.status === status)
+    .sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+};
+
+/**
+ * สร้างข้อมูลสำหรับตารางผู้เสนอราคา (อัปเดตสำหรับโครงสร้างใหม่)
+ */
+export const getBidTableData = (auctionId: number, reservePrice: number) => {
+  const latestBids = getLatestBidByCompany(auctionId);
+
+  return latestBids.map((bid, index) => {
+    const companyId = getCompanyByUserId(bid.user_id);
+    const company = companyId ? getCompanyById(companyId) : null;
+    const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
+    const percentageDiff = calculatePriceDifferencePercentage(
+      reservePrice,
+      bid.bid_amount
+    );
+
+    return {
+      rank: index + 1,
+      userId: bid.user_id,
+      companyId: companyId || 0,
+      companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
+      companyShortName:
+        company?.name?.substring(0, 20) +
+          (company?.name && company.name.length > 20 ? '...' : '') ||
+        `ผู้ใช้ #${bid.user_id}`,
+      bidAmount: bid.bid_amount,
+      priceDifference: priceDiff,
+      percentageDifference: percentageDiff,
+      bidTime: bid.bid_time,
+      isLowest: index === 0,
+      isWinning: bid.is_winning,
+      status: bid.status,
+      attempt: bid.attempt,
+      statusText: getBidStatusText(bid.status),
+      statusColor: getBidStatusColor(bid.status),
+      userRole: getUserRole(bid.user_id) || 'unknown',
+      canBid: canUserBid(bid.user_id),
+    };
+  });
+};
+
+/**
+ * สร้างข้อมูลประวัติการเสนอราคาทั้งหมด
+ */
+export const getBidHistoryData = (auctionId: number, reservePrice: number) => {
+  const allBids = getAllAuctionBids(auctionId);
+
+  return allBids.map((bid) => {
+    const companyId = getCompanyByUserId(bid.user_id);
+    const company = companyId ? getCompanyById(companyId) : null;
+    const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
+    const percentageDiff = calculatePriceDifferencePercentage(
+      reservePrice,
+      bid.bid_amount
+    );
+
+    return {
+      bidId: bid.bid_id,
+      userId: bid.user_id,
+      companyId: companyId || 0,
+      companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
+      bidAmount: bid.bid_amount,
+      priceDifference: priceDiff,
+      percentageDifference: percentageDiff,
+      bidTime: bid.bid_time,
+      status: bid.status,
+      attempt: bid.attempt,
+      isWinning: bid.is_winning,
+      statusText: getBidStatusText(bid.status),
+      statusColor: getBidStatusColor(bid.status),
+      userRole: getUserRole(bid.user_id) || 'unknown',
+    };
+  });
+};
+
+/**
+ * คำนวณเวลาคงเหลือในการประมูล
+ */
+export const calculateTimeRemaining = (
+  endTime: string
+): {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+  totalMinutes: number;
+} => {
+  const now = new Date();
+  const end = safeParseDate(endTime);
+  const diffMs = end.getTime() - now.getTime();
+
+  if (diffMs <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isExpired: true,
+      totalMinutes: 0,
+    };
+  }
+
+  const totalMinutes = Math.floor(diffMs / (1000 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+  return {
+    days,
+    hours,
+    minutes,
+    seconds,
+    isExpired: false,
+    totalMinutes,
+  };
+};
+
+/**
+ * ฟอร์แมตตัวเลขเป็นรูปแบบเงิน
+ */
+export const formatCurrency = (
+  amount: number,
+  currency: string = 'THB'
+): string => {
+  if (isNaN(amount)) return '0';
+
+  const formatter = new Intl.NumberFormat('th-TH', {
+    style: 'currency',
+    currency: currency,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  return formatter.format(amount);
+};
+
+/**
+ * แปลงสตริงเป็นตัวเลข
+ */
+export const parseNumber = (str: string): number => {
+  const cleaned = str.replace(/[^\d.-]/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+/**
+ * คำนวณเปอร์เซ็นต์
+ */
+export const calculatePercentage = (value: number, total: number): number => {
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100 * 100) / 100; // 2 decimal places
+};
+
+/**
+ * เพิ่มวันลงในวันที่
+ */
+export const addDays = (date: Date, days: number): Date => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+/**
+ * เพิ่มเดือนลงในวันที่
+ */
+export const addMonths = (date: Date, months: number): Date => {
+  const result = new Date(date);
+  result.setMonth(result.getMonth() + months);
+  return result;
+};
+
+/**
+ * ตรวจสอบว่าปีเป็นปีอธิกสุรทินหรือไม่
+ */
+export const isLeapYear = (year: number): boolean => {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+};
+
+/**
+ * รับจำนวนวันในเดือน
+ */
+export const getDaysInMonth = (year: number, month: number): number => {
+  return new Date(year, month, 0).getDate();
+};
+
+/**
+ * แปลงวันที่เป็นรูปแบบ ISO string
+ */
+export const toISOString = (date: Date): string => {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+};
+
+/**
+ * ตัดสตริงและเพิ่ม ...
+ */
+export const truncateString = (str: string, maxLength: number): string => {
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength) + '...';
+};
+
+/**
+ * แปลงสตริงเป็น Title Case
+ */
+export const toTitleCase = (str: string): string => {
+  return str.replace(/\w\S*/g, (txt) => {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+};
+
+/**
+ * ลบช่องว่างส่วนเกิน
+ */
+export const cleanString = (str: string): string => {
+  return str.trim().replace(/\s+/g, ' ');
+};
+
+/**
+ * ตรวจสอบเลขประจำตัวผู้เสียภาษี
+ */
+export const isValidTaxId = (taxId: string): boolean => {
+  const cleaned = taxId.replace(/[-\s]/g, '');
+  return /^\d{13}$/.test(cleaned);
+};
+
+/**
+ * ลบค่าซ้ำในอาร์เรย์
+ */
+export const removeDuplicates = <T>(array: T[]): T[] => {
+  return [...new Set(array)];
+};
+
+/**
+ * สุ่มค่าในอาร์เรย์
+ */
+export const shuffleArray = <T>(array: T[]): T[] => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+/**
+ * จัดกลุ่มอาร์เรย์ตาม key
+ */
+export const groupBy = <T, K extends keyof T>(
+  array: T[],
+  key: K
+): Record<string, T[]> => {
+  return array.reduce((groups, item) => {
+    const group = String(item[key]);
+    groups[group] = groups[group] || [];
+    groups[group].push(item);
+    return groups;
+  }, {} as Record<string, T[]>);
+};
+
+// =============================================================================
 // EXPORT ALL UTILITIES
 // =============================================================================
 
@@ -474,6 +1034,18 @@ export default {
   getCurrentDateTime,
   safeParseDate,
   createDateChangeHandler,
+  calculateTimeRemaining,
+  formatTimeRemaining,
+  getTimeRemaining,
+
+  // Currency & Number
+  formatCurrency,
+  formatNumber,
+  formatPrice,
+  parseNumber,
+  calculatePercentage,
+  formatPercentage,
+  formatAuctionId,
 
   // Participant
   getActiveParticipants,
@@ -487,25 +1059,51 @@ export default {
   getParticipantStatusText,
   getConnectionStatusText,
 
-  // Auction
-  formatPrice,
-  formatAuctionId,
-  getTimeRemaining,
+  // Bid
+  getAuctionBids,
+  getAllAuctionBids,
+  getLatestBidByCompany,
+  getLowestBid,
+  getWinningBid,
+  getBidCount,
+  getTotalBidCount,
+  getUserBids,
+  getLatestUserBid,
+  getCompanyBids,
+  getLatestCompanyBid,
+  calculatePriceDifference,
+  calculatePriceDifferencePercentage,
+  hasCompanyBid,
+  hasUserBid,
+  getCompanyById,
+  getCompanyName,
+  getCompanyByUser,
+  getCompanyNameByUser,
+  getUserBidAttempts,
+  getBidStatsByStatus,
+  getBidsByStatus,
+  getBidTableData,
+  getBidHistoryData,
+
+  // String
+  truncateString,
+  truncateText,
+  toTitleCase,
+  cleanString,
+  slugify,
 
   // Validation
   isValidEmail,
   isValidThaiPhone,
+  isValidTaxId,
   isValidThaiNationalId,
 
-  // String
-  truncateText,
-  slugify,
+  // Array
+  removeDuplicates,
+  shuffleArray,
+  groupBy,
 
-  // Number
-  formatNumber,
-  formatPercentage,
-
-  // Storage
+  // Local Storage
   setLocalStorage,
   getLocalStorage,
   removeLocalStorage,

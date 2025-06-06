@@ -684,7 +684,7 @@ export default function AuctionFormPage() {
           {/* Remark */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              หมายเหตุ
+              รายละเอียด
             </h2>
 
             <div className="relative">
@@ -693,7 +693,7 @@ export default function AuctionFormPage() {
                 onChange={(e) => handleInputChange('remark', e.target.value)}
                 rows={5}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="กรอกหมายเหตุเพิ่มเติม"
+                placeholder="กรอกรายละเอียดเพิ่มเติม"
               />
               <div className="absolute top-3 left-0 flex items-start pl-3 pointer-events-none">
                 <svg

@@ -19,14 +19,28 @@ import {
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Item } from '@/app/model/dataAuction_Item';
-import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
-import { getStatusById, currencyConfig } from '@/app/model/dataConfig';
 import {
+  dataAuction_Participant,
+  AuctionParticipant,
+} from '@/app/model/dataAuction_Participant';
+import { getStatusById, currencyConfig } from '@/app/model/dataConfig';
+import { getCurrentDateTime } from '@/app/utils/globalFunction';
+import {
+  getParticipantStats,
+  formatCurrency,
   formatDateForDisplay,
   safeParseDate,
-  getCurrentDateTime,
-  getParticipantStats,
+  getBidTableData,
+  calculateTimeRemaining,
+  formatTimeRemaining,
+  getLowestBid,
+  getBidCount,
   getConnectionStatusText,
+  getBidHistoryData,
+  getBidStatsByStatus,
+  getWinningBid,
+  getTotalBidCount,
+  getCompanyNameByUser,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionDetailPage() {
@@ -381,16 +395,14 @@ export default function AuctionDetailPage() {
                 </div>
               </div>
 
-              {auction.remark && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    หมายเหตุ
-                  </label>
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
-                    {auction.remark}
-                  </p>
-                </div>
-              )}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  รายละเอียด
+                </label>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">
+                  {auction.remark || ''}
+                </p>
+              </div>
             </div>
 
             {/* Auction Items */}
@@ -645,6 +657,362 @@ export default function AuctionDetailPage() {
                   <span className="text-gray-900">
                     {currency?.description || 'ไม่ระบุ'}
                   </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Auction Header */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    {auction.name}
+                  </h1>
+                  <p className="text-gray-600 mb-4">
+                    {auction.remark || 'ไม่มีรายละเอียดเพิ่มเติม'}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-500 block">
+                        ราคาเริ่มต้น
+                      </span>
+                      <span className="text-lg font-medium text-gray-900">
+                        {formatCurrency(auction.reserve_price)}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500 block">
+                        เริ่มประมูล
+                      </span>
+                      <span className="text-lg font-medium text-gray-900">
+                        {formatDateForDisplay(
+                          safeParseDate(auction.start_dt),
+                          true
+                        )}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500 block">
+                        สิ้นสุดการประมูล
+                      </span>
+                      <span className="text-lg font-medium text-gray-900">
+                        {formatDateForDisplay(
+                          safeParseDate(auction.end_dt),
+                          true
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ml-6">
+                  <div className="text-right">
+                    <span className="text-sm text-gray-500 block">
+                      เวลาคงเหลือ
+                    </span>
+                    <span className="text-xl font-bold text-blue-600">
+                      {formatTimeRemaining(
+                        calculateTimeRemaining(auction.end_dt)
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bidding Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {getBidCount(auction.auction_id)}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    การเสนอราคาที่ยอมรับ
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {getLowestBid(auction.auction_id)
+                      ? formatCurrency(
+                          getLowestBid(auction.auction_id)!.bid_amount
+                        )
+                      : '-'}
+                  </div>
+                  <div className="text-sm text-gray-500">ราคาต่ำสุด</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {participantStats.total}
+                  </div>
+                  <div className="text-sm text-gray-500">ผู้สมัครทั้งหมด</div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {participantStats.online}
+                  </div>
+                  <div className="text-sm text-gray-500">ออนไลน์</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bid Status Statistics */}
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                สถิติการเสนอราคา
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {(() => {
+                  const bidStats = getBidStatsByStatus(auction.auction_id);
+                  return (
+                    <>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
+                          {bidStats.accept}
+                        </div>
+                        <div className="text-sm text-green-700">ยอมรับ</div>
+                      </div>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">
+                          {bidStats.rejected}
+                        </div>
+                        <div className="text-sm text-red-700">ปฏิเสธ</div>
+                      </div>
+                      <div className="text-center p-4 bg-gray-50 rounded-lg">
+                        <div className="text-2xl font-bold text-gray-600">
+                          {bidStats.canceled}
+                        </div>
+                        <div className="text-sm text-gray-700">ยกเลิก</div>
+                      </div>
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {bidStats.total}
+                        </div>
+                        <div className="text-sm text-blue-700">รวมทั้งหมด</div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Bidding Table */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  ตารางการเสนอราคา (ราคาล่าสุดของแต่ละบริษัท)
+                </h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        อันดับ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        บริษัท / ผู้ใช้
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ราคาเสนอ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ส่วนต่าง
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        % ส่วนต่าง
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        สถานะ
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ครั้งที่
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        เวลาเสนอ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {getBidTableData(
+                      auction.auction_id,
+                      auction.reserve_price
+                    ).map((bidData) => (
+                      <tr
+                        key={`${bidData.userId}-${bidData.companyId}`}
+                        className={
+                          bidData.isLowest ? 'bg-green-50' : 'hover:bg-gray-50'
+                        }
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            {bidData.isLowest && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                                ชนะ
+                              </span>
+                            )}
+                            {bidData.isWinning && (
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
+                                ชนะอย่างเป็นทางการ
+                              </span>
+                            )}
+                            <span
+                              className={`text-sm font-medium ${
+                                bidData.isLowest
+                                  ? 'text-green-900'
+                                  : 'text-gray-900'
+                              }`}
+                            >
+                              #{bidData.rank}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                <span className="text-white text-sm font-medium">
+                                  {bidData.companyName.charAt(0)}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {bidData.companyShortName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                User ID: {bidData.userId}
+                                {bidData.companyId > 0 &&
+                                  ` | Company ID: ${bidData.companyId}`}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                Role: {bidData.userRole}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div
+                            className={`text-sm font-medium ${
+                              bidData.isLowest
+                                ? 'text-green-900'
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            {formatCurrency(bidData.bidAmount)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div
+                            className={`text-sm font-medium ${
+                              bidData.priceDifference > 0
+                                ? 'text-green-600'
+                                : bidData.priceDifference < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                            }`}
+                          >
+                            {bidData.priceDifference > 0 ? '+' : ''}
+                            {formatCurrency(Math.abs(bidData.priceDifference))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              bidData.percentageDifference > 0
+                                ? 'bg-green-100 text-green-800'
+                                : bidData.percentageDifference < 0
+                                ? 'bg-red-100 text-red-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {bidData.percentageDifference > 0 ? '+' : ''}
+                            {bidData.percentageDifference.toFixed(2)}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bidData.statusColor}`}
+                          >
+                            {bidData.statusText}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-900">
+                            #{bidData.attempt}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDateForDisplay(
+                            safeParseDate(bidData.bidTime),
+                            true
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {getBidTableData(auction.auction_id, auction.reserve_price)
+                      .length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={8}
+                          className="px-6 py-8 text-center text-gray-500"
+                        >
+                          <div className="flex flex-col items-center">
+                            <svg
+                              className="w-12 h-12 text-gray-300 mb-2"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              />
+                            </svg>
+                            <p>ยังไม่มีการเสนอราคา</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Participants Section */}
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    ผู้เข้าร่วมประมูล
+                  </h2>
+                  <div className="flex items-center space-x-4 text-sm">
+                    <span className="text-gray-600">
+                      ลงทะเบียนแล้ว:{' '}
+                      <span className="font-medium">
+                        {participantStats.total}
+                      </span>
+                    </span>
+                    <span className="text-green-600">
+                      ออนไลน์:{' '}
+                      <span className="font-medium">
+                        {participantStats.online}
+                      </span>
+                    </span>
+                    <span className="text-gray-400">
+                      ออฟไลน์:{' '}
+                      <span className="font-medium">
+                        {participantStats.offline}
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
