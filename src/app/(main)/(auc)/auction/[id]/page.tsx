@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Container from '@/app/components/ui/Container';
+import BidHistory from '@/app/components/history/BidHistory';
 import {
   AucCategoryIcon,
   AucStartTimeIcon,
@@ -52,6 +53,11 @@ export default function AuctionDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState('');
+  const [showHistoryPopup, setShowHistoryPopup] = useState(false);
+  const [showBidPopup, setShowBidPopup] = useState(false);
+  const [bidAmount, setBidAmount] = useState<string>('');
+  const [bidError, setBidError] = useState<string>('');
+  const [isSubmittingBid, setIsSubmittingBid] = useState(false);
 
   useEffect(() => {
     loadAuctionData();
@@ -170,9 +176,7 @@ export default function AuctionDetailPage() {
   };
 
   const formatAuctionId = (id: number) => {
-    const currentYear = new Date().getFullYear();
-    const paddedId = id.toString().padStart(4, '0');
-    return `[${currentYear}${paddedId}]`;
+    return `[2024${id.toString().padStart(4, '0')}]`;
   };
 
   // ดึงข้อมูลเพิ่มเติม
@@ -196,6 +200,81 @@ export default function AuctionDetailPage() {
     ? currencyConfig[auction.currency as keyof typeof currencyConfig]
     : null;
   const statusInfo = auction ? getStatusById(auction.status) : null;
+
+  // Bid handling functions
+  const openBidPopup = () => {
+    setBidAmount('');
+    setBidError('');
+    setShowBidPopup(true);
+  };
+
+  const closeBidPopup = () => {
+    setShowBidPopup(false);
+    setBidAmount('');
+    setBidError('');
+  };
+
+  const validateBidAmount = (amount: string): string | null => {
+    const numAmount = parseFloat(amount);
+
+    if (!amount || isNaN(numAmount)) {
+      return 'กรุณาระบุจำนวนเงิน';
+    }
+
+    if (numAmount <= 0) {
+      return 'จำนวนเงินต้องมากกว่า 0';
+    }
+
+    if (numAmount > (auction?.reserve_price || 0)) {
+      return 'ราคาเสนอต้องไม่เกินราคาสำรอง';
+    }
+
+    const lowestBid = getLowestBid(auction?.auction_id || 0);
+    if (lowestBid && numAmount >= lowestBid.bid_amount) {
+      return `ราคาเสนอต้องต่ำกว่าราคาดีที่สุดปัจจุบัน (${lowestBid.bid_amount.toLocaleString(
+        'th-TH'
+      )} บาท)`;
+    }
+
+    return null;
+  };
+
+  const submitBid = async () => {
+    if (!auction) return;
+
+    const error = validateBidAmount(bidAmount);
+    if (error) {
+      setBidError(error);
+      return;
+    }
+
+    setIsSubmittingBid(true);
+    setBidError('');
+
+    try {
+      // จำลองการส่งข้อมูลไปยัง API
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // แสดงข้อความสำเร็จ
+      alert(
+        `เสนอราคาสำเร็จ! จำนวน ${parseFloat(bidAmount).toLocaleString(
+          'th-TH'
+        )} บาท`
+      );
+
+      // ปิดป๊อปอัพและรีเฟรชข้อมูล
+      closeBidPopup();
+      loadAuctionData();
+    } catch (error) {
+      setBidError('เกิดข้อผิดพลาดในการเสนอราคา กรุณาลองใหม่');
+    } finally {
+      setIsSubmittingBid(false);
+    }
+  };
+
+  const canPlaceBid = () => {
+    return auction && (auction.status === 3 || auction.status === 4);
+  };
 
   if (isLoading) {
     return (
@@ -546,14 +625,130 @@ export default function AuctionDetailPage() {
 
         {/* Bidding Results Table */}
         <div className="mt-8">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <svg
+                className="w-5 h-5 text-yellow-600"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 2L13.09 8.26L20 9.27L15 14.14L16.18 21.02L10 17.77L3.82 21.02L5 14.14L0 9.27L6.91 8.26L10 2Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="flex items-center gap-4 mt-1">
+                <span className="text-lg font-semibold text-gray-900">
+                  ราคาดีที่สุดตอนนี้:{' '}
+                  {(() => {
+                    const lowestBid = getLowestBid(auction.auction_id);
+                    if (lowestBid) {
+                      return `${lowestBid.bid_amount.toLocaleString('th-TH')} ${
+                        currency?.code || 'THB'
+                      }`;
+                    }
+                    return 'ยังไม่มีการเสนอราคา';
+                  })()}
+                </span>
+                {(() => {
+                  const lowestBid = getLowestBid(auction.auction_id);
+                  if (lowestBid) {
+                    const savings =
+                      auction.reserve_price - lowestBid.bid_amount;
+                    const savingsRate = (savings / auction.reserve_price) * 100;
+                    return (
+                      <>
+                        <span
+                          className={`text-sm ${
+                            savings > 0
+                              ? 'text-green-600'
+                              : savings < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          มูลค่าประหยัด {savings.toLocaleString('th-TH')}{' '}
+                          {currency?.code || 'THB'}
+                        </span>
+                        <span
+                          className={`text-sm ${
+                            savingsRate > 0
+                              ? 'text-green-600'
+                              : savingsRate < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          อัตราประหยัด {savingsRate > 0 ? '+' : ''}
+                          {savingsRate.toFixed(2)}%
+                        </span>
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+          </div>
+
+          {/* Bidding Results Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                ผลการเสนอราคา
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                รายการการเสนอราคาล่าสุดของแต่ละบริษัท
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    ผลการเสนอราคา
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    รายการการเสนอราคาล่าสุดของแต่ละบริษัท
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    {canPlaceBid() && (
+                      <button
+                        onClick={openBidPopup}
+                        className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                          />
+                        </svg>
+                        เสนอราคา
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setShowHistoryPopup(true)}
+                      className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      ประวัติประมูล
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full">
@@ -738,6 +933,216 @@ export default function AuctionDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Auction History Popup */}
+      {showHistoryPopup && (
+        <BidHistory
+          isOpen={showHistoryPopup}
+          onClose={() => setShowHistoryPopup(false)}
+          auctionId={auction.auction_id}
+          reservePrice={auction.reserve_price}
+        />
+      )}
+
+      {/* Bid Popup */}
+      {showBidPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
+                </svg>
+                เสนอราคาประมูล
+              </h2>
+              <button
+                onClick={closeBidPopup}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-blue-800">
+                      ข้อมูลการประมูล
+                    </span>
+                  </div>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <div>
+                      ราคาสำรอง:{' '}
+                      <span className="font-semibold">
+                        {formatCurrency(auction?.reserve_price || 0)}
+                      </span>
+                    </div>
+                    {(() => {
+                      const lowestBid = getLowestBid(auction?.auction_id || 0);
+                      return lowestBid ? (
+                        <div>
+                          ราคาดีที่สุดปัจจุบัน:{' '}
+                          <span className="font-semibold">
+                            {formatCurrency(lowestBid.bid_amount)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div>ยังไม่มีการเสนอราคา</div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label
+                    htmlFor="bidAmount"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    จำนวนเงินที่ต้องการเสนอ (บาท)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      id="bidAmount"
+                      value={bidAmount}
+                      onChange={(e) => {
+                        setBidAmount(e.target.value);
+                        setBidError('');
+                      }}
+                      placeholder="ระบุจำนวนเงิน"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
+                      disabled={isSubmittingBid}
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500 text-sm">บาท</span>
+                    </div>
+                  </div>
+                  {bidError && (
+                    <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {bidError}
+                    </p>
+                  )}
+                </div>
+
+                {bidAmount &&
+                  !isNaN(parseFloat(bidAmount)) &&
+                  parseFloat(bidAmount) > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                      <div className="text-sm text-green-700">
+                        <div className="font-medium mb-1">สรุปการเสนอราคา:</div>
+                        <div>
+                          จำนวนเงิน:{' '}
+                          <span className="font-semibold">
+                            {parseFloat(bidAmount).toLocaleString('th-TH')} บาท
+                          </span>
+                        </div>
+                        {auction && (
+                          <div>
+                            ส่วนต่าง:{' '}
+                            <span className="font-semibold">
+                              {(
+                                auction.reserve_price - parseFloat(bidAmount)
+                              ).toLocaleString('th-TH')}{' '}
+                              บาท
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={closeBidPopup}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isSubmittingBid}
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={submitBid}
+                disabled={isSubmittingBid || !bidAmount || bidError !== ''}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+              >
+                {isSubmittingBid ? (
+                  <>
+                    <svg
+                      className="w-4 h-4 animate-spin"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    กำลังเสนอราคา...
+                  </>
+                ) : (
+                  'ยืนยันเสนอราคา'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Container>
   );
 }

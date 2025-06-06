@@ -809,7 +809,14 @@ export const getBidTableData = (auctionId: number, reservePrice: number) => {
 export const getBidHistoryData = (auctionId: number, reservePrice: number) => {
   const allBids = getAllAuctionBids(auctionId);
 
-  return allBids.map((bid) => {
+  // เรียงลำดับตามเวลาจากน้อยไปมาก (เก่าไปใหม่)
+  const sortedBids = allBids.sort((a, b) => {
+    const timeA = new Date(a.bid_time).getTime();
+    const timeB = new Date(b.bid_time).getTime();
+    return timeA - timeB; // เรียงจากน้อยไปมาก
+  });
+
+  return sortedBids.map((bid) => {
     const companyId = getCompanyByUserId(bid.user_id);
     const company = companyId ? getCompanyById(companyId) : null;
     const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
