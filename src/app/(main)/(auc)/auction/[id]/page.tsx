@@ -404,93 +404,10 @@ export default function AuctionDetailPage() {
                 </p>
               </div>
             </div>
-
-            {/* Auction Items */}
-            {auctionItems.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5 text-blue-600"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
-                    />
-                  </svg>
-                  รายการสินค้าในตลาด
-                </h2>
-
-                <div className="space-y-4">
-                  {auctionItems.map((item) => (
-                    <div
-                      key={item.item_id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-gray-900">
-                          {item.item_name}
-                        </h3>
-                        <span className="text-sm font-medium text-blue-600">
-                          {formatPrice(item.base_price)}{' '}
-                          {currency?.code || 'THB'}
-                        </span>
-                      </div>
-                      {item.description && (
-                        <p className="text-gray-600 text-sm mb-2">
-                          {item.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>
-                          จำนวน: {formatPrice(item.quantity)} {item.unit}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Time Remaining */}
-            {auction.status === 3 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5 text-orange-600"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                  เวลาที่เหลือ
-                </h3>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600 mb-2">
-                    {timeRemaining}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    จนกว่าจะสิ้นสุดการประมูล
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Participants */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -529,492 +446,294 @@ export default function AuctionDetailPage() {
               </div>
             </div>
 
-            {/* Participants List */}
-            {participantStats.participants.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5 text-blue-600"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                    />
-                  </svg>
-                  รายชื่อผู้เข้าร่วม
-                </h3>
-
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {participantStats.participants.map((participant) => (
-                    <div
-                      key={participant.id}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className={`w-3 h-3 rounded-full ${
-                              participant.is_connected
-                                ? 'bg-green-500'
-                                : 'bg-gray-400'
-                            }`}
-                          ></div>
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium text-blue-600">
-                              {participant.user_id.toString().slice(-2)}
-                            </span>
-                          </div>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            ผู้ใช้ #{participant.user_id}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            เข้าร่วมเมื่อ:{' '}
-                            {formatDateForDisplay(
-                              safeParseDate(participant.joined_dt),
-                              true
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                            participant.is_connected
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {getConnectionStatusText(participant.is_connected)}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
+            {/* Time Remaining Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                การดำเนินการ
-              </h3>
-              <div className="space-y-3">
-                {auction.status === 1 || auction.status === 2 ? (
-                  <button className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
-                    ลงทะเบียนเข้าร่วมประมูล
-                  </button>
-                ) : auction.status === 3 ? (
-                  <button className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
-                    เข้าร่วมประมูล
-                  </button>
-                ) : null}
-
-                <button
-                  onClick={() =>
-                    router.push(`/auctionform?id=${auction.auction_id}`)
-                  }
-                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  แก้ไขตลาด
-                </button>
-              </div>
-            </div>
-
-            {/* Auction Info */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                ข้อมูลเพิ่มเติม
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                เวลาคงเหลือ
               </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">สร้างเมื่อ:</span>
-                  <span className="text-gray-900">
-                    {formatDateForDisplay(
-                      safeParseDate(auction.created_dt),
-                      true
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">อัพเดทล่าสุด:</span>
-                  <span className="text-gray-900">
-                    {formatDateForDisplay(
-                      safeParseDate(auction.updated_dt),
-                      true
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">สกุลเงิน:</span>
-                  <span className="text-gray-900">
-                    {currency?.description || 'ไม่ระบุ'}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            {/* Auction Header */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {auction.name}
-                  </h1>
-                  <p className="text-gray-600 mb-4">
-                    {auction.remark || 'ไม่มีรายละเอียดเพิ่มเติม'}
+              {auction.status === 3 ? (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-600 mb-2">
+                    {timeRemaining}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    จนกว่าจะสิ้นสุดการประมูล
                   </p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <span className="text-sm text-gray-500 block">
-                        ราคาเริ่มต้น
-                      </span>
-                      <span className="text-lg font-medium text-gray-900">
-                        {formatCurrency(auction.reserve_price)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 block">
-                        เริ่มประมูล
-                      </span>
-                      <span className="text-lg font-medium text-gray-900">
-                        {formatDateForDisplay(
-                          safeParseDate(auction.start_dt),
-                          true
-                        )}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-500 block">
-                        สิ้นสุดการประมูล
-                      </span>
-                      <span className="text-lg font-medium text-gray-900">
-                        {formatDateForDisplay(
-                          safeParseDate(auction.end_dt),
-                          true
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="ml-6">
-                  <div className="text-right">
-                    <span className="text-sm text-gray-500 block">
-                      เวลาคงเหลือ
-                    </span>
-                    <span className="text-xl font-bold text-blue-600">
-                      {formatTimeRemaining(
-                        calculateTimeRemaining(auction.end_dt)
-                      )}
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                    <span className="text-orange-600 text-sm font-medium">
+                      กำลังดำเนินการ
                     </span>
                   </div>
                 </div>
-              </div>
+              ) : auction.status === 4 ? (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-red-600 mb-2 animate-pulse">
+                    {timeRemaining}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">เวลาที่เหลือ</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-red-600 text-sm font-medium">
+                      ใกล้สิ้นสุด!
+                    </span>
+                  </div>
+                </div>
+              ) : auction.status === 5 ? (
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-gray-600 mb-2">
+                    หมดเวลา
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    การประมูลสิ้นสุดแล้ว
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                    <span className="text-gray-600 text-sm font-medium">
+                      สิ้นสุดแล้ว
+                    </span>
+                  </div>
+                </div>
+              ) : auction.status === 1 || auction.status === 2 ? (
+                <div className="text-center">
+                  <div className="text-lg font-semibold text-blue-600 mb-2">
+                    {formatDateForDisplay(
+                      safeParseDate(auction.start_dt),
+                      true
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">เวลาเริ่มประมูล</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-blue-600 text-sm font-medium">
+                      ยังไม่เริ่ม
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600 mb-2">
+                    --:--:--
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    ไม่สามารถคำนวณเวลาได้
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                    <span className="text-yellow-600 text-sm font-medium">
+                      สถานะไม่ทราบ
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
+        </div>
 
-            {/* Bidding Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {getBidCount(auction.auction_id)}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    การเสนอราคาที่ยอมรับ
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
-                    {getLowestBid(auction.auction_id)
-                      ? formatCurrency(
-                          getLowestBid(auction.auction_id)!.bid_amount
-                        )
-                      : '-'}
-                  </div>
-                  <div className="text-sm text-gray-500">ราคาต่ำสุด</div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {participantStats.total}
-                  </div>
-                  <div className="text-sm text-gray-500">ผู้สมัครทั้งหมด</div>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
-                    {participantStats.online}
-                  </div>
-                  <div className="text-sm text-gray-500">ออนไลน์</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Bid Status Statistics */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                สถิติการเสนอราคา
+        {/* Bidding Results Table */}
+        <div className="mt-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">
+                ผลการเสนอราคา
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {(() => {
-                  const bidStats = getBidStatsByStatus(auction.auction_id);
-                  return (
-                    <>
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {bidStats.accept}
-                        </div>
-                        <div className="text-sm text-green-700">ยอมรับ</div>
-                      </div>
-                      <div className="text-center p-4 bg-red-50 rounded-lg">
-                        <div className="text-2xl font-bold text-red-600">
-                          {bidStats.rejected}
-                        </div>
-                        <div className="text-sm text-red-700">ปฏิเสธ</div>
-                      </div>
-                      <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <div className="text-2xl font-bold text-gray-600">
-                          {bidStats.canceled}
-                        </div>
-                        <div className="text-sm text-gray-700">ยกเลิก</div>
-                      </div>
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {bidStats.total}
-                        </div>
-                        <div className="text-sm text-blue-700">รวมทั้งหมด</div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                รายการการเสนอราคาล่าสุดของแต่ละบริษัท
+              </p>
             </div>
-
-            {/* Bidding Table */}
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  ตารางการเสนอราคา (ราคาล่าสุดของแต่ละบริษัท)
-                </h2>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        อันดับ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        บริษัท / ผู้ใช้
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ราคาเสนอ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ส่วนต่าง
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        % ส่วนต่าง
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        สถานะ
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ครั้งที่
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        เวลาเสนอ
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {getBidTableData(
-                      auction.auction_id,
-                      auction.reserve_price
-                    ).map((bidData) => (
-                      <tr
-                        key={`${bidData.userId}-${bidData.companyId}`}
-                        className={
-                          bidData.isLowest ? 'bg-green-50' : 'hover:bg-gray-50'
-                        }
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {bidData.isLowest && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
-                                ชนะ
-                              </span>
-                            )}
-                            {bidData.isWinning && (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-2">
-                                ชนะอย่างเป็นทางการ
-                              </span>
-                            )}
-                            <span
-                              className={`text-sm font-medium ${
-                                bidData.isLowest
-                                  ? 'text-green-900'
-                                  : 'text-gray-900'
-                              }`}
-                            >
-                              #{bidData.rank}
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-blue-600">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                      Company Name
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      Saving
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      Saving Rate
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                      Connection
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-white uppercase tracking-wider">
+                      เวลา
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {getBidTableData(
+                    auction.auction_id,
+                    auction.reserve_price
+                  ).map((bidData, index) => (
+                    <tr
+                      key={`${bidData.userId}-${bidData.companyId}`}
+                      className={`${
+                        bidData.isLowest ? 'bg-yellow-50' : 'hover:bg-gray-50'
+                      } ${index === 0 ? 'bg-green-50' : ''}`}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          {bidData.isLowest && (
+                            <span className="inline-flex items-center p-1 mr-2">
+                              <svg
+                                className="w-5 h-5 text-yellow-500"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 14a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 7.618V16a1 1 0 11-2 0V7.618L6.237 6.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 14a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
                             </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-                                <span className="text-white text-sm font-medium">
+                          )}
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0 h-8 w-8">
+                              <div className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                <span className="text-white text-xs font-medium">
                                   {bidData.companyName.charAt(0)}
                                 </span>
                               </div>
                             </div>
-                            <div className="ml-4">
+                            <div>
                               <div className="text-sm font-medium text-gray-900">
                                 {bidData.companyShortName}
                               </div>
-                              <div className="text-sm text-gray-500">
-                                User ID: {bidData.userId}
-                                {bidData.companyId > 0 &&
-                                  ` | Company ID: ${bidData.companyId}`}
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                Role: {bidData.userRole}
+                              <div className="text-xs text-gray-500">
+                                ID:{' '}
+                                {bidData.companyId > 0
+                                  ? bidData.companyId
+                                  : bidData.userId}
                               </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div
+                          className={`text-sm font-medium ${
+                            bidData.isLowest
+                              ? 'text-green-900'
+                              : 'text-gray-900'
+                          }`}
+                        >
+                          {formatCurrency(bidData.bidAmount)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div
+                          className={`text-sm font-medium ${
+                            bidData.priceDifference > 0
+                              ? 'text-green-600'
+                              : bidData.priceDifference < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          {bidData.priceDifference > 0 ? '+' : ''}
+                          {formatCurrency(Math.abs(bidData.priceDifference))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div
+                          className={`text-sm font-medium ${
+                            bidData.percentageDifference > 0
+                              ? 'text-green-600'
+                              : bidData.percentageDifference < 0
+                              ? 'text-red-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          {bidData.percentageDifference > 0 ? '+' : ''}
+                          {bidData.percentageDifference.toFixed(2)}%
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
                           <div
-                            className={`text-sm font-medium ${
-                              bidData.isLowest
-                                ? 'text-green-900'
-                                : 'text-gray-900'
+                            className={`w-3 h-3 rounded-full ${
+                              bidData.isConnected
+                                ? 'bg-green-500'
+                                : 'bg-gray-400'
                             }`}
-                          >
-                            {formatCurrency(bidData.bidAmount)}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div
-                            className={`text-sm font-medium ${
-                              bidData.priceDifference > 0
-                                ? 'text-green-600'
-                                : bidData.priceDifference < 0
-                                ? 'text-red-600'
+                          ></div>
+                          <span
+                            className={`text-xs font-medium ${
+                              bidData.isConnected
+                                ? 'text-green-700'
                                 : 'text-gray-600'
                             }`}
                           >
-                            {bidData.priceDifference > 0 ? '+' : ''}
-                            {formatCurrency(Math.abs(bidData.priceDifference))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              bidData.percentageDifference > 0
-                                ? 'bg-green-100 text-green-800'
-                                : bidData.percentageDifference < 0
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}
-                          >
-                            {bidData.percentageDifference > 0 ? '+' : ''}
-                            {bidData.percentageDifference.toFixed(2)}%
+                            {bidData.isConnected ? 'Online' : 'Offline'}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bidData.statusColor}`}
-                          >
-                            {bidData.statusText}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-gray-900">
-                            #{bidData.attempt}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {formatDateForDisplay(
-                            safeParseDate(bidData.bidTime),
-                            true
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                    {getBidTableData(auction.auction_id, auction.reserve_price)
-                      .length === 0 && (
-                      <tr>
-                        <td
-                          colSpan={8}
-                          className="px-6 py-8 text-center text-gray-500"
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bidData.statusColor}`}
                         >
-                          <div className="flex flex-col items-center">
-                            <svg
-                              className="w-12 h-12 text-gray-300 mb-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                              />
-                            </svg>
-                            <p>ยังไม่มีการเสนอราคา</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Participants Section */}
-            <div className="bg-white rounded-lg border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    ผู้เข้าร่วมประมูล
-                  </h2>
-                  <div className="flex items-center space-x-4 text-sm">
-                    <span className="text-gray-600">
-                      ลงทะเบียนแล้ว:{' '}
-                      <span className="font-medium">
-                        {participantStats.total}
-                      </span>
-                    </span>
-                    <span className="text-green-600">
-                      ออนไลน์:{' '}
-                      <span className="font-medium">
-                        {participantStats.online}
-                      </span>
-                    </span>
-                    <span className="text-gray-400">
-                      ออฟไลน์:{' '}
-                      <span className="font-medium">
-                        {participantStats.offline}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-              </div>
+                          {bidData.statusText}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                        {formatDateForDisplay(
+                          safeParseDate(bidData.bidTime),
+                          true
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {getBidTableData(auction.auction_id, auction.reserve_price)
+                    .length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-6 py-8 text-center text-gray-500"
+                      >
+                        <div className="flex flex-col items-center">
+                          <svg
+                            className="w-12 h-12 text-gray-300 mb-2"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                            />
+                          </svg>
+                          <p>ยังไม่มีการเสนอราคา</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

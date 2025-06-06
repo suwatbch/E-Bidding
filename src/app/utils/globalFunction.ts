@@ -798,6 +798,7 @@ export const getBidTableData = (auctionId: number, reservePrice: number) => {
       statusColor: getBidStatusColor(bid.status),
       userRole: getUserRole(bid.user_id) || 'unknown',
       canBid: canUserBid(bid.user_id),
+      isConnected: isUserOnline(auctionId, bid.user_id),
     };
   });
 };
