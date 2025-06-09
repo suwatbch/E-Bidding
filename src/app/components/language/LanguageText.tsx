@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { groupedTranslations } from '@/app/model/dataLanguageTextTemp';
+import { groupedTranslations } from '@/app/model/language_text_Temp';
 import Pagination from '@/app/components/ui/Pagination';
 import LoadingState from '@/app/components/ui/LoadingState';
 import EmptyState from '@/app/components/ui/EmptyState';

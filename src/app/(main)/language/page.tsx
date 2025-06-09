@@ -6,7 +6,7 @@ import {
   Language,
   languages as initialLanguages,
   LanguageCode,
-} from '@/app/model/dataLanguageTemp';
+} from '@/app/model/language_Temp';
 import TransectionLanguage from '@/app/components/language/LanguageText';
 
 interface FormData {

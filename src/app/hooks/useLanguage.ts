@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { languages, LanguageCode } from '../model/dataLanguageTemp';
-import { groupedTranslations } from '../model/dataLanguageTextTemp';
+import { languages, LanguageCode } from '../model/language_Temp';
+import { groupedTranslations } from '../model/language_text_Temp';
 
 const LANGUAGE_KEY = 'selectedLanguage';
 

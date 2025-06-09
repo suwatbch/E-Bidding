@@ -2,13 +2,18 @@ const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const authRouter = require('./controllers/auth');
 const languageRouter = require('./controllers/language');
+const { authMiddleware } = require('./config/authMiddleware');
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Global Authentication Middleware
+app.use(authMiddleware);
 
 // Environment variables
 const PORT = process.env.PORT || 3001;
@@ -27,6 +32,7 @@ const io = new Server(httpServer, {
 });
 
 // API Routes
+app.use('/api/auth', authRouter);
 app.use('/api/languages', languageRouter);
 
 // Make io accessible to routes

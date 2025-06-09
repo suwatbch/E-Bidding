@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { NavLanguageIcon, NavArrowDownIcon } from './ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
-import { LanguageCode } from '@/app/model/dataLanguageTemp';
+import { LanguageCode } from '@/app/model/language_Temp';
 import Dropdown from './ui/Dropdown';
 
 interface LanguageSwitcherProps {

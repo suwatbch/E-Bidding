@@ -1,12 +1,7 @@
-export type LanguageCode = 'th' | 'en' | 'zh';
+// Auto-generated from API data
+import { Language } from './language';
 
-export interface Language {
-  language_code: string; // VARCHAR(5) PRIMARY KEY
-  language_name: string; // VARCHAR(100) NOT NULL
-  flag: string | null; // VARCHAR(8) CHARACTER SET utf8mb4
-  is_default: boolean; // BOOLEAN DEFAULT FALSE
-  status: 0 | 1; // TINYINT(1) DEFAULT 1
-}
+export type LanguageCode = 'th' | 'en' | 'zh';
 
 export const languages: Language[] = [
   {
@@ -14,20 +9,20 @@ export const languages: Language[] = [
     language_name: 'ไทย',
     flag: '🇹🇭',
     is_default: true,
-    status: 1,
+    status: 1 as 0 | 1,
   },
   {
     language_code: 'en',
     language_name: 'English',
     flag: '🇬🇧',
     is_default: false,
-    status: 1,
+    status: 1 as 0 | 1,
   },
   {
     language_code: 'zh',
     language_name: '中文',
     flag: '🇨🇳',
     is_default: false,
-    status: 1,
+    status: 1 as 0 | 1,
   },
 ];
