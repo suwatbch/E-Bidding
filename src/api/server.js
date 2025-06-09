@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
-const auctionRouter = require('./controllers/auctions');
+const languageRouter = require('./controllers/language');
 
 const app = express();
 
@@ -22,9 +22,12 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: FRONTEND_URL,
-    methods: ["GET", "POST"]
-  }
+    methods: ['GET', 'POST'],
+  },
 });
+
+// API Routes
+app.use('/api/languages', languageRouter);
 
 // Make io accessible to routes
 app.set('io', io);
@@ -47,13 +50,16 @@ io.on('connection', (socket) => {
   // Handle notifications
   socket.on('new-notification', async (data) => {
     try {
-      const response = await fetch(`${SERVER_URL}:${PORT}/api/auctions/notification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      });
+      const response = await fetch(
+        `${SERVER_URL}:${PORT}/api/auctions/notification`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        }
+      );
 
       const result = await response.json();
       console.log('✅ Notification logged:', result);
@@ -76,15 +82,12 @@ io.on('connection', (socket) => {
   });
 });
 
-// API Routes
-app.use('/api/auctions', auctionRouter);
-
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -94,11 +97,11 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     status: 'error',
     message: err.message || 'Internal server error',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // Start server
 httpServer.listen(PORT, () => {
   console.log(`Server is running on ${SERVER_URL}:${PORT}`);
-}); 
+});
