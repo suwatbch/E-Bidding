@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService, type LoginRequest } from '@/app/services/authService';
+import { useAuth } from '@/app/contexts/AuthContext';
 import {
   LogoIcon,
   FormEmailIcon,
@@ -58,6 +59,7 @@ const EyeOffIcon = () => (
 export default function LoginPage() {
   const router = useRouter();
   const { translate } = useLanguage();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -72,25 +74,6 @@ export default function LoginPage() {
     type: 'success' as 'success' | 'error',
   });
 
-  // Load saved credentials on component mount
-  useEffect(() => {
-    const savedCredentials = localStorage.getItem('login_credentials');
-    if (savedCredentials) {
-      try {
-        const { username, password, rememberMe } = JSON.parse(savedCredentials);
-        setFormData({
-          username: username || '',
-          password: password || '',
-          rememberMe: rememberMe || false,
-        });
-      } catch (error) {
-        console.error('Error loading saved credentials:', error);
-        // Clear invalid data
-        localStorage.removeItem('login_credentials');
-      }
-    }
-  }, []);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -99,25 +82,6 @@ export default function LoginPage() {
     }));
     // Clear error when user starts typing
     if (error) setError('');
-  };
-
-  const saveCredentials = (
-    username: string,
-    password: string,
-    rememberMe: boolean
-  ) => {
-    if (rememberMe) {
-      // Save credentials to localStorage
-      const credentials = {
-        username,
-        password,
-        rememberMe: true,
-      };
-      localStorage.setItem('login_credentials', JSON.stringify(credentials));
-    } else {
-      // Remove saved credentials
-      localStorage.removeItem('login_credentials');
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,14 +105,7 @@ export default function LoginPage() {
 
         // Store user data if available
         if (response.data) {
-          localStorage.setItem('user', JSON.stringify(response.data));
-
-          // Store username if remember me is checked
-          if (formData.rememberMe) {
-            localStorage.setItem('rememberedUsername', response.data.username);
-          } else {
-            localStorage.removeItem('rememberedUsername');
-          }
+          login(response.data, response.data.token, formData.rememberMe);
         }
 
         router.push('/auctions');

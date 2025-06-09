@@ -137,7 +137,7 @@ async function loginUser(username, password, remember_me = false) {
     await resetLoginCount(username);
 
     // กำหนดระยะเวลาหมดอายุของ token ตาม remember_me
-    const expiresIn = remember_me ? '30d' : '1d';
+    const expiresIn = remember_me ? '1d' : '1d';
 
     // สร้าง JWT Token
     const token = jwt.sign(

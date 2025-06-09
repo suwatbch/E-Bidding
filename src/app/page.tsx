@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { redirect } from 'next/navigation';
 import { useLanguage } from './contexts/LanguageContext';
+import { LogoIcon } from '@/app/components/ui/Icons';
 
 export default function HomePage() {
   const { isLoading } = useLanguage();
@@ -20,7 +21,7 @@ export default function HomePage() {
       <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
         <div className="mb-6">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-2xl">🏢</span>
+            <LogoIcon />
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             E-Bidding System
