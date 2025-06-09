@@ -10,6 +10,9 @@ const {
   toggleUserLock,
   deleteUser,
   resetLoginCount,
+  getLockedUsers,
+  requestOtp,
+  resetPassword,
 } = require('../helper/authHelper');
 
 // POST /api/auth/register - สมัครสมาชิก (Public Route)
@@ -265,18 +268,7 @@ router.get('/users', async (req, res) => {
 // GET /api/auth/users/locked - ดึงรายการผู้ใช้ที่ถูกล็อค (Admin Only)
 router.get('/users/locked', async (req, res) => {
   try {
-    // ดึงข้อมูลผู้ใช้ที่ถูกล็อค
-    const query = `
-      SELECT 
-        user_id, username, fullname, login_count, 
-        is_locked, updated_dt
-      FROM users 
-      WHERE is_locked = true AND status = 1
-      ORDER BY updated_dt DESC
-    `;
-
-    const { executeQuery } = require('../config/dataconfig');
-    const result = await executeQuery(query);
+    const result = await getLockedUsers();
 
     if (result.success) {
       res.status(200).json({
@@ -474,70 +466,61 @@ router.post('/otp', async (req, res) => {
       });
     }
 
-    const { executeQuery } = require('../config/dataconfig');
+    const result = await requestOtp(username);
 
-    // ค้นหา user_id จาก username
-    const findUserQuery = `
-      SELECT user_id, username, phone 
-      FROM users 
-      WHERE username = ? AND status = 1
-    `;
-    const userResult = await executeQuery(findUserQuery, [username]);
-
-    if (!userResult.success || userResult.data.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบชื่อผู้ใช้ในระบบ',
-      });
-    }
-
-    const user = userResult.data[0];
-
-    // สร้างรหัส OTP 6 หลักแบบสุ่ม
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // กำหนดเวลาเริ่มต้นและสิ้นสุด (5 นาที)
-    const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + 5 * 60 * 1000); // เพิ่ม 5 นาที
-
-    // ลบ OTP เก่าทั้งหมดของ user นี้
-    const deleteOldOtpQuery = `
-      DELETE FROM OTP 
-      WHERE user_id = ?
-    `;
-    await executeQuery(deleteOldOtpQuery, [user.user_id]);
-
-    // บันทึก OTP ใหม่ลงฐานข้อมูล
-    const insertOtpQuery = `
-      INSERT INTO OTP (otp, user_id, username, start_time, end_time, is_used)
-      VALUES (?, ?, ?, ?, ?, FALSE)
-    `;
-    const insertResult = await executeQuery(insertOtpQuery, [
-      otp,
-      user.user_id,
-      user.username,
-      startTime,
-      endTime,
-    ]);
-
-    if (insertResult.success) {
+    if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ส่งรหัส OTP สำเร็จ',
-        data: {
-          message: 'รหัส OTP ถูกส่งไปยังเบอร์โทรศัพท์ที่ลงทะเบียน',
-          expires_in: '5 นาที',
-        },
+        message: result.message,
+        data: result.data,
       });
     } else {
-      res.status(500).json({
+      res.status(result.error === 'ไม่พบชื่อผู้ใช้ในระบบ' ? 404 : 500).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการสร้างรหัส OTP',
-        error: insertResult.error,
+        message: result.error,
       });
     }
   } catch (error) {
     console.error('Error in getOtp:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auth/reset-password - รีเซ็ตรหัสผ่าน
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { username, otp, newPassword } = req.body;
+
+    const result = await resetPassword(username, otp, newPassword);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result.data,
+      });
+    } else {
+      const statusCode =
+        result.error === 'ไม่พบผู้ใช้งานนี้ในระบบ'
+          ? 404
+          : result.error.includes('OTP')
+          ? 400
+          : result.error.includes('ครบถ้วน') ||
+            result.error.includes('6 ตัวอักษร')
+          ? 400
+          : 500;
+
+      res.status(statusCode).json({
+        success: false,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    console.error('Error in resetPassword:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

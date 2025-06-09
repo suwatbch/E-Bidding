@@ -1,13 +1,14 @@
 import { io } from 'socket.io-client';
 
 // ใช้ environment variable หรือ fallback เป็น localhost ถ้าไม่มีค่า
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
 
 // สร้าง socket instance
 const socket = io(SOCKET_URL, {
   autoConnect: false, // ไม่เชื่อมต่อทันทีตอนสร้าง instance
   reconnection: true, // เปิดใช้งานการเชื่อมต่อใหม่อัตโนมัติ
-  timeout: 10000 // timeout 10 วินาที
+  timeout: 10000, // timeout 10 วินาที
 });
 
 // เพิ่ม event listeners สำหรับ debug
@@ -28,7 +29,6 @@ export const connectSocket = () => {
   try {
     if (!socket.connected) {
       socket.connect();
-      console.log('🔄 Attempting to connect socket...');
     }
   } catch (error) {
     console.error('❌ Error connecting socket:', error);
@@ -40,7 +40,6 @@ export const disconnectSocket = () => {
   try {
     if (socket.connected) {
       socket.disconnect();
-      console.log('👋 Socket disconnected manually');
     }
   } catch (error) {
     console.error('❌ Error disconnecting socket:', error);
@@ -77,10 +76,9 @@ export const subscribeToNotifications = (callback: (data: any) => void) => {
 export const unsubscribeFromNotifications = (callback: (data: any) => void) => {
   try {
     socket.off('notification', callback);
-    console.log('🔕 Unsubscribed from notifications');
   } catch (error) {
     console.error('❌ Error unsubscribing from notifications:', error);
   }
 };
 
-export default socket; 
+export default socket;

@@ -1226,6 +1226,24 @@ export const languageTexts = [
     language_code: 'zh',
     text: '可在以下时间后再次请求 OTP',
   },
+  {
+    id: 387,
+    keyname: 'resetting_password',
+    language_code: 'th',
+    text: 'กำลังรีเซ็ตรหัสผ่าน...',
+  },
+  {
+    id: 388,
+    keyname: 'resetting_password',
+    language_code: 'en',
+    text: 'Resetting password...',
+  },
+  {
+    id: 389,
+    keyname: 'resetting_password',
+    language_code: 'zh',
+    text: '正在重置密码...',
+  },
 ];
 
 // ฟังก์ชันสำหรับจัดกลุ่มข้อความตาม keyname

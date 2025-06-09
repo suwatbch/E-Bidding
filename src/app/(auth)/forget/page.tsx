@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import {
   LogoIcon,
   FormEmailIcon,
@@ -13,6 +14,8 @@ import {
 } from '@/app/components/ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import CircuitBackground from '@/app/components/CircuitBackground';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Eye icons for password visibility toggle (same as login page)
 const EyeIcon = () => (
@@ -64,6 +67,8 @@ export default function ForgetPasswordPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
+  const [otp, setOtp] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
 
   // Create refs for input fields
   const usernameRef = useRef<HTMLInputElement>(null);
@@ -90,7 +95,7 @@ export default function ForgetPasswordPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // ตรวจสอบข้อมูลทั้งหมด
@@ -119,16 +124,53 @@ export default function ForgetPasswordPage() {
       return;
     }
 
-    // Here you would typically handle the password reset request
-    // For now, we'll just show an alert and redirect
-    alert(translate('forget_success_message'));
-    router.push('/login');
+    if (!otp.trim()) {
+      alert('กรุณากรอกรหัส OTP');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      alert('รหัส OTP ต้องมี 6 หลัก');
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/auth/reset-password`,
+        {
+          username,
+          otp,
+          newPassword,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = response.data;
+
+      if (result.success) {
+        alert(translate('forget_success_message'));
+        router.push('/login');
+      } else {
+        alert(result.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน');
+      }
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Handle OTP input to allow only numbers and max 6 digits
   const handleOTPInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
     if (value.length <= 6) {
+      setOtp(value);
       e.target.value = value;
     }
   };
@@ -161,15 +203,11 @@ export default function ForgetPasswordPage() {
 
     setIsRequestingOTP(true);
     try {
-      const response = await fetch('http://localhost:3001/api/auth/otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username }),
+      const response = await axios.post(`${API_URL}/api/auth/otp`, {
+        username,
       });
 
-      const result = await response.json();
+      const result = response.data;
 
       if (result.success) {
         setOtpRequested(true);
@@ -384,6 +422,7 @@ export default function ForgetPasswordPage() {
                     <input
                       type="text"
                       maxLength={6}
+                      value={otp}
                       onChange={handleOTPInput}
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
@@ -401,12 +440,26 @@ export default function ForgetPasswordPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 
+                disabled={isResetting}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 
                   focus:ring-blue-500 focus:ring-offset-2 transform transition-all duration-200 shadow-md
-                  hover:scale-[1.02] active:scale-[0.98] bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600"
+                  hover:scale-[1.02] active:scale-[0.98] ${
+                    isResetting
+                      ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600'
+                  }`}
               >
-                <ButtonSendIcon />
-                {translate('forget_button')}
+                {isResetting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    {translate('resetting_password')}
+                  </>
+                ) : (
+                  <>
+                    <ButtonSendIcon />
+                    {translate('forget_button')}
+                  </>
+                )}
               </button>
 
               {/* Back to Login Link */}

@@ -4,6 +4,7 @@ const { verifyToken } = require('../helper/authHelper');
 const PUBLIC_ROUTES = [
   '/api/auth/login',
   '/api/auth/otp',
+  '/api/auth/reset-password',
   '/api/auth/register',
   '/api/languages',
   '/api/languages/',
