@@ -52,27 +52,13 @@ export const dataAuction_Type: AuctionType[] = [
   },
   {
     auction_type_id: 7,
-    code: 'furniture',
-    name: 'เฟอร์นิเจอร์',
-    description: 'เฟอร์นิเจอร์และของตกแต่ง',
-    status: 1,
-  },
-  {
-    auction_type_id: 8,
-    code: 'construction',
-    name: 'วัสดุก่อสร้าง',
-    description: 'วัสดุและอุปกรณ์ก่อสร้าง',
-    status: 0,
-  },
-  {
-    auction_type_id: 9,
     code: 'agriculture',
     name: 'อุปกรณ์การเกษตร',
     description: 'เครื่องมือและอุปกรณ์ทางการเกษตร',
     status: 0,
   },
   {
-    auction_type_id: 10,
+    auction_type_id: 8,
     code: 'medical',
     name: 'อุปกรณ์การแพทย์',
     description: 'เครื่องมือและอุปกรณ์ทางการแพทย์',
