@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import SaveIcon from '@mui/icons-material/Save';
-import { 
-  connectSocket, 
-  disconnectSocket, 
+import {
+  connectSocket,
+  disconnectSocket,
   sendNotification,
   subscribeToNotifications,
-  unsubscribeFromNotifications
-} from '@/app/services/socket';
+  unsubscribeFromNotifications,
+} from '@/app/services/socketService';
 import Container from '@/app/components/ui/Container';
 
 export default function AlertsPage() {
@@ -98,9 +98,7 @@ export default function AlertsPage() {
             {savedName ? (
               <div className="text-center">
                 <p className="text-lg font-medium text-gray-900">{savedName}</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  การแจ้งเตือนล่าสุด
-                </p>
+                <p className="text-sm text-gray-500 mt-2">การแจ้งเตือนล่าสุด</p>
               </div>
             ) : (
               <div className="text-center text-gray-500">

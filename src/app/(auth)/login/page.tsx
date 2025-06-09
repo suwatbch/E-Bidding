@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
+import { authService, type LoginRequest } from '@/app/services/authService';
 import {
   LogoIcon,
   FormEmailIcon,
@@ -67,6 +67,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [message, setMessage] = useState({
+    text: '',
+    type: 'success' as 'success' | 'error',
+  });
 
   // Load saved credentials on component mount
   useEffect(() => {
@@ -122,46 +126,37 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/login`,
-        {
-          username: formData.username,
-          password: formData.password,
-          remember_me: formData.rememberMe,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await authService.login({
+        username: formData.username,
+        password: formData.password,
+        remember_me: formData.rememberMe,
+      } as LoginRequest);
 
-      // Handle successful login
-      if (response.data.success) {
-        // Save credentials based on remember me checkbox
-        saveCredentials(
-          formData.username,
-          formData.password,
-          formData.rememberMe
-        );
+      if (response.success) {
+        // Show success message
+        setMessage({
+          text: response.message || translate('login_success'),
+          type: 'success',
+        });
 
-        // Store token if provided
-        if (response.data.data.token) {
-          localStorage.setItem('auth_token', response.data.data.token);
+        // Store user data if available
+        if (response.data) {
+          localStorage.setItem('user', JSON.stringify(response.data));
+
+          // Store username if remember me is checked
+          if (formData.rememberMe) {
+            localStorage.setItem('rememberedUsername', response.data.username);
+          } else {
+            localStorage.removeItem('rememberedUsername');
+          }
         }
 
-        // Store user data if provided
-        if (response.data.data.user) {
-          localStorage.setItem(
-            'user_data',
-            JSON.stringify(response.data.data.user)
-          );
-        }
-
-        // Redirect to auctions page
         router.push('/auctions');
       } else {
-        setError(response.data.message || translate('login_error_invalid'));
+        setMessage({
+          text: response.message || translate('login_error'),
+          type: 'error',
+        });
       }
     } catch (error: any) {
       console.error('Login error:', error);

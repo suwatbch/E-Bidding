@@ -25,7 +25,7 @@ import {
   disconnectSocket,
   subscribeToNotifications,
   unsubscribeFromNotifications,
-} from '@/app/services/socket';
+} from '@/app/services/socketService';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';

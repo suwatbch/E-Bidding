@@ -1,0 +1,145 @@
+import axios, { AxiosResponse } from 'axios';
+
+// Base API URL
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// Create axios instance with base configuration
+const authApi = axios.create({
+  baseURL: `${API_URL}/api/auth`,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000, // 10 seconds timeout
+});
+
+// Types for API requests and responses
+export interface LoginRequest {
+  username: string;
+  password: string;
+  remember_me?: boolean;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user_id: number;
+    username: string;
+    full_name: string;
+    role: string;
+    token?: string;
+  };
+}
+
+export interface OTPRequest {
+  username: string;
+}
+
+export interface OTPResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    expires_at: string;
+  };
+}
+
+export interface ResetPasswordRequest {
+  username: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// Error response type
+export interface ErrorResponse {
+  success: false;
+  message: string;
+  error?: string;
+}
+
+// Auth Service
+export const authService = {
+  /**
+   * Login user
+   */
+  login: async (data: LoginRequest): Promise<LoginResponse> => {
+    try {
+      const response: AxiosResponse<LoginResponse> = await authApi.post(
+        '/login',
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+      };
+    }
+  },
+
+  /**
+   * Request OTP for password reset
+   */
+  requestOTP: async (data: OTPRequest): Promise<OTPResponse> => {
+    try {
+      const response: AxiosResponse<OTPResponse> = await authApi.post(
+        '/otp',
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการส่ง OTP',
+      };
+    }
+  },
+
+  /**
+   * Reset password with OTP
+   */
+  resetPassword: async (
+    data: ResetPasswordRequest
+  ): Promise<ResetPasswordResponse> => {
+    try {
+      const response: AxiosResponse<ResetPasswordResponse> = await authApi.post(
+        '/reset-password',
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน',
+      };
+    }
+  },
+
+  /**
+   * Logout user (if needed in the future)
+   */
+  logout: async (): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await authApi.post('/logout');
+      return response.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการออกจากระบบ',
+      };
+    }
+  },
+};

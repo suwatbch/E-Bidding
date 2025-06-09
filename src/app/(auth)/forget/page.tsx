@@ -3,7 +3,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import axios from 'axios';
+import {
+  authService,
+  type OTPRequest,
+  type ResetPasswordRequest,
+} from '@/app/services/authService';
 import {
   LogoIcon,
   FormEmailIcon,
@@ -14,8 +18,6 @@ import {
 } from '@/app/components/ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
 import CircuitBackground from '@/app/components/CircuitBackground';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Eye icons for password visibility toggle (same as login page)
 const EyeIcon = () => (
@@ -136,27 +138,17 @@ export default function ForgetPasswordPage() {
 
     setIsResetting(true);
     try {
-      const response = await axios.post(
-        `${API_URL}/api/auth/reset-password`,
-        {
-          username,
-          otp,
-          newPassword,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const response = await authService.resetPassword({
+        username,
+        otp,
+        newPassword,
+      });
 
-      const result = response.data;
-
-      if (result.success) {
+      if (response.success) {
         alert(translate('forget_success_message'));
         router.push('/login');
       } else {
-        alert(result.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน');
+        alert(response.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน');
       }
     } catch (error) {
       console.error('Error resetting password:', error);
@@ -203,17 +195,15 @@ export default function ForgetPasswordPage() {
 
     setIsRequestingOTP(true);
     try {
-      const response = await axios.post(`${API_URL}/api/auth/otp`, {
+      const response = await authService.requestOTP({
         username,
       });
 
-      const result = response.data;
-
-      if (result.success) {
+      if (response.success) {
         setOtpRequested(true);
         setOtpCountdown(300); // 5 minutes = 300 seconds
       } else {
-        alert(result.message || translate('otp_request_error'));
+        alert(response.message || translate('otp_request_error'));
       }
     } catch (error) {
       console.error('Error requesting OTP:', error);
