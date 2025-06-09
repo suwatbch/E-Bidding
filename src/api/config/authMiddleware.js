@@ -3,6 +3,7 @@ const { verifyToken } = require('../helper/authHelper');
 // รายการ API ที่ไม่ต้องเช็ค Token (Public Routes)
 const PUBLIC_ROUTES = [
   '/api/auth/login',
+  '/api/auth/otp',
   '/api/auth/register',
   '/api/languages',
   '/api/languages/',

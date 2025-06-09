@@ -138,8 +138,6 @@ export class LanguageService {
 
       this.lastUpdateTime = Date.now();
 
-      console.log(`✅ Language data loaded successfully`);
-
       return {
         languages: dataLanguage,
         languageTexts: dataLanguageText,

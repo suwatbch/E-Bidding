@@ -462,6 +462,90 @@ router.delete('/users/:userId', async (req, res) => {
   }
 });
 
+// POST /api/auth/otp - ขอรหัส OTP สำหรับรีเซ็ตรหัสผ่าน (Public Route)
+router.post('/otp', async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุชื่อผู้ใช้',
+      });
+    }
+
+    const { executeQuery } = require('../config/dataconfig');
+
+    // ค้นหา user_id จาก username
+    const findUserQuery = `
+      SELECT user_id, username, phone 
+      FROM users 
+      WHERE username = ? AND status = 1
+    `;
+    const userResult = await executeQuery(findUserQuery, [username]);
+
+    if (!userResult.success || userResult.data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบชื่อผู้ใช้ในระบบ',
+      });
+    }
+
+    const user = userResult.data[0];
+
+    // สร้างรหัส OTP 6 หลักแบบสุ่ม
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // กำหนดเวลาเริ่มต้นและสิ้นสุด (5 นาที)
+    const startTime = new Date();
+    const endTime = new Date(startTime.getTime() + 5 * 60 * 1000); // เพิ่ม 5 นาที
+
+    // ลบ OTP เก่าทั้งหมดของ user นี้
+    const deleteOldOtpQuery = `
+      DELETE FROM OTP 
+      WHERE user_id = ?
+    `;
+    await executeQuery(deleteOldOtpQuery, [user.user_id]);
+
+    // บันทึก OTP ใหม่ลงฐานข้อมูล
+    const insertOtpQuery = `
+      INSERT INTO OTP (otp, user_id, username, start_time, end_time, is_used)
+      VALUES (?, ?, ?, ?, ?, FALSE)
+    `;
+    const insertResult = await executeQuery(insertOtpQuery, [
+      otp,
+      user.user_id,
+      user.username,
+      startTime,
+      endTime,
+    ]);
+
+    if (insertResult.success) {
+      res.status(200).json({
+        success: true,
+        message: 'ส่งรหัส OTP สำเร็จ',
+        data: {
+          message: 'รหัส OTP ถูกส่งไปยังเบอร์โทรศัพท์ที่ลงทะเบียน',
+          expires_in: '5 นาที',
+        },
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการสร้างรหัส OTP',
+        error: insertResult.error,
+      });
+    }
+  } catch (error) {
+    console.error('Error in getOtp:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
 // GET /api/auth/verify - ตรวจสอบ Token (ต้อง login)
 router.get('/verify', async (req, res) => {
   try {
