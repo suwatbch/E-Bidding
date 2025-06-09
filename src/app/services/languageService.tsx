@@ -1,10 +1,13 @@
 // Language Service สำหรับจัดการข้อมูลภาษาจาก API
+import axios from 'axios';
 import { Language, dataLanguage, updateLanguageData } from '../model/language';
 import {
   LanguageText,
   dataLanguageText,
   updateLanguageTextData,
 } from '../model/language_text';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export class LanguageService {
   private static instance: LanguageService;
@@ -77,19 +80,13 @@ export class LanguageService {
   // โหลดข้อมูลภาษาจาก API
   async loadLanguagesFromAPI(): Promise<Language[]> {
     try {
-      const response = await fetch('/api/languages', {
-        method: 'GET',
+      const response = await axios.get(`${API_URL}/api/languages`, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.data || [];
+      return response.data.data || [];
     } catch (error) {
       console.error('Error loading languages from API:', error);
       throw error;
@@ -99,19 +96,13 @@ export class LanguageService {
   // โหลดข้อมูลข้อความภาษาจาก API
   async loadLanguageTextsFromAPI(): Promise<LanguageText[]> {
     try {
-      const response = await fetch('/api/languages/texts', {
-        method: 'GET',
+      const response = await axios.get(`${API_URL}/api/languages/texts/all`, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const result = await response.json();
-      return result.data || [];
+      return response.data.data || [];
     } catch (error) {
       console.error('Error loading language texts from API:', error);
       throw error;
