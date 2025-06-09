@@ -74,7 +74,7 @@ async function createUser(userData) {
 }
 
 // เข้าสู่ระบบ
-async function loginUser(username, password) {
+async function loginUser(username, password, remember_me = false) {
   try {
     // ดึงข้อมูลผู้ใช้
     const userResult = await getUserByUsername(username);
@@ -136,6 +136,9 @@ async function loginUser(username, password) {
     // รหัสผ่านถูกต้อง - รีเซ็ต login count และปลดล็อค
     await resetLoginCount(username);
 
+    // กำหนดระยะเวลาหมดอายุของ token ตาม remember_me
+    const expiresIn = remember_me ? '30d' : '1d';
+
     // สร้าง JWT Token
     const token = jwt.sign(
       {
@@ -145,7 +148,7 @@ async function loginUser(username, password) {
         language_code: user.language_code,
       },
       JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      { expiresIn }
     );
 
     // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับ

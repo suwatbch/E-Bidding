@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import axios from 'axios';
 import {
   LogoIcon,
   FormEmailIcon,
@@ -12,13 +14,176 @@ import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// Eye icons for password visibility toggle
+const EyeIcon = () => (
+  <svg
+    className="w-5 h-5 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg
+    className="w-5 h-5 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"
+    />
+  </svg>
+);
+
 export default function LoginPage() {
   const router = useRouter();
   const { translate } = useLanguage();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    rememberMe: false,
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Load saved credentials on component mount
+  useEffect(() => {
+    const savedCredentials = localStorage.getItem('login_credentials');
+    if (savedCredentials) {
+      try {
+        const { username, password, rememberMe } = JSON.parse(savedCredentials);
+        setFormData({
+          username: username || '',
+          password: password || '',
+          rememberMe: rememberMe || false,
+        });
+      } catch (error) {
+        console.error('Error loading saved credentials:', error);
+        // Clear invalid data
+        localStorage.removeItem('login_credentials');
+      }
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
+
+  const saveCredentials = (
+    username: string,
+    password: string,
+    rememberMe: boolean
+  ) => {
+    if (rememberMe) {
+      // Save credentials to localStorage
+      const credentials = {
+        username,
+        password,
+        rememberMe: true,
+      };
+      localStorage.setItem('login_credentials', JSON.stringify(credentials));
+    } else {
+      // Remove saved credentials
+      localStorage.removeItem('login_credentials');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push('/auctions');
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/auth/login`,
+        {
+          username: formData.username,
+          password: formData.password,
+          remember_me: formData.rememberMe,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      // Handle successful login
+      if (response.data.success) {
+        // Save credentials based on remember me checkbox
+        saveCredentials(
+          formData.username,
+          formData.password,
+          formData.rememberMe
+        );
+
+        // Store token if provided
+        if (response.data.data.token) {
+          localStorage.setItem('auth_token', response.data.data.token);
+        }
+
+        // Store user data if provided
+        if (response.data.data.user) {
+          localStorage.setItem(
+            'user_data',
+            JSON.stringify(response.data.data.user)
+          );
+        }
+
+        // Redirect to auctions page
+        router.push('/auctions');
+      } else {
+        setError(response.data.message || translate('login_error_invalid'));
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage =
+          error.response.data?.message ||
+          error.response.data?.error ||
+          translate('login_error_server');
+        setError(errorMessage);
+      } else if (error.request) {
+        // Network error
+        setError(translate('login_error_network'));
+      } else {
+        // Other error
+        setError(translate('login_error_unknown'));
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,24 +221,36 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                {/* Email Input */}
+                {/* Username Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('email_label')}
+                    {translate('username_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <FormEmailIcon />
                     </div>
                     <input
-                      type="email"
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                        placeholder:text-gray-400 text-gray-900"
-                      placeholder={translate('email_placeholder')}
+                        placeholder:text-gray-400 text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
+                      placeholder={translate('username_placeholder')}
+                      required
                     />
                   </div>
                 </div>
@@ -88,12 +265,25 @@ export default function LoginPage() {
                       <FormLockIcon />
                     </div>
                     <input
-                      type="password"
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                      className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                        placeholder:text-gray-400 text-gray-900"
+                        placeholder:text-gray-400 text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
                       placeholder={translate('password_placeholder')}
+                      required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600 disabled:cursor-not-allowed"
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -104,7 +294,11 @@ export default function LoginPage() {
                   <input
                     type="checkbox"
                     id="remember-me"
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:cursor-not-allowed"
                   />
                   <label
                     htmlFor="remember-me"
@@ -121,13 +315,24 @@ export default function LoginPage() {
               {/* Login Button */}
               <button
                 type="submit"
+                disabled={isLoading}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 
                   text-white rounded-lg hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 
                   focus:ring-blue-500 focus:ring-offset-2 transform transition-all duration-200 shadow-md
-                  hover:scale-[1.02] active:scale-[0.98]"
+                  hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed 
+                  disabled:hover:scale-100 disabled:hover:from-blue-600 disabled:hover:to-blue-500"
               >
-                <ButtonLoginIcon />
-                {translate('login_button')}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    {translate('login_loading')}
+                  </>
+                ) : (
+                  <>
+                    <ButtonLoginIcon />
+                    {translate('login_button')}
+                  </>
+                )}
               </button>
 
               {/* Company Info & Registration */}
@@ -136,7 +341,7 @@ export default function LoginPage() {
                   BIC CORPORATION CO.,LTD.
                 </div>
                 <div className="text-xs text-gray-400">
-                  ยังไม่มีบัญชี? สามารถติดต่อผู้ดูแลระบบเพื่อสมัครสมาชิก
+                  {translate('no_account')}
                 </div>
               </div>
             </form>

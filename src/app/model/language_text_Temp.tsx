@@ -934,6 +934,136 @@ export const languageTexts = [
     language_code: 'zh',
     text: '返回登录',
   },
+
+  // Login Error Messages
+  {
+    id: 152,
+    keyname: 'login_loading',
+    language_code: 'th',
+    text: 'กำลังเข้าสู่ระบบ...',
+  },
+  {
+    id: 153,
+    keyname: 'login_loading',
+    language_code: 'en',
+    text: 'Logging in...',
+  },
+  {
+    id: 154,
+    keyname: 'login_loading',
+    language_code: 'zh',
+    text: '登录中...',
+  },
+  {
+    id: 155,
+    keyname: 'login_error_invalid',
+    language_code: 'th',
+    text: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+  },
+  {
+    id: 156,
+    keyname: 'login_error_invalid',
+    language_code: 'en',
+    text: 'Invalid email or password',
+  },
+  {
+    id: 157,
+    keyname: 'login_error_invalid',
+    language_code: 'zh',
+    text: '邮箱或密码无效',
+  },
+  {
+    id: 158,
+    keyname: 'login_error_server',
+    language_code: 'th',
+    text: 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์',
+  },
+  {
+    id: 159,
+    keyname: 'login_error_server',
+    language_code: 'en',
+    text: 'Server error occurred',
+  },
+  {
+    id: 160,
+    keyname: 'login_error_server',
+    language_code: 'zh',
+    text: '服务器错误',
+  },
+  {
+    id: 161,
+    keyname: 'login_error_network',
+    language_code: 'th',
+    text: 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้',
+  },
+  {
+    id: 162,
+    keyname: 'login_error_network',
+    language_code: 'en',
+    text: 'Unable to connect to server',
+  },
+  {
+    id: 163,
+    keyname: 'login_error_network',
+    language_code: 'zh',
+    text: '无法连接到服务器',
+  },
+  {
+    id: 164,
+    keyname: 'login_error_unknown',
+    language_code: 'th',
+    text: 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ',
+  },
+  {
+    id: 165,
+    keyname: 'login_error_unknown',
+    language_code: 'en',
+    text: 'An unknown error occurred',
+  },
+  {
+    id: 166,
+    keyname: 'login_error_unknown',
+    language_code: 'zh',
+    text: '发生未知错误',
+  },
+
+  // Username texts
+  {
+    id: 167,
+    keyname: 'username_label',
+    language_code: 'th',
+    text: 'ชื่อผู้ใช้',
+  },
+  {
+    id: 168,
+    keyname: 'username_label',
+    language_code: 'en',
+    text: 'Username',
+  },
+  {
+    id: 169,
+    keyname: 'username_label',
+    language_code: 'zh',
+    text: '用户名',
+  },
+  {
+    id: 170,
+    keyname: 'username_placeholder',
+    language_code: 'th',
+    text: 'กรอกชื่อผู้ใช้',
+  },
+  {
+    id: 171,
+    keyname: 'username_placeholder',
+    language_code: 'en',
+    text: 'Enter username',
+  },
+  {
+    id: 172,
+    keyname: 'username_placeholder',
+    language_code: 'zh',
+    text: '输入用户名',
+  },
 ];
 
 // ฟังก์ชันสำหรับจัดกลุ่มข้อความตาม keyname

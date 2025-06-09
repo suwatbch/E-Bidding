@@ -82,16 +82,16 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login - เข้าสู่ระบบ (Public Route)
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, remember_me } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'กรุณาระบุชื่อผู้ใช้และรหัสผ่าน',
+        message: 'กรุณาระบุชื่อผู้ใช้และรหัสผ่านให้ถูกต้อง',
       });
     }
 
-    const result = await loginUser(username, password);
+    const result = await loginUser(username, password, remember_me);
 
     if (result.success) {
       res.status(200).json({
