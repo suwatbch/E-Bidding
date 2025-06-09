@@ -11,7 +11,7 @@ import {
   AucOfferIcon,
 } from '@/app/components/ui/Icons';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
-import { statusConfig, currencyConfig } from '@/app/model/dataConfig';
+import { statusConfig, currencyConfig } from '@/app/model/config';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import {
   formatDateForData,

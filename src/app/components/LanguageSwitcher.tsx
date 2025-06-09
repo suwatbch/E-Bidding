@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { NavLanguageIcon, NavArrowDownIcon } from './ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
+import { LanguageCode } from '@/app/model/dataLanguageTemp';
 import Dropdown from './ui/Dropdown';
 
 interface LanguageSwitcherProps {
@@ -45,8 +46,8 @@ export default function LanguageSwitcher({
                 variant === 'navbar' ? 'md:text-white text-gray-700' : ''
               }`}
             >
-              {languages.find((lang) => lang.code === currentLang)?.name ||
-                currentLang}
+              {languages.find((lang) => lang.language_code === currentLang)
+                ?.language_name || currentLang}
             </span>
             <div
               className={`transform group-hover:scale-110 transition duration-300 ${
@@ -65,9 +66,9 @@ export default function LanguageSwitcher({
     >
       {languages.map((lang) => (
         <button
-          key={lang.code}
+          key={lang.language_code}
           onClick={() => {
-            changeLanguage(lang.code);
+            changeLanguage(lang.language_code as LanguageCode);
             setIsOpen(false);
           }}
           className={`group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 ${
@@ -78,13 +79,13 @@ export default function LanguageSwitcher({
         >
           <span
             className={`transform group-hover:scale-105 transition duration-300 ${
-              currentLang === lang.code
+              currentLang === lang.language_code
                 ? 'text-blue-700 font-medium'
                 : 'text-gray-700 group-hover:text-blue-600'
             }`}
           >
             <span className="inline-block w-6">{lang.flag}</span>
-            {lang.name}
+            {lang.language_name}
           </span>
         </button>
       ))}

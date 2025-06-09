@@ -1,4 +1,4 @@
-import { LanguageCode } from '@/app/model/dataLanguage';
+import { LanguageCode } from '@/app/model/dataLanguageTemp';
 
 interface TranslationText {
   [key: string]: string;

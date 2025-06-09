@@ -24,7 +24,7 @@ import {
   dataAuction_Participant,
   AuctionParticipant,
 } from '@/app/model/dataAuction_Participant';
-import { getStatusById, currencyConfig } from '@/app/model/dataConfig';
+import { getStatusById, currencyConfig } from '@/app/model/config';
 import { getCurrentDateTime } from '@/app/utils/globalFunction';
 import {
   getParticipantStats,

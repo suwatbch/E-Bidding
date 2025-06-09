@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { languages, LanguageCode } from '../model/dataLanguage';
-import { translations } from '../model/dataLanguageText';
+import { languages, LanguageCode } from '../model/dataLanguageTemp';
+import { groupedTranslations } from '../model/dataLanguageTextTemp';
 
 const LANGUAGE_KEY = 'selectedLanguage';
 
@@ -13,7 +13,10 @@ export function useLanguage() {
   // อ่านค่าภาษาจาก localStorage เมื่อ component mount
   useEffect(() => {
     const storedLang = localStorage.getItem(LANGUAGE_KEY) as LanguageCode;
-    if (storedLang && languages.some(lang => lang.code === storedLang)) {
+    if (
+      storedLang &&
+      languages.some((lang) => lang.language_code === storedLang)
+    ) {
       setCurrentLang(storedLang);
     }
     setIsLoading(false);
@@ -29,7 +32,7 @@ export function useLanguage() {
 
   // ฟังก์ชันแปลข้อความ
   const translate = (key: string): string => {
-    return translations[currentLang][key] || key;
+    return groupedTranslations[key]?.[currentLang] || key;
   };
 
   // เพิ่ม event listener สำหรับการเปลี่ยนภาษา
@@ -52,6 +55,6 @@ export function useLanguage() {
     languages,
     translate,
     changeLanguage,
-    isLoading
+    isLoading,
   };
-} 
+}

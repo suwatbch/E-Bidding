@@ -31,7 +31,7 @@ import Container from '@/app/components/ui/Container';
 import { dataAuction, Auction } from '@/app/model/dataAuction';
 import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
-import { statusConfig, getStatusById } from '@/app/model/dataConfig';
+import { statusConfig, getStatusById } from '@/app/model/config';
 import ThaiDatePicker from '@/app/components/ui/DatePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
