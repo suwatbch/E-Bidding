@@ -11,7 +11,6 @@ import {
   LinkBackIcon,
 } from '@/app/components/ui/Icons';
 import { useLanguage } from '@/app/hooks/useLanguage';
-import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
 export default function ForgetPasswordPage() {
@@ -22,7 +21,7 @@ export default function ForgetPasswordPage() {
     e.preventDefault();
     // Here you would typically handle the password reset request
     // For now, we'll just show an alert and redirect
-    alert('ระบบได้ทำการเปลี่ยนรหัสผ่านของท่านแล้ว');
+    alert(translate('forget_success_message'));
     router.push('/login');
   };
 

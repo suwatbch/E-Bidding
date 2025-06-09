@@ -1,13 +1,12 @@
 import type { Metadata } from 'next';
-import { Kanit } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { UserProvider } from './contexts/UserContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 
-const kanit = Kanit({
-  subsets: ['latin', 'thai'],
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  variable: '--font-kanit',
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
   display: 'swap',
 });
 
@@ -35,7 +34,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/eicon.svg" type="image/svg+xml" />
       </head>
-      <body className={`${kanit.className} antialiased`}>
+      <body className={`${inter.className} antialiased`}>
         <LanguageProvider>
           <UserProvider>{children}</UserProvider>
         </LanguageProvider>

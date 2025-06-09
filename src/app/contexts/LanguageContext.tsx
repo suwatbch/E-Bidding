@@ -69,15 +69,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       setIsLoading(true);
       setError(null);
 
-      console.log('🔄 LanguageContext: Loading language data...');
-
       // ใช้ Language Service โหลดข้อมูล (จะลอง API ก่อน แล้ว fallback ไป temp)
       await languageService.refreshLanguageData();
 
       // อัพเดทข้อมูลใน state
       updateDataFromService();
-
-      console.log('✅ LanguageContext: Language data loaded successfully');
     } catch (err) {
       console.error('❌ LanguageContext: Error loading language data:', err);
       setError(

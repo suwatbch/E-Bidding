@@ -29,7 +29,6 @@ export class LanguageService {
     languageTexts: LanguageText[]
   ): Promise<void> {
     try {
-      console.log('✅ Saved language data to memory (from API)');
       // ข้อมูลจะถูกเก็บใน dataLanguage และ dataLanguageText อยู่แล้ว
     } catch (error) {
       console.error('❌ Failed to save to memory:', error);
@@ -115,7 +114,6 @@ export class LanguageService {
     languageTexts: LanguageText[];
   }> {
     if (this.isLoading) {
-      console.log('Language data is already loading...');
       return {
         languages: dataLanguage,
         languageTexts: dataLanguageText,
@@ -124,7 +122,6 @@ export class LanguageService {
 
     try {
       this.isLoading = true;
-      console.log('🔄 Loading language data from API...');
 
       // พยายามโหลดจาก API ก่อน
       const [languages, languageTexts] = await Promise.all([
@@ -141,11 +138,7 @@ export class LanguageService {
 
       this.lastUpdateTime = Date.now();
 
-      console.log(`✅ Language data loaded successfully from API:`, {
-        languages: languages.length,
-        texts: languageTexts.length,
-        timestamp: new Date().toLocaleString('th-TH'),
-      });
+      console.log(`✅ Language data loaded successfully`);
 
       return {
         languages: dataLanguage,
