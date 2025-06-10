@@ -411,8 +411,67 @@ async function resetPassword(username, otp, newPassword) {
   }
 }
 
+// ตรวจสอบและถอดรหัส JWT Token
+function verifyToken(token) {
+  try {
+    // ตรวจสอบว่า token ถูกส่งมาหรือไม่
+    if (!token) {
+      return {
+        success: false,
+        error: 'ไม่พบ Token',
+      };
+    }
+
+    // ถอดรหัส Token
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    // ตรวจสอบว่า Token หมดอายุหรือยัง
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (decoded.exp < currentTime) {
+      return {
+        success: false,
+        error: 'Token หมดอายุ',
+      };
+    }
+
+    // ส่งข้อมูลผู้ใช้กลับ
+    return {
+      success: true,
+      data: {
+        user_id: decoded.user_id,
+        username: decoded.username,
+        fullname: decoded.fullname,
+        type: decoded.type,
+        email: decoded.email,
+        phone: decoded.phone,
+        language_code: decoded.language_code,
+      },
+    };
+  } catch (error) {
+    console.error('Error verifying token:', error.message);
+
+    if (error.name === 'TokenExpiredError') {
+      return {
+        success: false,
+        error: 'Token หมดอายุ',
+      };
+    } else if (error.name === 'JsonWebTokenError') {
+      return {
+        success: false,
+        error: 'Token ไม่ถูกต้อง',
+      };
+    } else {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบ Token',
+      };
+    }
+  }
+}
+
 module.exports = {
   loginUser,
   requestOtp,
   resetPassword,
+  verifyToken,
 };

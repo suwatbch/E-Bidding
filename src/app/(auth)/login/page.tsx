@@ -77,9 +77,9 @@ export default function LoginPage() {
     // ลบ session และ token ที่มีอยู่
     clearSession();
 
-    // ลบ token จาก cookies
-    document.cookie =
-      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
+    // ลบ token จาก cookies (อาจจะขัดแย้งกับ login process)
+    // document.cookie =
+    //   'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
 
     // ดึง returnUrl จาก URL parameters
     if (typeof window !== 'undefined') {
@@ -146,17 +146,16 @@ export default function LoginPage() {
             })
           );
         } else {
-          // Clear saved credentials if "Remember Me" is not checked
           localStorage.removeItem(REMEMBER_ME_KEY);
           localStorage.removeItem(SAVED_CREDENTIALS_KEY);
         }
 
-        // Login to context
         login(userData, response.data.token, formData.rememberMe);
+        console.log('🔍 User Data:', userData);
 
         setTimeout(() => {
           router.push('/auctions');
-        }, 500);
+        }, 100);
       } else {
         alert(response.message || translate('login_error'));
       }

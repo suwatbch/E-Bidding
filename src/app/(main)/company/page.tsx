@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Company, initialCompanies } from '@/app/model/dataCompany';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Company, companyService } from '@/app/services/companyService';
 import Container from '@/app/components/ui/Container';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -18,18 +18,18 @@ interface FormData {
 }
 
 export default function CompanyPage() {
+  // === ALL HOOKS MUST COME FIRST ===
   const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useLocalStorage('companyPerPage', 5);
-  const [currentPage, setCurrentPage] = useState(1);
   const [mounted, setMounted] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{
-    key: keyof Company | null;
-    direction: 'asc' | 'desc' | null;
-  }>({ key: null, direction: null });
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
   const [form, setForm] = useState<FormData>({
     name: '',
     tax_id: '',
@@ -39,25 +39,115 @@ export default function CompanyPage() {
     status: true,
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // จำลองการโหลดข้อมูลจริง
-        setCompanies(initialCompanies);
-      } catch (error) {
-        console.error('Error loading companies:', error);
-      } finally {
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Company | null;
+    direction: 'asc' | 'desc' | null;
+  }>({
+    key: null,
+    direction: null,
+  });
+
+  // === FUNCTIONS ===
+  const loadCompanies = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await companyService.getAllCompanies();
+      if (result.success) {
+        setCompanies(result.data);
+        setIsLoading(false);
+      } else {
+        setError(result.message);
         setIsLoading(false);
       }
+    } catch (error: any) {
+      console.error('❌ Error loading companies:', error);
+      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลบริษัท');
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleRetry = async () => {
+    setRetryCount((prev) => prev + 1);
+    await loadCompanies();
+  };
+
+  // === EFFECTS ===
+  useEffect(() => {
+    const initializeData = async () => {
+      // โหลดข้อมูลบริษัท
+      await loadCompanies();
     };
 
-    loadData();
+    initializeData();
     setMounted(true);
   }, []);
 
-  // Filter companies based on search term
+  // โหลดข้อมูลใหม่เมื่อ searchTerm เปลี่ยน (debounced)
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      if (mounted) {
+        loadCompanies();
+      }
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
+
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // === EARLY RETURN AFTER ALL HOOKS ===
+  // ถ้ามี error ให้แสดง Error State
+  if (error && !isLoading) {
+    return (
+      <Container className="py-8">
+        <div className="flex-1 py-8 flex flex-col items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+            <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              เกิดข้อผิดพลาด
+            </h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-y-3">
+              <button
+                onClick={handleRetry}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ลองใหม่ (ครั้งที่ {retryCount + 1})
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                รีเฟรชหน้า
+              </button>
+            </div>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  // === COMPONENT LOGIC CONTINUES ===
+  // Filter companies based on search term (ใช้สำหรับ local filtering ถ้าต้องการ)
   const filteredCompanies = companies.filter((company) => {
+    if (!searchTerm.trim()) return true;
     const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
     return (
       company.name.toLowerCase().includes(searchTermLower) ||
@@ -169,11 +259,6 @@ export default function CompanyPage() {
     );
   };
 
-  // Reset to first page when search term changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
-
   const openAddModal = () => {
     setEditCompany(null);
     setForm({
@@ -195,7 +280,7 @@ export default function CompanyPage() {
       address: company.address,
       phone: company.phone,
       email: company.email,
-      status: company.status,
+      status: company.status === 1,
     });
     setIsModalOpen(true);
   };
@@ -203,6 +288,7 @@ export default function CompanyPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditCompany(null);
+    setError(null);
     setForm({
       name: '',
       tax_id: '',
@@ -219,27 +305,88 @@ export default function CompanyPage() {
     setForm({ ...form, [e.target.name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editCompany) {
-      setCompanies(
-        companies.map((c) =>
-          c.id === editCompany.id ? { ...editCompany, ...form } : c
-        )
-      );
-    } else {
-      setCompanies([...companies, { id: Date.now(), ...form }]);
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // แปลง status จาก boolean เป็น number สำหรับ API
+      const formData = {
+        ...form,
+        status: form.status ? 1 : 0,
+      };
+
+      let result;
+
+      if (editCompany) {
+        // อัปเดทบริษัทที่มีอยู่
+        const updateData = {
+          name: formData.name,
+          tax_id: formData.tax_id,
+          address: formData.address,
+          email: formData.email,
+          phone: formData.phone,
+          status: formData.status,
+        };
+
+        result = await companyService.updateCompany(editCompany.id, updateData);
+
+        if (result.success) {
+          await loadCompanies();
+          closeModal();
+        } else {
+          console.error('❌ Failed to update company:', result.message);
+          setError(result.message);
+        }
+      } else {
+        // สร้างบริษัทใหม่
+        const createData = {
+          name: formData.name,
+          tax_id: formData.tax_id,
+          address: formData.address,
+          email: formData.email,
+          phone: formData.phone,
+          status: formData.status,
+        };
+
+        result = await companyService.createCompany(createData);
+
+        if (result.success) {
+          await loadCompanies();
+          closeModal();
+        } else {
+          console.error('❌ Failed to create company:', result.message);
+          setError(result.message);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Error saving company:', error);
+      setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } finally {
+      setIsLoading(false);
     }
-    closeModal();
   };
 
-  const handleStatusChange = (id: number) => {
-    if (window.confirm('คุณต้องการ "ลบ" บริษัทนี้ใช่หรือไม่ ?')) {
-      setCompanies(
-        companies.map((company) =>
-          company.id === id ? { ...company, status: !company.status } : company
-        )
-      );
+  const handleDelete = async (id: number) => {
+    if (!confirm('คุณแน่ใจว่าต้องการลบบริษัทนี้?')) return;
+
+    try {
+      setIsLoading(true);
+      const result = await companyService.deleteCompany(id);
+
+      if (result.success) {
+        await loadCompanies();
+      } else {
+        console.error('❌ Failed to delete company:', result.message);
+        setError(result.message);
+      }
+    } catch (error: any) {
+      console.error('❌ Error deleting company:', error);
+      setError('เกิดข้อผิดพลาดในการลบบริษัท');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -606,7 +753,7 @@ export default function CompanyPage() {
                                   `คุณต้องการลบบริษัท "${company.name}" หรือไม่?`
                                 )
                               ) {
-                                handleStatusChange(company.id);
+                                handleDelete(company.id);
                               }
                             }}
                             className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
@@ -641,6 +788,70 @@ export default function CompanyPage() {
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+              {/* Error Toast */}
+              {error && (
+                <div className="fixed top-4 right-4 z-50 max-w-md bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-red-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <h3 className="text-sm font-medium text-red-800">
+                        เกิดข้อผิดพลาด
+                      </h3>
+                      <p className="mt-1 text-sm text-red-700">{error}</p>
+                      {error.includes('API') && (
+                        <div className="mt-2 text-xs text-red-600">
+                          <p>💡 วิธีแก้ไข:</p>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            <li>
+                              ตรวจสอบว่า API Server ทำงานอยู่ที่ port 3001
+                            </li>
+                            <li>
+                              รัน{' '}
+                              <code className="bg-red-100 px-1 rounded">
+                                npm run dev:api
+                              </code>{' '}
+                              ใน terminal
+                            </li>
+                            <li>ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</li>
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-4 flex-shrink-0 flex">
+                      <button
+                        onClick={() => setError(null)}
+                        className="bg-red-50 rounded-md inline-flex text-red-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      >
+                        <span className="sr-only">ปิด</span>
+                        <svg
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Modal Header - Fixed */}
               <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
                 <button

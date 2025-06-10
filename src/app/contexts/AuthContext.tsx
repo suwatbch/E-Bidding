@@ -52,6 +52,7 @@ interface AuthContextType {
   getTokenExpiresAt: () => Date | null;
   isTokenExpired: () => boolean;
   getTimeUntilExpiration: () => number; // milliseconds
+  protectRoute: (currentPath: string) => boolean; // Client-side route protection
 }
 
 // Create Context
@@ -66,21 +67,17 @@ export const useAuth = () => {
   return context;
 };
 
-// ฟังก์ชันสำหรับดึงข้อมูล user จาก JWT token
+// ฟังก์ชันสำหรับถอดข้อมูล user จาก JWT token
 const getUserFromJWT = (token: string): User | null => {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
 
     const payload = parts[1];
-
-    // ใช้ฟังก์ชันที่รองรับทั้ง client และ server side
     let decoded;
     if (typeof window !== 'undefined') {
-      // Browser environment
       decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
     } else {
-      // Node.js environment
       decoded = JSON.parse(
         Buffer.from(
           payload.replace(/-/g, '+').replace(/_/g, '/'),
@@ -89,41 +86,84 @@ const getUserFromJWT = (token: string): User | null => {
       );
     }
 
-    // ตรวจสอบว่ามีข้อมูล user ครบ
-    if (decoded.user_id && decoded.username) {
-      return {
-        user_id: decoded.user_id,
-        username: decoded.username,
-        fullname: decoded.fullname || decoded.username,
-        type: decoded.type || 'user',
-        email: decoded.email,
-        phone: decoded.phone,
-        language_code: decoded.language_code,
-        tax_id: decoded.tax_id,
-        address: decoded.address,
-        login_count: decoded.login_count,
-        is_locked: decoded.is_locked,
-        image: decoded.image,
-        status: decoded.status,
-        created_dt: decoded.created_dt,
-        updated_dt: decoded.updated_dt,
-      } as User;
-    }
+    // ฟังก์ชันสำหรับ decode Unicode escape sequences
+    const decodeUnicodeString = (str: string): string => {
+      if (!str || typeof str !== 'string') return str;
 
-    return null;
+      try {
+        let decoded = str;
+
+        // Method 1: Decode hex escape sequences (\xNN)
+        decoded = decoded.replace(/\\x([0-9A-Fa-f]{2})/g, (match, hex) => {
+          return String.fromCharCode(parseInt(hex, 16));
+        });
+
+        // Method 2: Try to decode as UTF-8 byte sequence
+        try {
+          // แปลง string เป็น bytes แล้ว decode เป็น UTF-8
+          const bytes = [];
+          for (let i = 0; i < decoded.length; i++) {
+            bytes.push(decoded.charCodeAt(i));
+          }
+
+          // ใช้ TextDecoder สำหรับ UTF-8
+          if (typeof TextDecoder !== 'undefined') {
+            const uint8Array = new Uint8Array(bytes);
+            const textDecoder = new TextDecoder('utf-8');
+            decoded = textDecoder.decode(uint8Array);
+          }
+        } catch (e) {
+          // ถ้า decode ไม่ได้ ใช้ค่าเดิม
+        }
+
+        return decoded;
+      } catch {
+        return str;
+      }
+    };
+
+    const decodedFullname = decodeUnicodeString(decoded.fullname || '');
+    const finalFullname =
+      decodedFullname ||
+      decoded.username ||
+      `${decoded.firstName || ''} ${decoded.lastName || ''}`.trim();
+
+    console.log('🔍 decoded.image', decoded.image);
+
+    return {
+      user_id: decoded.user_id || decoded.id,
+      username: decoded.username || decoded.sub,
+      fullname: finalFullname,
+      type: decoded.type || decoded.role || 'user',
+      email: decoded.email,
+      phone: decoded.phone,
+      language_code: decoded.language_code,
+      tax_id: decoded.tax_id,
+      address: decoded.address,
+      login_count: decoded.login_count,
+      is_locked: decoded.is_locked,
+      image: decoded.image,
+      status: decoded.status,
+      created_dt: decoded.created_dt,
+      updated_dt: decoded.updated_dt,
+    };
   } catch (error) {
+    console.error('Error parsing JWT:', error);
     return null;
   }
 };
 
 // ฟังก์ชันสำหรับอ่าน cookie auth_token
 const getAuthTokenFromCookie = (): string | null => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
-  const cookieValue = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith('auth_token='))
-    ?.split('=')[1];
+  const allCookies = document.cookie.split('; ');
+  const authTokenCookie = allCookies.find((row) =>
+    row.startsWith('auth_token=')
+  );
+  const cookieValue = authTokenCookie?.split('=')[1];
 
   return cookieValue || null;
 };
@@ -287,15 +327,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     rememberMe = false
   ) => {
     try {
-      console.log('💾 saveSession called with:', {
-        userData,
-        authToken,
-        rememberMe,
-      });
-
       // Token หมดอายุใน 1 วันสำหรับทุกกรณี
       const tokenExpiresAt = getTokenExpiresAt() || getFallbackTokenExpiresAt();
-      console.log('🕐 Token expires at:', tokenExpiresAt);
 
       const session: AuthSession = {
         user: userData,
@@ -303,29 +336,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         remember_me: rememberMe,
         expires_at: tokenExpiresAt.toISOString(),
       };
-      console.log('📦 Session object:', session);
 
       // Store remember preference
       localStorage.setItem(STORAGE_KEYS.REMEMBER, rememberMe.toString());
-      console.log('💭 Remember preference stored:', rememberMe);
 
       // Choose storage based on remember me
       const storage = rememberMe ? localStorage : sessionStorage;
-      console.log(
-        '🗂️ Using storage:',
-        rememberMe ? 'localStorage' : 'sessionStorage'
-      );
 
       // Save session
       storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
-      console.log('✅ Session saved to storage');
 
       // Also save individual items for compatibility
       storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
       if (authToken) {
         storage.setItem(STORAGE_KEYS.TOKEN, authToken);
       }
-      console.log('✅ Individual items saved');
     } catch (error) {
       console.error('❌ Error saving session:', error);
     }
@@ -350,10 +375,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Login method - ให้ sync จาก cookie หลัง login
+  // Login method - ตั้ง cookie สำหรับ middleware
   const login = (userData: User, authToken?: string, rememberMe = false) => {
-    console.log('🔑 Login method called:', { userData, authToken, rememberMe });
-
     setUser(userData);
     setToken(authToken || null);
 
@@ -362,15 +385,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setTokenExpiresAt(tokenExpiresAt);
     saveSession(userData, authToken, rememberMe);
 
-    console.log('💾 Session saved to storage');
+    // ตั้ง cookie สำหรับ middleware (ฝั่ง server)
+    if (authToken) {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 1); // 1 วัน
+
+      document.cookie = `auth_token=${authToken}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
+    }
 
     // ลอง sync จาก cookie หลังจากนั้น (กรณี backend set cookie แล้ว)
     setTimeout(() => {
-      console.log('🍪 Attempting to sync from cookie...');
+      const cookieToken = getAuthTokenFromCookie();
       if (syncFromCookie()) {
-        console.log('✅ Cookie sync successful');
-      } else {
-        console.log('❌ Cookie sync failed, using saved session');
+        // Cookie sync successful
       }
     }, 500); // เพิ่มเวลารอให้ cookie ถูก set
   };
@@ -409,9 +436,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return token;
   };
 
-  // Load session on mount
+  // Client side effects
   useEffect(() => {
+    setIsLoading(true);
+
+    // โหลดข้อมูลจาก storage
     loadSession();
+
+    const handleMiddlewareLogout = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const reason = urlParams.get('reason');
+
+      if (reason === 'token_expired') {
+        logout();
+        // แสดงข้อความแจ้งเตือน
+        setTimeout(() => {
+          alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+        }, 100);
+      }
+    };
+
+    handleMiddlewareLogout();
+    setIsLoading(false);
+  }, []);
+
+  // Initialize user data from cookie
+  useEffect(() => {
+    // โหลดข้อมูล user จาก cookie เมื่อเริ่มต้น
+    syncFromCookie();
   }, []);
 
   // Auto check token expiration every minute
@@ -454,15 +506,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // ฟังก์ชันสำหรับ sync ข้อมูลจาก cookie
   const syncFromCookie = () => {
     const cookieToken = getAuthTokenFromCookie();
+
     if (cookieToken) {
       const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
       const userFromJWT = getUserFromJWT(cookieToken);
 
       if (userFromJWT && cookieExpiration) {
-        // อัพเดต state จาก cookie
-        setUser(userFromJWT);
-        setToken(cookieToken);
-        setTokenExpiresAt(cookieExpiration);
+        // อัพเดต state จาก cookie - บังคับให้อัพเดทใหม่
+        setUser(null); // ล้างข้อมูลเก่าก่อน
+        setTimeout(() => {
+          setUser(userFromJWT);
+          setToken(cookieToken);
+          setTokenExpiresAt(cookieExpiration);
+        }, 0);
 
         // อัพเดต storage ด้วย
         const session: AuthSession = {
@@ -485,6 +541,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     return false; // sync ไม่สำเร็จ
+  };
+
+  // Client-side route protection - ใช้แทน middleware
+  const protectRoute = (currentPath: string): boolean => {
+    const protectedRoutes = [
+      '/auctions',
+      '/auction',
+      '/auctionform',
+      '/my-auctions',
+      '/alerts',
+      '/company',
+      '/language',
+      '/user',
+      '/token-session',
+      '/test',
+    ];
+
+    const authRoutes = ['/login', '/register', '/forget'];
+
+    const isProtectedRoute = protectedRoutes.some((route) =>
+      currentPath.startsWith(route)
+    );
+    const isAuthRoute = authRoutes.some((route) =>
+      currentPath.startsWith(route)
+    );
+
+    // ถ้าเป็นหน้า auth และมี user แล้ว ควรไป auctions
+    if (isAuthRoute && isAuthenticated && !isTokenExpired()) {
+      return false; // ไม่ควรอยู่หน้า auth
+    }
+
+    // ถ้าเป็นหน้าที่ต้อง login และยังไม่ได้ login
+    if (isProtectedRoute && (!isAuthenticated || isTokenExpired())) {
+      return false; // ไม่ควรเข้าหน้านี้
+    }
+
+    return true; // อนุญาตให้เข้าได้
   };
 
   // Context value
@@ -529,6 +622,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const timeUntilExpiration = tokenExpiresAt.getTime() - now.getTime();
       return Math.max(0, timeUntilExpiration);
     },
+    protectRoute,
   };
 
   return (

@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
+const { authMiddleware } = require('./config/authMiddleware');
 const authRouter = require('./controllers/auth');
 const languageRouter = require('./controllers/language');
-const { authMiddleware } = require('./config/authMiddleware');
+const companyRouter = require('./controllers/company');
 
 const app = express();
 
@@ -39,7 +40,7 @@ const io = new Server(httpServer, {
 // API Routes
 app.use('/api/auth', authRouter);
 app.use('/api/languages', languageRouter);
-
+app.use('/api/company', companyRouter);
 // Make io accessible to routes
 app.set('io', io);
 
@@ -90,15 +91,6 @@ io.on('connection', (socket) => {
   // Handle errors
   socket.on('error', (error) => {
     console.error('❌ Socket error:', error);
-  });
-});
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
   });
 });
 

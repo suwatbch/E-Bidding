@@ -21,6 +21,10 @@ export default function Pagination({
 }: PaginationProps) {
   const totalPages = Math.ceil(totalItems / perPage);
 
+  // ป้องกัน hydration mismatch โดยตรวจสอบ mounted state
+  const isFirstPage = mounted && currentPage === 1;
+  const isLastPage = mounted && currentPage === totalPages;
+
   return (
     <div className="flex justify-between items-center m-4">
       <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -62,17 +66,17 @@ export default function Pagination({
       <div className="flex items-center gap-2">
         <button
           onClick={() => onPageChange(1)}
-          disabled={currentPage === 1}
+          disabled={!mounted || isFirstPage}
           className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           หน้าแรก
         </button>
         <button
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-          disabled={currentPage === 1}
+          disabled={!mounted || isFirstPage}
           className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           ก่อนหน้า
         </button>
@@ -87,7 +91,7 @@ export default function Pagination({
                 pageNum = i + 1;
                 if (i === 4)
                   return (
-                    <span key="dots" className="px-2">
+                    <span key="dots" className="px-2 text-gray-400">
                       ...
                     </span>
                   );
@@ -95,20 +99,20 @@ export default function Pagination({
                 pageNum = totalPages - (4 - i);
                 if (i === 0)
                   return (
-                    <span key="dots" className="px-2">
+                    <span key="dots" className="px-2 text-gray-400">
                       ...
                     </span>
                   );
               } else {
                 if (i === 0)
                   return (
-                    <span key="dots1" className="px-2">
+                    <span key="dots1" className="px-2 text-gray-400">
                       ...
                     </span>
                   );
                 if (i === 4)
                   return (
-                    <span key="dots2" className="px-2">
+                    <span key="dots2" className="px-2 text-gray-400">
                       ...
                     </span>
                   );
@@ -118,11 +122,11 @@ export default function Pagination({
                 <button
                   key={i}
                   onClick={() => onPageChange(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center
+                  className={`w-8 h-8 rounded-lg text-sm flex items-center justify-center transition-colors
                   ${
                     currentPage === pageNum
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
                   }`}
                 >
                   {pageNum}
@@ -132,17 +136,17 @@ export default function Pagination({
         </div>
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-          disabled={currentPage === totalPages}
+          disabled={!mounted || isLastPage || totalPages === 0}
           className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           ถัดไป
         </button>
         <button
           onClick={() => onPageChange(totalPages)}
-          disabled={currentPage === totalPages}
+          disabled={!mounted || isLastPage || totalPages === 0}
           className="px-3 py-1 rounded-lg border border-gray-200 text-sm text-gray-600 
-            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white"
+            hover:bg-gray-50 disabled:opacity-50 disabled:hover:bg-white disabled:cursor-not-allowed"
         >
           หน้าสุดท้าย
         </button>

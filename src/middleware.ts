@@ -1,29 +1,9 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// ฟังก์ชันสำหรับตรวจสอบ token หมดอายุ
-function isTokenExpired(token: string): boolean {
-  try {
-    // แยก payload จาก JWT token
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return true; // token format ไม่ถูกต้อง
-    }
-
-    // ใช้ Buffer แทน atob() เพื่อรองรับ Node.js environment
-    const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
-    const tokenData = JSON.parse(payload);
-
-    const currentTime = Math.floor(Date.now() / 1000);
-
-    return tokenData.exp ? tokenData.exp < currentTime : false;
-  } catch (error) {
-    return true; // ถ้า decode ไม่ได้ ถือว่าหมดอายุ
-  }
-}
-
-// หน้าที่ต้อง login ก่อนเข้าได้
-const protectedRoutes = [
+// กำหนด routes ต่างๆ
+const PUBLIC_ROUTES = ['/', '/about', '/contact'];
+const AUTH_ROUTES = ['/login', '/register', '/forget'];
+const PROTECTED_ROUTES = [
   '/auctions',
   '/auction',
   '/auctionform',
@@ -36,55 +16,136 @@ const protectedRoutes = [
   '/test',
 ];
 
-// หน้า auth ที่ไม่ควรเข้าเมื่อ login แล้ว
-const authRoutes = ['/login', '/register', '/forget'];
+// ฟังก์ชันอ่าน cookie
+function getCookie(request: NextRequest, name: string): string | null {
+  const cookieHeader = request.headers.get('cookie');
+  if (!cookieHeader) return null;
 
-export function middleware(request: NextRequest) {
+  const cookies = cookieHeader.split(';');
+  for (const cookie of cookies) {
+    const [cookieName, cookieValue] = cookie.trim().split('=');
+    if (cookieName === name) {
+      return decodeURIComponent(cookieValue);
+    }
+  }
+  return null;
+}
+
+// ฟังก์ชันตรวจสอบ JWT token
+function isTokenValid(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    // Decode payload
+    const payload = parts[1];
+    const decoded = JSON.parse(
+      Buffer.from(
+        payload.replace(/-/g, '+').replace(/_/g, '/'),
+        'base64'
+      ).toString('utf-8')
+    );
+
+    // เช็คว่ามี exp หรือไม่
+    if (!decoded.exp) return false;
+
+    // เช็คว่าหมดอายุหรือยัง
+    const now = Math.floor(Date.now() / 1000);
+    return decoded.exp > now;
+  } catch (error) {
+    console.error('Token validation error:', error);
+    return false;
+  }
+}
+
+// ฟังก์ชันล้าง auth cookies
+function clearAuthCookies(response: NextResponse): NextResponse {
+  response.cookies.set('auth_token', '', {
+    path: '/',
+    expires: new Date(0),
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+
+  // เพิ่ม header สำหรับ client-side cleanup
+  response.headers.set('X-Clear-Auth', 'true');
+
+  return response;
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // ดึง token จาก cookies
-  const token = request.cookies.get('auth_token')?.value;
-
-  // ตรวจสอบหน้า auth (login, register, forget)
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-
-  if (isAuthRoute) {
-    // ถ้ามี token และยังไม่หมดอายุ ไม่ให้เข้าหน้า auth
-    if (token && !isTokenExpired(token)) {
-      return NextResponse.redirect(new URL('/auctions', request.url));
-    }
-    // ถ้าไม่มี token หรือหมดอายุแล้ว ให้เข้าหน้า auth ได้
+  // ข้าม static files และ API routes
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.') // files with extensions
+  ) {
     return NextResponse.next();
   }
 
-  // ตรวจสอบหน้าที่ต้อง login
-  const isProtectedRoute = protectedRoutes.some((route) =>
+  // อ่าน auth token จาก cookie
+  const authToken = getCookie(request, 'auth_token');
+  const isAuthenticated = authToken && isTokenValid(authToken);
+
+  // ตรวจสอบ route type
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(route)
+  );
+  const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+  const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
     pathname.startsWith(route)
   );
 
-  if (isProtectedRoute) {
-    // ถ้าไม่มี token
-    if (!token) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('returnUrl', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+  // === AUTO LOGOUT: Token หมดอายุ ===
+  if (authToken && !isAuthenticated) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('returnUrl', pathname);
+    loginUrl.searchParams.set('reason', 'token_expired');
 
-    // ตรวจสอบว่า token หมดอายุหรือไม่
-    if (isTokenExpired(token)) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('returnUrl', pathname);
-
-      // ลบ token ที่หมดอายุออกจาก cookies
-      const response = NextResponse.redirect(loginUrl);
-      response.cookies.delete('auth_token');
-      return response;
-    }
-
-    // ถ้า token ยังใช้ได้ ให้ผ่านได้
+    const response = NextResponse.redirect(loginUrl);
+    return clearAuthCookies(response);
   }
 
-  return NextResponse.next();
+  // === PROTECTED ROUTES: ต้อง login ก่อน ===
+  if (isProtectedRoute && !isAuthenticated) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('returnUrl', pathname);
+
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // === AUTH ROUTES: ถ้า login แล้วไม่ควรเข้า ===
+  if (isAuthRoute && isAuthenticated) {
+    // ถ้ามี returnUrl ให้ไปที่นั่น ไม่งั้นไป auctions
+    const returnUrl = request.nextUrl.searchParams.get('returnUrl');
+    const redirectUrl =
+      returnUrl && returnUrl !== '/login' ? returnUrl : '/auctions';
+
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
+  }
+
+  // === DEFAULT: อนุญาตให้ผ่าน ===
+  const response = NextResponse.next();
+  response.headers.set(
+    'X-Auth-Status',
+    isAuthenticated ? 'authenticated' : 'unauthenticated'
+  );
+  response.headers.set(
+    'X-Route-Type',
+    isPublicRoute
+      ? 'public'
+      : isAuthRoute
+      ? 'auth'
+      : isProtectedRoute
+      ? 'protected'
+      : 'unknown'
+  );
+
+  return response;
 }
 
 export const config = {
@@ -95,7 +156,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - files with extensions (js, css, png, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.).*)',
   ],
 };

@@ -24,16 +24,6 @@ router.post('/login', async (req, res) => {
     const result = await loginUser(username, password);
 
     if (result.success) {
-      const cookieOptions = {
-        httpOnly: true,
-        maxAge: COOKIE_MAX_AGE,
-        path: '/',
-        sameSite: 'lax',
-        secure: process.env.NODE_ENV === 'production',
-      };
-
-      res.cookie('auth_token', result.data.token, cookieOptions);
-
       res.status(200).json({
         success: true,
         message: result.message,
@@ -61,7 +51,7 @@ router.post('/logout', async (req, res) => {
     // ลบ cookie auth_token
     res.clearCookie('auth_token', {
       path: '/',
-      httpOnly: true,
+      httpOnly: false,
     });
 
     res.status(200).json({
