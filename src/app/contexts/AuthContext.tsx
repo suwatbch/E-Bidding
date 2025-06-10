@@ -36,6 +36,7 @@ interface AuthContextType {
   // Methods
   login: (userData: User, token?: string, rememberMe?: boolean) => void;
   logout: () => void;
+  clearSession: () => void;
   updateUser: (userData: Partial<User>) => void;
   checkAuth: () => boolean;
   getToken: () => string | null;
@@ -205,6 +206,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
     setTokenExpiresAt(null);
     clearSession();
+
+    // ลบ token จาก cookies
+    document.cookie =
+      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
   };
 
   // Update user data
@@ -257,6 +262,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     tokenExpiresAt,
     login,
     logout,
+    clearSession,
     updateUser,
     checkAuth,
     getToken,

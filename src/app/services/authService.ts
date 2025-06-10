@@ -10,6 +10,7 @@ const authApi = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 10 seconds timeout
+  withCredentials: true, // เพื่อให้สามารถรับและส่ง cookie ได้
 });
 
 // Types for API requests and responses

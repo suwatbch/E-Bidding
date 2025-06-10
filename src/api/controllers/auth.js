@@ -97,6 +97,11 @@ router.post('/login', async (req, res) => {
     const result = await loginUser(username, password, remember_me);
 
     if (result.success) {
+      res.cookie('auth_token', result.data.token, {
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/',
+      });
       res.status(200).json({
         success: true,
         message: result.message,
@@ -113,6 +118,29 @@ router.post('/login', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auth/logout - ออกจากระบบ (Public Route)
+router.post('/logout', async (req, res) => {
+  try {
+    // ลบ cookie auth_token
+    res.clearCookie('auth_token', {
+      path: '/',
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'ออกจากระบบสำเร็จ',
+    });
+  } catch (error) {
+    console.error('Error in logout:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการออกจากระบบ',
       error: error.message,
     });
   }

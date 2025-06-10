@@ -15,8 +15,6 @@ import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
 // Eye icons for password visibility toggle
 const EyeIcon = () => (
   <svg
@@ -59,7 +57,7 @@ const EyeOffIcon = () => (
 export default function LoginPage() {
   const router = useRouter();
   const { translate } = useLanguage();
-  const { login } = useAuth();
+  const { login, clearSession } = useAuth();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -73,6 +71,26 @@ export default function LoginPage() {
     text: '',
     type: 'success' as 'success' | 'error',
   });
+  const [returnUrl, setReturnUrl] = useState('/auctions');
+
+  // ลบ token เมื่อเข้าหน้า login
+  useEffect(() => {
+    // ลบ session และ token ที่มีอยู่
+    clearSession();
+
+    // ลบ token จาก cookies
+    document.cookie =
+      'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
+
+    // ดึง returnUrl จาก URL parameters
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnUrlParam = urlParams.get('returnUrl');
+      if (returnUrlParam) {
+        setReturnUrl(returnUrlParam);
+      }
+    }
+  }, [clearSession]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -106,9 +124,12 @@ export default function LoginPage() {
         // Store user data if available
         if (response.data) {
           login(response.data, response.data.token, formData.rememberMe);
-        }
 
-        router.push('/auctions');
+          // Redirect หลัง login สำเร็จ
+          setTimeout(() => {
+            window.location.href = returnUrl;
+          }, 500);
+        }
       } else {
         setMessage({
           text: response.message || translate('login_error'),

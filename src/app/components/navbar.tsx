@@ -33,6 +33,8 @@ import Container from './ui/Container';
 import UserFormModal from './user/FormDataUser';
 import { User } from '@/app/model/dataUser';
 import { useUser } from '@/app/contexts/UserContext';
+import { useAuth } from '@/app/contexts/AuthContext';
+import { authService } from '@/app/services/authService';
 
 interface FormData {
   username: string;
@@ -82,6 +84,7 @@ export default function Navbar() {
   const router = useRouter();
   const { currentLang, languages, translate, changeLanguage } = useLanguage();
   const { profile, updateProfile, updateUser, isProfileLoading } = useUser();
+  const { logout } = useAuth();
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -155,9 +158,25 @@ export default function Navbar() {
     },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsProfileOpen(false); // ปิดเมนูดรอปดาวน์
-    router.push('/login');
+
+    try {
+      // เรียก logout API
+      await authService.logout();
+
+      // เรียก logout function จาก AuthContext
+      logout();
+
+      // Redirect ไปหน้า login
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+
+      // ถึงแม้จะ error ใน API ก็ให้ logout ท้องถิ่นแล้ว redirect
+      logout();
+      router.push('/login');
+    }
   };
 
   const isActivePage = (path: string) => pathname === path;
