@@ -6,11 +6,8 @@ const PUBLIC_ROUTES = [
   '/api/auth/logout',
   '/api/auth/otp',
   '/api/auth/reset-password',
-  '/api/auth/register',
   '/api/languages',
   '/api/languages/',
-  '/api/health',
-  '/api/status',
 ];
 
 // รายการ API ที่ต้องเป็น Admin เท่านั้น
@@ -19,12 +16,8 @@ const ADMIN_ONLY_ROUTES = [];
 // ฟังก์ชันตรวจสอบว่า route เป็น public หรือไม่
 function isPublicRoute(path) {
   return PUBLIC_ROUTES.some((route) => {
-    // ตรวจสอบ exact match
     if (route === path) return true;
-
-    // ตรวจสอบ prefix match (สำหรับ /api/languages/ และ sub-routes)
     if (route.endsWith('/') && path.startsWith(route)) return true;
-
     return false;
   });
 }
@@ -32,7 +25,6 @@ function isPublicRoute(path) {
 // ฟังก์ชันตรวจสอบว่า route ต้องเป็น admin หรือไม่
 function isAdminOnlyRoute(path) {
   return ADMIN_ONLY_ROUTES.some((route) => {
-    // แทนที่ :userId ด้วย pattern ที่ตรงกับตัวเลข
     const routePattern = route.replace(':userId', '\\d+');
     const regex = new RegExp(`^${routePattern}$`);
     return regex.test(path);

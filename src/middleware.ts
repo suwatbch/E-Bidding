@@ -11,7 +11,6 @@ function isTokenExpired(token: string): boolean {
 
     return tokenData.exp ? tokenData.exp < currentTime : false;
   } catch (error) {
-    // ถ้า token ไม่สามารถ parse ได้ ให้ถือว่าหมดอายุ
     return true;
   }
 }
