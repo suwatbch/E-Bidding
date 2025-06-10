@@ -12,8 +12,8 @@ import React, {
 export interface User {
   user_id: number;
   username: string;
-  full_name: string;
-  role: string;
+  fullname: string;
+  type: string;
   email?: string;
   phone?: string;
   language_code?: string;
@@ -94,8 +94,8 @@ const getUserFromJWT = (token: string): User | null => {
       return {
         user_id: decoded.user_id,
         username: decoded.username,
-        full_name: decoded.full_name || decoded.username,
-        role: decoded.type || 'user',
+        fullname: decoded.fullname || decoded.username,
+        type: decoded.type || 'user',
         email: decoded.email,
         phone: decoded.phone,
         language_code: decoded.language_code,
@@ -287,8 +287,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     rememberMe = false
   ) => {
     try {
+      console.log('💾 saveSession called with:', {
+        userData,
+        authToken,
+        rememberMe,
+      });
+
       // Token หมดอายุใน 1 วันสำหรับทุกกรณี
       const tokenExpiresAt = getTokenExpiresAt() || getFallbackTokenExpiresAt();
+      console.log('🕐 Token expires at:', tokenExpiresAt);
 
       const session: AuthSession = {
         user: userData,
@@ -296,23 +303,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         remember_me: rememberMe,
         expires_at: tokenExpiresAt.toISOString(),
       };
+      console.log('📦 Session object:', session);
 
       // Store remember preference
       localStorage.setItem(STORAGE_KEYS.REMEMBER, rememberMe.toString());
+      console.log('💭 Remember preference stored:', rememberMe);
 
       // Choose storage based on remember me
       const storage = rememberMe ? localStorage : sessionStorage;
+      console.log(
+        '🗂️ Using storage:',
+        rememberMe ? 'localStorage' : 'sessionStorage'
+      );
 
       // Save session
       storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+      console.log('✅ Session saved to storage');
 
       // Also save individual items for compatibility
       storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
       if (authToken) {
         storage.setItem(STORAGE_KEYS.TOKEN, authToken);
       }
+      console.log('✅ Individual items saved');
     } catch (error) {
-      console.error('Error saving session:', error);
+      console.error('❌ Error saving session:', error);
     }
   };
 
@@ -337,19 +352,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Login method - ให้ sync จาก cookie หลัง login
   const login = (userData: User, authToken?: string, rememberMe = false) => {
+    console.log('🔑 Login method called:', { userData, authToken, rememberMe });
+
     setUser(userData);
     setToken(authToken || null);
 
-    // ลอง sync จาก cookie (กรณี backend set cookie แล้ว)
+    // บันทึกข้อมูลใน storage ทันที
+    const tokenExpiresAt = getFallbackTokenExpiresAt();
+    setTokenExpiresAt(tokenExpiresAt);
+    saveSession(userData, authToken, rememberMe);
+
+    console.log('💾 Session saved to storage');
+
+    // ลอง sync จาก cookie หลังจากนั้น (กรณี backend set cookie แล้ว)
     setTimeout(() => {
+      console.log('🍪 Attempting to sync from cookie...');
       if (syncFromCookie()) {
-        return;
+        console.log('✅ Cookie sync successful');
       } else {
-        const tokenExpiresAt = getFallbackTokenExpiresAt();
-        setTokenExpiresAt(tokenExpiresAt);
-        saveSession(userData, authToken, rememberMe);
+        console.log('❌ Cookie sync failed, using saved session');
       }
-    }, 100); // รอให้ cookie ถูก set
+    }, 500); // เพิ่มเวลารอให้ cookie ถูก set
   };
 
   // Logout method

@@ -189,12 +189,12 @@ export default function Navbar() {
         username: user.username,
         password: '',
         language_code: user.language_code || 'th',
-        fullname: user.full_name || '',
+        fullname: user.fullname || '',
         tax_id: user.tax_id || '',
         address: user.address || '',
         email: user.email || '',
         phone: user.phone || '',
-        type: (user.role as 'admin' | 'user') || 'user',
+        type: (user.type as 'admin' | 'user') || 'user',
         status: user.status === 1,
         is_locked: user.is_locked || false,
         is_profile: true,
@@ -528,7 +528,7 @@ export default function Navbar() {
                       {user?.image ? (
                         <img
                           src={user.image}
-                          alt={user.full_name || 'User'}
+                          alt={user.fullname || 'User'}
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
@@ -559,9 +559,9 @@ export default function Navbar() {
                         <>
                           <span
                             className="text-left text-sm text-white truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={user?.full_name || 'ไม่ระบุชื่อ'}
+                            title={user?.fullname || 'ไม่ระบุชื่อ'}
                           >
-                            {user?.full_name || 'ไม่ระบุชื่อ'}
+                            {user?.fullname || 'ไม่ระบุชื่อ'}
                           </span>
                           <span
                             className="text-left text-xs text-white/80 truncate w-[140px] transform group-hover:scale-105 transition duration-300"

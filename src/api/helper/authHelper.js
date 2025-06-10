@@ -157,8 +157,8 @@ async function loginUser(username, password) {
     const payload = {
       user_id: user.user_id,
       username: user.username,
-      full_name: user.fullname, // แปลง fullname เป็น full_name
-      role: user.type, // แปลง type เป็น role
+      fullname: user.fullname, // แปลง fullname เป็น fullname
+      type: user.type, // แปลง type เป็น role
       email: user.email,
       phone: user.phone,
       language_code: user.language_code,
@@ -176,8 +176,8 @@ async function loginUser(username, password) {
     const mappedUser = {
       user_id: userData.user_id,
       username: userData.username,
-      full_name: userData.fullname, // แปลง fullname เป็น full_name
-      role: userData.type, // แปลง type เป็น role
+      fullname: userData.fullname,
+      type: userData.type,
       email: userData.email,
       phone: userData.phone,
       language_code: userData.language_code,

@@ -26,8 +26,8 @@ export interface LoginResponse {
   data?: {
     user_id: number;
     username: string;
-    full_name: string;
-    role: string;
+    fullname: string;
+    type: string;
     token?: string;
   };
 }
