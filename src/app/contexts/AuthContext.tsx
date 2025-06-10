@@ -57,12 +57,19 @@ export const useAuth = () => {
   return context;
 };
 
+const TOKEN_EXPIRES_HOURS = 24;
+const TOKEN_EXPIRES_MS = TOKEN_EXPIRES_HOURS * 60 * 60 * 1000;
+
+const getTokenExpiresAt = (): Date => {
+  return new Date(Date.now() + TOKEN_EXPIRES_MS);
+};
+
 // Storage keys
 const STORAGE_KEYS = {
   SESSION: 'auth_session',
   USER: 'auth_user',
   TOKEN: 'auth_token',
-  REMEMBER: 'auth_remember',
+  REMEMBER: 'auth_remember_me',
 } as const;
 
 // Provider Props
@@ -143,7 +150,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     try {
       // Token หมดอายุใน 1 วันสำหรับทุกกรณี
-      const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day
+      const tokenExpiresAt = getTokenExpiresAt();
 
       const session: AuthSession = {
         user: userData,
@@ -192,7 +199,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Login method
   const login = (userData: User, authToken?: string, rememberMe = false) => {
-    const tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 1 day
+    const tokenExpiresAt = getTokenExpiresAt();
 
     setUser(userData);
     setToken(authToken || null);

@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../config/dataconfig');
 
 // JWT Secret (ในการใช้งานจริงควรเก็บใน environment variable)
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  'E8d4K9mN2pQ7rV5xB1fG6hJ3kL0sT9wY2eR8uI5oP7qA4zC6vB3nM1xS8dF0gH9j';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 // สร้างผู้ใช้ใหม่
@@ -136,9 +138,6 @@ async function loginUser(username, password, remember_me = false) {
     // รหัสผ่านถูกต้อง - รีเซ็ต login count และปลดล็อค
     await resetLoginCount(username);
 
-    // กำหนดระยะเวลาหมดอายุของ token ตาม remember_me
-    const expiresIn = remember_me ? '1d' : '1d';
-
     // สร้าง JWT Token
     const token = jwt.sign(
       {
@@ -148,7 +147,7 @@ async function loginUser(username, password, remember_me = false) {
         language_code: user.language_code,
       },
       JWT_SECRET,
-      { expiresIn }
+      JWT_EXPIRES_IN
     );
 
     // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับ

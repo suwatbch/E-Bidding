@@ -15,6 +15,9 @@ const {
   resetPassword,
 } = require('../helper/authHelper');
 
+// Constants
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000; // 1 วัน (24 ชั่วโมง)
+
 // POST /api/auth/register - สมัครสมาชิก (Public Route)
 router.post('/register', async (req, res) => {
   try {
@@ -98,9 +101,11 @@ router.post('/login', async (req, res) => {
 
     if (result.success) {
       res.cookie('auth_token', result.data.token, {
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000,
-        path: '/',
+        httpOnly: true, // ป้องกัน XSS
+        maxAge: COOKIE_MAX_AGE,
+        path: '/', // ใช้ได้ทั้งเว็บไซต์
+        sameSite: 'strict', // ป้องกัน CSRF
+        secure: process.env.NODE_ENV === 'production', // HTTPS ใน production
       });
       res.status(200).json({
         success: true,
