@@ -67,20 +67,20 @@ export const authService = {
   /**
    * Login user
    */
-  login: async (data: LoginRequest): Promise<LoginResponse> => {
+  login: async (request: LoginRequest): Promise<LoginResponse> => {
     try {
-      const response: AxiosResponse<LoginResponse> = await authApi.post(
-        '/login',
-        data
-      );
-      return response.data;
+      const response = await authApi.post('/login', request);
+
+      return {
+        success: response.data.success,
+        message: response.data.message,
+        data: response.data.data,
+      };
     } catch (error: any) {
-      if (error.response?.data) {
-        return error.response.data;
-      }
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์',
+        message:
+          error.response?.data?.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
       };
     }
   },

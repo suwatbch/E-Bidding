@@ -16,6 +16,15 @@ export interface User {
   role: string;
   email?: string;
   phone?: string;
+  language_code?: string;
+  tax_id?: string;
+  address?: string;
+  login_count?: number;
+  is_locked?: boolean;
+  image?: string;
+  status?: number;
+  created_dt?: string;
+  updated_dt?: string;
 }
 
 export interface AuthSession {
@@ -57,10 +66,125 @@ export const useAuth = () => {
   return context;
 };
 
-const TOKEN_EXPIRES_HOURS = 24;
-const TOKEN_EXPIRES_MS = TOKEN_EXPIRES_HOURS * 60 * 60 * 1000;
+// ฟังก์ชันสำหรับดึงข้อมูล user จาก JWT token
+const getUserFromJWT = (token: string): User | null => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
 
-const getTokenExpiresAt = (): Date => {
+    const payload = parts[1];
+
+    // ใช้ฟังก์ชันที่รองรับทั้ง client และ server side
+    let decoded;
+    if (typeof window !== 'undefined') {
+      // Browser environment
+      decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    } else {
+      // Node.js environment
+      decoded = JSON.parse(
+        Buffer.from(
+          payload.replace(/-/g, '+').replace(/_/g, '/'),
+          'base64'
+        ).toString('utf-8')
+      );
+    }
+
+    // ตรวจสอบว่ามีข้อมูล user ครบ
+    if (decoded.user_id && decoded.username) {
+      return {
+        user_id: decoded.user_id,
+        username: decoded.username,
+        full_name: decoded.full_name || decoded.username,
+        role: decoded.type || 'user',
+        email: decoded.email,
+        phone: decoded.phone,
+        language_code: decoded.language_code,
+        tax_id: decoded.tax_id,
+        address: decoded.address,
+        login_count: decoded.login_count,
+        is_locked: decoded.is_locked,
+        image: decoded.image,
+        status: decoded.status,
+        created_dt: decoded.created_dt,
+        updated_dt: decoded.updated_dt,
+      } as User;
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+};
+
+// ฟังก์ชันสำหรับอ่าน cookie auth_token
+const getAuthTokenFromCookie = (): string | null => {
+  if (typeof window === 'undefined') return null;
+
+  const cookieValue = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith('auth_token='))
+    ?.split('=')[1];
+
+  return cookieValue || null;
+};
+
+// ฟังก์ชันสำหรับถอด JWT และดึงเวลาหมดอายุ
+const getTokenExpirationFromJWT = (token: string): Date | null => {
+  try {
+    // JWT token มี 3 ส่วน: header.payload.signature
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    // ถอด payload (ส่วนที่ 2)
+    const payload = parts[1];
+
+    // Decode Base64URL - รองรับทั้ง client และ server side
+    let decoded;
+    if (typeof window !== 'undefined') {
+      // Browser environment
+      decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    } else {
+      // Node.js environment
+      decoded = JSON.parse(
+        Buffer.from(
+          payload.replace(/-/g, '+').replace(/_/g, '/'),
+          'base64'
+        ).toString('utf-8')
+      );
+    }
+
+    // แสดงข้อมูลทั้งหมดจาก JWT payload
+    if (!decoded.exp) {
+      return null;
+    }
+
+    // แปลง exp (seconds) เป็น Date object
+    const expirationDate = new Date(decoded.exp * 1000);
+
+    return expirationDate;
+  } catch (error) {
+    return null;
+  }
+};
+
+// ฟังก์ชันสำหรับอ่านวันหมดอายุจาก cookie
+const getTokenExpiresAt = (): Date | null => {
+  const token = getAuthTokenFromCookie();
+  if (!token) {
+    return null;
+  }
+
+  const expiration = getTokenExpirationFromJWT(token);
+
+  return expiration;
+};
+
+// Fallback: สำหรับกรณีที่ไม่มี token ให้สร้างเวลาหมดอายุ 24 ชั่วโมง
+const getFallbackTokenExpiresAt = (): Date => {
+  const TOKEN_EXPIRES_HOURS = 24;
+  const TOKEN_EXPIRES_MS = TOKEN_EXPIRES_HOURS * 60 * 60 * 1000;
   return new Date(Date.now() + TOKEN_EXPIRES_MS);
 };
 
@@ -89,6 +213,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check if token is expired
   const isTokenExpired = (): boolean => {
+    // ลองอ่านจาก cookie ก่อน
+    const cookieToken = getAuthTokenFromCookie();
+    if (cookieToken) {
+      const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
+      if (cookieExpiration) {
+        const isExpired = new Date() > cookieExpiration;
+        return isExpired;
+      }
+    }
+
+    // Fallback: ใช้จาก state ถ้าไม่มี cookie
     if (!tokenExpiresAt) return false;
     return new Date() > tokenExpiresAt;
   };
@@ -96,7 +231,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Auto logout when token expires
   const checkTokenExpiration = () => {
     if (isAuthenticated && isTokenExpired()) {
-      console.log('🕐 Token expired, logging out...');
       logout();
       return true;
     }
@@ -106,28 +240,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Load session from storage
   const loadSession = () => {
     try {
-      // Check for remember me preference
+      // ลองอ่านจาก cookie ก่อนเสมอ
+      if (syncFromCookie()) {
+        setIsLoading(false);
+        return;
+      }
+
+      // ถ้าไม่มี cookie ให้ลองอ่านจาก storage
       const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true';
       const storage = rememberMe ? localStorage : sessionStorage;
-
       const sessionData = storage.getItem(STORAGE_KEYS.SESSION);
 
       if (sessionData) {
         const session: AuthSession = JSON.parse(sessionData);
 
-        // Check if session is expired
+        // ตรวจสอบว่า session หมดอายุหรือไม่
         if (session.expires_at) {
           const expiresAt = new Date(session.expires_at);
           const now = new Date();
 
           if (now > expiresAt) {
-            // Session expired
             clearSession();
+            setIsLoading(false);
             return;
           }
         }
 
-        // Restore session
+        // Restore session จาก storage
         setUser(session.user);
         setToken(session.token || null);
         setTokenExpiresAt(
@@ -135,7 +274,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         );
       }
     } catch (error) {
-      console.error('Error loading session:', error);
       clearSession();
     } finally {
       setIsLoading(false);
@@ -150,7 +288,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   ) => {
     try {
       // Token หมดอายุใน 1 วันสำหรับทุกกรณี
-      const tokenExpiresAt = getTokenExpiresAt();
+      const tokenExpiresAt = getTokenExpiresAt() || getFallbackTokenExpiresAt();
 
       const session: AuthSession = {
         user: userData,
@@ -197,14 +335,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Login method
+  // Login method - ให้ sync จาก cookie หลัง login
   const login = (userData: User, authToken?: string, rememberMe = false) => {
-    const tokenExpiresAt = getTokenExpiresAt();
-
     setUser(userData);
     setToken(authToken || null);
-    setTokenExpiresAt(tokenExpiresAt);
-    saveSession(userData, authToken, rememberMe);
+
+    // ลอง sync จาก cookie (กรณี backend set cookie แล้ว)
+    setTimeout(() => {
+      if (syncFromCookie()) {
+        return;
+      } else {
+        const tokenExpiresAt = getFallbackTokenExpiresAt();
+        setTokenExpiresAt(tokenExpiresAt);
+        saveSession(userData, authToken, rememberMe);
+      }
+    }, 100); // รอให้ cookie ถูก set
   };
 
   // Logout method
@@ -260,6 +405,65 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => clearInterval(interval);
   }, [isAuthenticated, tokenExpiresAt]);
 
+  // Sync with cookie changes
+  useEffect(() => {
+    const syncWithCookie = () => {
+      const cookieToken = getAuthTokenFromCookie();
+      if (cookieToken) {
+        const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
+        if (cookieExpiration && cookieExpiration !== tokenExpiresAt) {
+          setTokenExpiresAt(cookieExpiration);
+        }
+      } else if (tokenExpiresAt && isAuthenticated) {
+        logout();
+      }
+    };
+
+    // Sync ทันทีเมื่อโหลด
+    syncWithCookie();
+
+    // Sync ทุก 30 วินาที
+    const syncInterval = setInterval(syncWithCookie, 30000);
+
+    return () => clearInterval(syncInterval);
+  }, [isAuthenticated]);
+
+  // ฟังก์ชันสำหรับ sync ข้อมูลจาก cookie
+  const syncFromCookie = () => {
+    const cookieToken = getAuthTokenFromCookie();
+    if (cookieToken) {
+      const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
+      const userFromJWT = getUserFromJWT(cookieToken);
+
+      if (userFromJWT && cookieExpiration) {
+        // อัพเดต state จาก cookie
+        setUser(userFromJWT);
+        setToken(cookieToken);
+        setTokenExpiresAt(cookieExpiration);
+
+        // อัพเดต storage ด้วย
+        const session: AuthSession = {
+          user: userFromJWT,
+          token: cookieToken,
+          expires_at: cookieExpiration.toISOString(),
+          remember_me: localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true',
+        };
+
+        const storage = session.remember_me ? localStorage : sessionStorage;
+        storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
+        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userFromJWT));
+        storage.setItem(STORAGE_KEYS.TOKEN, cookieToken);
+
+        return true; // sync สำเร็จ
+      }
+    } else if (isAuthenticated) {
+      // ไม่มี cookie แต่ยังมี session - logout
+      logout();
+    }
+
+    return false; // sync ไม่สำเร็จ
+  };
+
   // Context value
   const contextValue: AuthContextType = {
     user,
@@ -273,13 +477,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
     checkAuth,
     getToken,
-    getTokenExpiresAt: () => tokenExpiresAt,
+    getTokenExpiresAt: () => {
+      const cookieToken = getAuthTokenFromCookie();
+      if (cookieToken) {
+        const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
+        if (cookieExpiration) {
+          return cookieExpiration;
+        }
+      }
+      return tokenExpiresAt;
+    },
     isTokenExpired,
     getTimeUntilExpiration: () => {
+      const cookieToken = getAuthTokenFromCookie();
+      if (cookieToken) {
+        const cookieExpiration = getTokenExpirationFromJWT(cookieToken);
+        if (cookieExpiration) {
+          const now = new Date();
+          const timeUntilExpiration =
+            cookieExpiration.getTime() - now.getTime();
+          return Math.max(0, timeUntilExpiration);
+        }
+      }
+
+      // Fallback: ใช้จาก state
       if (!tokenExpiresAt) return 0;
       const now = new Date();
       const timeUntilExpiration = tokenExpiresAt.getTime() - now.getTime();
-      return timeUntilExpiration;
+      return Math.max(0, timeUntilExpiration);
     },
   };
 

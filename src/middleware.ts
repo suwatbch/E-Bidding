@@ -4,14 +4,21 @@ import type { NextRequest } from 'next/server';
 // ฟังก์ชันสำหรับตรวจสอบ token หมดอายุ
 function isTokenExpired(token: string): boolean {
   try {
-    // สำหรับการทดสอบ ให้ถือว่า token หมดอายุใน 24 ชั่วโมง
-    // ในกรณีจริงอาจต้อง decode JWT เพื่อตรวจสอบ exp
-    const tokenData = JSON.parse(atob(token.split('.')[1] || '{}'));
+    // แยก payload จาก JWT token
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return true; // token format ไม่ถูกต้อง
+    }
+
+    // ใช้ Buffer แทน atob() เพื่อรองรับ Node.js environment
+    const payload = Buffer.from(parts[1], 'base64').toString('utf-8');
+    const tokenData = JSON.parse(payload);
+
     const currentTime = Math.floor(Date.now() / 1000);
 
     return tokenData.exp ? tokenData.exp < currentTime : false;
   } catch (error) {
-    return true;
+    return true; // ถ้า decode ไม่ได้ ถือว่าหมดอายุ
   }
 }
 
@@ -38,17 +45,12 @@ export function middleware(request: NextRequest) {
   // ดึง token จาก cookies
   const token = request.cookies.get('auth_token')?.value;
 
-  console.log(
-    `🔍 Middleware checking: ${pathname}, Token: ${token ? 'exists' : 'none'}`
-  );
-
   // ตรวจสอบหน้า auth (login, register, forget)
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
   if (isAuthRoute) {
     // ถ้ามี token และยังไม่หมดอายุ ไม่ให้เข้าหน้า auth
     if (token && !isTokenExpired(token)) {
-      console.log('✅ User already logged in, redirecting to auctions');
       return NextResponse.redirect(new URL('/auctions', request.url));
     }
     // ถ้าไม่มี token หรือหมดอายุแล้ว ให้เข้าหน้า auth ได้
@@ -63,7 +65,6 @@ export function middleware(request: NextRequest) {
   if (isProtectedRoute) {
     // ถ้าไม่มี token
     if (!token) {
-      console.log('🚫 No token found, redirecting to login');
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('returnUrl', pathname);
       return NextResponse.redirect(loginUrl);
@@ -71,7 +72,6 @@ export function middleware(request: NextRequest) {
 
     // ตรวจสอบว่า token หมดอายุหรือไม่
     if (isTokenExpired(token)) {
-      console.log('⏰ Token expired, redirecting to login');
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('returnUrl', pathname);
 
@@ -82,7 +82,6 @@ export function middleware(request: NextRequest) {
     }
 
     // ถ้า token ยังใช้ได้ ให้ผ่านได้
-    console.log('✅ Token valid, allowing access to:', pathname);
   }
 
   return NextResponse.next();

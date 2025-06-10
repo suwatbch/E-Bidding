@@ -24,13 +24,16 @@ router.post('/login', async (req, res) => {
     const result = await loginUser(username, password);
 
     if (result.success) {
-      res.cookie('auth_token', result.data.token, {
-        httpOnly: true, // ป้องกัน XSS
+      const cookieOptions = {
+        httpOnly: true,
         maxAge: COOKIE_MAX_AGE,
-        path: '/', // ใช้ได้ทั้งเว็บไซต์
-        sameSite: 'strict', // ป้องกัน CSRF
-        secure: process.env.NODE_ENV === 'production', // HTTPS ใน production
-      });
+        path: '/',
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      };
+
+      res.cookie('auth_token', result.data.token, cookieOptions);
+
       res.status(200).json({
         success: true,
         message: result.message,

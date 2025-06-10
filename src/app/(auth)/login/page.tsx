@@ -70,10 +70,6 @@ export default function LoginPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState({
-    text: '',
-    type: 'success' as 'success' | 'error',
-  });
   const [returnUrl, setReturnUrl] = useState('/auctions');
 
   // Load saved credentials on component mount
@@ -136,10 +132,11 @@ export default function LoginPage() {
         remember_me: formData.rememberMe,
       } as LoginRequest);
 
-      if (response.success) {
-        // Handle Remember Me functionality
+      if (response.success && response.data) {
+        const userData = (response.data as any).user || response.data;
+
+        // Save credentials if "Remember Me" is checked
         if (formData.rememberMe) {
-          // Save credentials to localStorage
           localStorage.setItem(REMEMBER_ME_KEY, 'true');
           localStorage.setItem(
             SAVED_CREDENTIALS_KEY,
@@ -149,28 +146,18 @@ export default function LoginPage() {
             })
           );
         } else {
-          // Clear saved credentials
+          // Clear saved credentials if "Remember Me" is not checked
           localStorage.removeItem(REMEMBER_ME_KEY);
           localStorage.removeItem(SAVED_CREDENTIALS_KEY);
         }
 
-        // Show success message
-        setMessage({
-          text: response.message || translate('login_success'),
-          type: 'success',
-        });
+        // Login to context
+        login(userData, response.data.token, formData.rememberMe);
 
-        // Store user data if available
-        if (response.data) {
-          login(response.data, response.data.token, formData.rememberMe);
-
-          // Redirect หลัง login สำเร็จ
-          setTimeout(() => {
-            window.location.href = returnUrl;
-          }, 500);
-        }
+        setTimeout(() => {
+          router.push('/auctions');
+        }, 500);
       } else {
-        // API returned error response (400, etc.) - แสดง error message แบบ alert
         alert(response.message || translate('login_error'));
       }
     } catch (error: any) {

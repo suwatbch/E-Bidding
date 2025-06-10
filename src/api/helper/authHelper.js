@@ -153,25 +153,48 @@ async function loginUser(username, password) {
     // รหัสผ่านถูกต้อง - รีเซ็ต login count และปลดล็อค
     await resetLoginCount(username);
 
-    // สร้าง JWT Token
-    const token = jwt.sign(
-      {
-        user_id: user.user_id,
-        username: user.username,
-        type: user.type,
-        language_code: user.language_code,
-      },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
-    );
+    // สร้าง payload สำหรับ JWT
+    const payload = {
+      user_id: user.user_id,
+      username: user.username,
+      full_name: user.fullname, // แปลง fullname เป็น full_name
+      role: user.type, // แปลง type เป็น role
+      email: user.email,
+      phone: user.phone,
+      language_code: user.language_code,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 ชั่วโมง
+    };
 
-    // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับ
-    const { password: _, ...userWithoutPassword } = user;
+    // สร้าง JWT Token
+    const token = jwt.sign(payload, JWT_SECRET);
+
+    // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับและ map ฟิลด์ให้ตรงกับ frontend interface
+    const { password: _, ...userData } = user;
+
+    // Map ฟิลด์ให้ตรงกับ interface ของ frontend
+    const mappedUser = {
+      user_id: userData.user_id,
+      username: userData.username,
+      full_name: userData.fullname, // แปลง fullname เป็น full_name
+      role: userData.type, // แปลง type เป็น role
+      email: userData.email,
+      phone: userData.phone,
+      language_code: userData.language_code,
+      tax_id: userData.tax_id,
+      address: userData.address,
+      login_count: userData.login_count,
+      is_locked: userData.is_locked,
+      image: userData.image,
+      status: userData.status,
+      created_dt: userData.created_dt,
+      updated_dt: userData.updated_dt,
+    };
 
     return {
       success: true,
       data: {
-        user: userWithoutPassword,
+        user: mappedUser,
         token,
       },
       message: 'เข้าสู่ระบบสำเร็จ',
