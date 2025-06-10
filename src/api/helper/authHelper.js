@@ -76,7 +76,7 @@ async function createUser(userData) {
 }
 
 // เข้าสู่ระบบ
-async function loginUser(username, password, remember_me = false) {
+async function loginUser(username, password) {
   try {
     // ดึงข้อมูลผู้ใช้
     const userResult = await getUserByUsername(username);

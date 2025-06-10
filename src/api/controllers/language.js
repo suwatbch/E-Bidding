@@ -66,7 +66,7 @@ router.get('/:languageCode', async (req, res) => {
           data: result.data[0],
         });
       } else {
-        res.status(404).json({
+        res.status(400).json({
           success: false,
           message: 'ไม่พบข้อมูลภาษาที่ระบุ',
         });

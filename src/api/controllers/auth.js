@@ -88,7 +88,7 @@ router.post('/register', async (req, res) => {
 // POST /api/auth/login - เข้าสู่ระบบ (Public Route)
 router.post('/login', async (req, res) => {
   try {
-    const { username, password, remember_me } = req.body;
+    const { username, password } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({
@@ -97,7 +97,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    const result = await loginUser(username, password, remember_me);
+    const result = await loginUser(username, password);
 
     if (result.success) {
       res.cookie('auth_token', result.data.token, {
@@ -113,7 +113,7 @@ router.post('/login', async (req, res) => {
         data: result.data,
       });
     } else {
-      res.status(401).json({
+      res.status(400).json({
         success: false,
         message: result.error,
       });
@@ -165,7 +165,7 @@ router.get('/profile', async (req, res) => {
         data: result.data[0],
       });
     } else {
-      res.status(404).json({
+      res.status(400).json({
         success: false,
         message: 'ไม่พบข้อมูลผู้ใช้',
       });
@@ -351,7 +351,7 @@ router.get('/users/:userId', async (req, res) => {
         data: result.data[0],
       });
     } else {
-      res.status(404).json({
+      res.status(400).json({
         success: false,
         message: 'ไม่พบข้อมูลผู้ใช้',
       });
@@ -412,7 +412,7 @@ router.post('/users/:userId/unlock', async (req, res) => {
     const userResult = await getUserById(userId);
 
     if (!userResult.success || userResult.data.length === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         message: 'ไม่พบข้อมูลผู้ใช้',
       });
@@ -508,7 +508,7 @@ router.post('/otp', async (req, res) => {
         data: result.data,
       });
     } else {
-      res.status(result.error === 'ไม่พบชื่อผู้ใช้ในระบบ' ? 404 : 500).json({
+      res.status(400).json({
         success: false,
         message: result.error,
       });
@@ -537,17 +537,7 @@ router.post('/reset-password', async (req, res) => {
         data: result.data,
       });
     } else {
-      const statusCode =
-        result.error === 'ไม่พบผู้ใช้งานนี้ในระบบ'
-          ? 404
-          : result.error.includes('OTP')
-          ? 400
-          : result.error.includes('ครบถ้วน') ||
-            result.error.includes('6 ตัวอักษร')
-          ? 400
-          : 500;
-
-      res.status(statusCode).json({
+      res.status(400).json({
         success: false,
         message: result.error,
       });

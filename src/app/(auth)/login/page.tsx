@@ -15,6 +15,10 @@ import { useLanguage } from '@/app/hooks/useLanguage';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
+// Constants for localStorage keys
+const REMEMBER_ME_KEY = 'e_bidding_remember_me';
+const SAVED_CREDENTIALS_KEY = 'e_bidding_saved_credentials';
+
 // Eye icons for password visibility toggle
 const EyeIcon = () => (
   <svg
@@ -65,7 +69,6 @@ export default function LoginPage() {
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState({
     text: '',
@@ -73,7 +76,7 @@ export default function LoginPage() {
   });
   const [returnUrl, setReturnUrl] = useState('/auctions');
 
-  // ลบ token เมื่อเข้าหน้า login
+  // Load saved credentials on component mount
   useEffect(() => {
     // ลบ session และ token ที่มีอยู่
     clearSession();
@@ -89,6 +92,28 @@ export default function LoginPage() {
       if (returnUrlParam) {
         setReturnUrl(returnUrlParam);
       }
+
+      // Load saved credentials if "Remember Me" was previously checked
+      const isRemembered = localStorage.getItem(REMEMBER_ME_KEY) === 'true';
+      if (isRemembered) {
+        const savedCredentials = localStorage.getItem(SAVED_CREDENTIALS_KEY);
+        if (savedCredentials) {
+          try {
+            const { username, password } = JSON.parse(savedCredentials);
+            setFormData((prev) => ({
+              ...prev,
+              username: username || '',
+              password: password || '',
+              rememberMe: true,
+            }));
+          } catch (error) {
+            console.error('Error loading saved credentials:', error);
+            // Clear invalid data
+            localStorage.removeItem(SAVED_CREDENTIALS_KEY);
+            localStorage.removeItem(REMEMBER_ME_KEY);
+          }
+        }
+      }
     }
   }, [clearSession]);
 
@@ -98,14 +123,11 @@ export default function LoginPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    // Clear error when user starts typing
-    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
     try {
       const response = await authService.login({
@@ -115,6 +137,23 @@ export default function LoginPage() {
       } as LoginRequest);
 
       if (response.success) {
+        // Handle Remember Me functionality
+        if (formData.rememberMe) {
+          // Save credentials to localStorage
+          localStorage.setItem(REMEMBER_ME_KEY, 'true');
+          localStorage.setItem(
+            SAVED_CREDENTIALS_KEY,
+            JSON.stringify({
+              username: formData.username,
+              password: formData.password,
+            })
+          );
+        } else {
+          // Clear saved credentials
+          localStorage.removeItem(REMEMBER_ME_KEY);
+          localStorage.removeItem(SAVED_CREDENTIALS_KEY);
+        }
+
         // Show success message
         setMessage({
           text: response.message || translate('login_success'),
@@ -131,28 +170,26 @@ export default function LoginPage() {
           }, 500);
         }
       } else {
-        setMessage({
-          text: response.message || translate('login_error'),
-          type: 'error',
-        });
+        // API returned error response (400, etc.) - แสดง error message แบบ alert
+        alert(response.message || translate('login_error'));
       }
     } catch (error: any) {
       console.error('Login error:', error);
 
-      // Handle different types of errors
+      // Handle network errors or other unexpected errors
       if (error.response) {
         // Server responded with error status
         const errorMessage =
           error.response.data?.message ||
           error.response.data?.error ||
           translate('login_error_server');
-        setError(errorMessage);
+        alert(errorMessage);
       } else if (error.request) {
         // Network error
-        setError(translate('login_error_network'));
+        alert(translate('login_error_network'));
       } else {
         // Other error
-        setError(translate('login_error_unknown'));
+        alert(translate('login_error_unknown'));
       }
     } finally {
       setIsLoading(false);
@@ -193,13 +230,6 @@ export default function LoginPage() {
                 {translate('login_subtitle')}
               </p>
             </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
