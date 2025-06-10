@@ -147,7 +147,7 @@ async function loginUser(username, password, remember_me = false) {
         language_code: user.language_code,
       },
       JWT_SECRET,
-      JWT_EXPIRES_IN
+      { expiresIn: JWT_EXPIRES_IN }
     );
 
     // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับ
