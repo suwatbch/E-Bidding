@@ -83,8 +83,8 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentLang, languages, translate, changeLanguage } = useLanguage();
-  const { profile, updateProfile, updateUser, isProfileLoading } = useUser();
-  const { logout } = useAuth();
+  const { updateProfile, updateUser } = useUser();
+  const { logout, user, isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -183,22 +183,22 @@ export default function Navbar() {
 
   const handleEditProfile = () => {
     setIsProfileOpen(false);
-    if (profile) {
-      console.log('Profile data:', profile);
+    if (user) {
+      console.log('Profile data:', user);
       const newFormData = {
-        username: profile.username,
+        username: user.username,
         password: '',
-        language_code: profile.language_code || 'th',
-        fullname: profile.fullname,
-        tax_id: profile.tax_id || '',
-        address: profile.address || '',
-        email: profile.email,
-        phone: profile.phone,
-        type: profile.type,
-        status: profile.status,
-        is_locked: profile.is_locked,
+        language_code: user.language_code || 'th',
+        fullname: user.full_name || '',
+        tax_id: user.tax_id || '',
+        address: user.address || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        type: (user.role as 'admin' | 'user') || 'user',
+        status: user.status === 1,
+        is_locked: user.is_locked || false,
         is_profile: true,
-        image: profile.image || undefined,
+        image: user.image || undefined,
       };
       console.log('Form data being set:', newFormData);
       setFormData(newFormData);
@@ -207,9 +207,9 @@ export default function Navbar() {
   };
 
   const handleSubmit = async (formData: FormData) => {
-    if (profile) {
-      const updatedProfile: User = {
-        ...profile,
+    if (user) {
+      const updatedProfile = {
+        ...user,
         username: formData.username,
         email: formData.email,
         fullname: formData.fullname,
@@ -223,7 +223,9 @@ export default function Navbar() {
         updated_dt: new Date().toISOString(),
         is_profile: true,
         image: formData.image,
-      };
+        password: formData.password || '',
+        login_count: user.login_count || 0,
+      } as User;
 
       // อัพเดทรหัสผ่านเฉพาะเมื่อมีการกรอกข้อมูล
       if (formData.password) {
@@ -523,10 +525,10 @@ export default function Navbar() {
                     className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 text-white hover:bg-white/10"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300">
-                      {profile?.image ? (
+                      {user?.image ? (
                         <img
-                          src={profile.image}
-                          alt={profile.fullname}
+                          src={user.image}
+                          alt={user.full_name || 'User'}
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
@@ -548,7 +550,7 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="flex flex-col items-start">
-                      {isProfileLoading ? (
+                      {isAuthLoading ? (
                         <>
                           <div className="h-4 w-[140px] bg-white/20 rounded animate-pulse"></div>
                           <div className="h-3 w-[140px] bg-white/20 rounded animate-pulse mt-1"></div>
@@ -557,15 +559,15 @@ export default function Navbar() {
                         <>
                           <span
                             className="text-left text-sm text-white truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={profile?.fullname || 'ไม่ระบุชื่อ'}
+                            title={user?.full_name || 'ไม่ระบุชื่อ'}
                           >
-                            {profile?.fullname || 'ไม่ระบุชื่อ'}
+                            {user?.full_name || 'ไม่ระบุชื่อ'}
                           </span>
                           <span
                             className="text-left text-xs text-white/80 truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={profile?.email || 'ไม่ระบุอีเมล'}
+                            title={user?.email || 'ไม่ระบุอีเมล'}
                           >
-                            {profile?.email || 'ไม่ระบุอีเมล'}
+                            {user?.email || 'ไม่ระบุอีเมล'}
                           </span>
                         </>
                       )}
@@ -766,7 +768,7 @@ export default function Navbar() {
         isOpen={isModalOpen}
         onClose={closeModal}
         onSubmit={handleSubmit}
-        editUser={profile}
+        editUser={user as any}
         initialForm={initialForm}
         form={formData}
         setForm={setFormData}
