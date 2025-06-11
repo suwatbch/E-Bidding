@@ -125,15 +125,54 @@ export default function Navbar() {
     // โหลดข้อมูลครั้งแรก
     loadUserDataFromStorage();
 
-    // ตั้ง interval เพื่อเช็คการเปลี่ยนแปลงทุก 1 วินาที
-    const checkInterval = setInterval(() => {
+    // ฟัง localStorage changes จากหน้าอื่น (same origin)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_user' && e.newValue) {
+        console.log('🔄 [Navbar] localStorage changed from another tab/page');
+        loadUserDataFromStorage();
+      }
+    };
+
+    // ฟัง manual localStorage changes ในหน้าเดียวกัน
+    const handleCustomStorageChange = () => {
+      console.log('🔄 [Navbar] localStorage changed manually');
+      loadUserDataFromStorage();
+    };
+
+    // เพิ่ม event listeners
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('localStorageChange', handleCustomStorageChange);
+
+    // Smart timeout: เช็คทันที ถ้าไม่มีข้อมูลค่อยรอ 2 วินาที
+    let timeoutId: NodeJS.Timeout | null = null;
+
+    const checkForData = () => {
       const currentAuthUser = localStorage.getItem('auth_user');
       if (currentAuthUser) {
         loadUserDataFromStorage();
+        return true; // มีข้อมูลแล้ว
       }
-    }, 1000);
+      return false; // ยังไม่มีข้อมูล
+    };
 
-    return () => clearInterval(checkInterval);
+    // เช็คทันที
+    if (!checkForData()) {
+      // ถ้าไม่มีข้อมูล ค่อยรอ 2 วินาที
+      timeoutId = setTimeout(() => {
+        checkForData(); // เช็คอีกครั้งหลัง 2 วินาที
+      }, 500);
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(
+        'localStorageChange',
+        handleCustomStorageChange
+      );
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   useEffect(() => {

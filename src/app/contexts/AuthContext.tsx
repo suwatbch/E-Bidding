@@ -346,6 +346,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Also save individual items for compatibility
       storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
 
+      // Dispatch custom event เพื่อแจ้งให้ components อื่นรู้ว่า localStorage เปลี่ยนแปลง
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('localStorageChange', {
+            detail: { key: 'auth_user', newValue: JSON.stringify(userData) },
+          })
+        );
+      }
+
       if (authToken) {
         storage.setItem(STORAGE_KEYS.TOKEN, authToken);
       }
