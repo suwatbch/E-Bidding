@@ -217,12 +217,6 @@ export class LanguageService {
     data: Partial<Language>
   ): Promise<{ success: boolean; message: string }> {
     try {
-      console.log('🔄 ส่งข้อมูลไป API:', {
-        languageCode,
-        data,
-        url: `${API_URL}/api/languages/${languageCode}`,
-      });
-
       const response = await axios.post(
         `${API_URL}/api/languages/${languageCode}`,
         data,
@@ -232,8 +226,6 @@ export class LanguageService {
           },
         }
       );
-
-      console.log('✅ ได้รับ response จาก API:', response.data);
 
       if (response.data.success) {
         // รีเฟรชข้อมูลหลังจากอัปเดต
@@ -282,6 +274,36 @@ export class LanguageService {
       return {
         success: false,
         message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ',
+      };
+    }
+  }
+
+  // ลบภาษา (soft delete)
+  async deleteLanguage(
+    languageCode: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/languages/${languageCode}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // รีเฟรชข้อมูลหลังจากลบ
+        await this.refreshLanguageData();
+      }
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error deleting language:', error);
+      console.error('❌ Error response:', error.response?.data);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบภาษา',
       };
     }
   }

@@ -24,7 +24,7 @@ export default function TransectionLanguage({
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useLocalStorage('languageTextPerPage', 5);
+  const [perPage, setPerPage] = useLocalStorage('languageTextPerPage', 10);
 
   // Loading and mounting states
   const [isLoading, setIsLoading] = useState(true);

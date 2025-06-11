@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Container from '@/app/components/ui/Container';
+import EmptyState from '@/app/components/ui/EmptyState';
 import { Language } from '@/app/model/language';
 import { languageService } from '@/app/services/languageService';
 import TransectionLanguage from '@/app/components/language/LanguageText';
@@ -16,11 +17,11 @@ interface FormData {
 
 export default function LanguagePage() {
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editLanguage, setEditLanguage] = useState<Language | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>({
     language_code: '',
     language_name: '',
@@ -32,7 +33,6 @@ export default function LanguagePage() {
   const loadLanguages = useCallback(async () => {
     try {
       setError(null);
-      setIsLoading(true);
 
       // โหลดข้อมูลจาก API ผ่าน languageService
       const data = await languageService.loadLanguagesFromAPI();
@@ -40,8 +40,6 @@ export default function LanguagePage() {
     } catch (error: any) {
       console.error('❌ Error loading languages:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลภาษา');
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -136,40 +134,35 @@ export default function LanguagePage() {
     if (!language) return;
 
     if (
-      !window.confirm(
-        `คุณต้องการลบภาษา "${language.language_name}" ใช่หรือไม่?`
-      )
+      !window.confirm(`คุณต้องการลบภาษา "${language.language_name}" หรือไม่?`)
     )
       return;
 
+    if (!confirm('คุณแน่ใจว่าต้องการลบภาษานี้?')) return;
+
     try {
+      setDeletingId(code);
       setError(null);
 
-      // เรียก API ลบภาษาโดยตรง
-      const response = await fetch(`/api/languages/${code}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
+      const result = await languageService.deleteLanguage(code);
 
       if (result.success) {
         // รีโหลดข้อมูลภาษา
         await loadLanguages();
-        alert(`ลบภาษาเรียบร้อยแล้ว`);
+        alert('ลบภาษาเรียบร้อยแล้ว');
       } else {
         setError(result.message || 'เกิดข้อผิดพลาดในการลบภาษา');
       }
     } catch (error: any) {
       console.error('❌ Error deleting language:', error);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    } finally {
+      setDeletingId(null);
     }
   };
 
   // ถ้ามี error ให้แสดง Error State
-  if (error && !isLoading) {
+  if (error) {
     return (
       <Container className="py-8">
         <div className="flex-1 py-8 flex flex-col items-center justify-center">
@@ -373,42 +366,12 @@ export default function LanguagePage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6}>
-                      <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredLanguages.length === 0 ? (
-                  <tr>
-                    <td colSpan={6}>
-                      <div className="text-center py-8">
-                        <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-                          <svg
-                            className="w-full h-full"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-                            />
-                          </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-1">
-                          ไม่พบข้อมูล
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          ไม่พบข้อมูลที่ตรงกับการค้นหา
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
+                {filteredLanguages.length === 0 ? (
+                  <EmptyState
+                    title="ไม่พบข้อมูล"
+                    description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
+                    colSpan={6}
+                  />
                 ) : (
                   filteredLanguages.map((language, index) => (
                     <tr
@@ -488,23 +451,44 @@ export default function LanguagePage() {
                           </button>
                           <button
                             onClick={() => handleDelete(language.language_code)}
-                            className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                            disabled={deletingId === language.language_code}
+                            className={`inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors ${
+                              deletingId === language.language_code
+                                ? 'opacity-50 cursor-not-allowed'
+                                : ''
+                            }`}
                             title="ลบ"
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                              />
-                            </svg>
+                            {deletingId === language.language_code ? (
+                              <svg
+                                className="w-4 h-4 animate-spin"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </td>
