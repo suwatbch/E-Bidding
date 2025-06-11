@@ -331,14 +331,26 @@ export class LanguageService {
     data: Partial<LanguageText>
   ): Promise<{ success: boolean; message: string }> {
     try {
-      // แปลงข้อมูลจาก LanguageText format เป็น API format
-      const apiData: any = {};
-      if (data.text_key !== undefined) apiData.keyname = data.text_key;
-      if (data.language_code !== undefined)
-        apiData.language_code = data.language_code;
-      if (data.text_value !== undefined) apiData.text = data.text_value;
+      // ค้นหาข้อมูลปัจจุบันเพื่อเอา keyname และ language_code
+      const existingText = dataLanguageText.find(
+        (item) => item.text_id === textId
+      );
 
-      const response = await axios.put(
+      if (!existingText) {
+        return {
+          success: false,
+          message: 'ไม่พบข้อมูลที่ต้องการอัพเดท',
+        };
+      }
+
+      // เตรียมข้อมูลที่จะส่งไป API (ต้องครบทั้ง 3 field)
+      const apiData = {
+        keyname: data.text_key || existingText.text_key,
+        language_code: data.language_code || existingText.language_code,
+        text: data.text_value || existingText.text_value,
+      };
+
+      const response = await axios.post(
         `${API_URL}/api/languages/texts/${textId}`,
         apiData,
         {
