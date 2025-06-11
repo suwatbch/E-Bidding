@@ -449,23 +449,43 @@ export default function TransectionLanguage({
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900 truncate">
-                          {key}
+                        <div className="relative">
+                          <div
+                            className="text-sm font-medium text-gray-900 truncate cursor-pointer"
+                            title={key}
+                          >
+                            {key}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">
-                          {texts.th || '-'}
+                        <div className="relative">
+                          <div
+                            className="text-sm text-gray-500 truncate cursor-pointer"
+                            title={texts.th || '-'}
+                          >
+                            {texts.th || '-'}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">
-                          {texts.en || '-'}
+                        <div className="relative">
+                          <div
+                            className="text-sm text-gray-500 truncate cursor-pointer"
+                            title={texts.en || '-'}
+                          >
+                            {texts.en || '-'}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500 truncate">
-                          {texts.zh || '-'}
+                        <div className="relative">
+                          <div
+                            className="text-sm text-gray-500 truncate cursor-pointer"
+                            title={texts.zh || '-'}
+                          >
+                            {texts.zh || '-'}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
