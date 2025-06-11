@@ -5,7 +5,6 @@ import { Company, companyService } from '@/app/services/companyService';
 import Container from '@/app/components/ui/Container';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
-import LoadingState from '@/app/components/ui/LoadingState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 interface FormData {
@@ -20,7 +19,6 @@ interface FormData {
 export default function CompanyPage() {
   // === ALL HOOKS MUST COME FIRST ===
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useLocalStorage('companyPerPage', 10);
@@ -29,6 +27,8 @@ export default function CompanyPage() {
   const [mounted, setMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -49,20 +49,16 @@ export default function CompanyPage() {
 
   // === FUNCTIONS ===
   const loadCompanies = useCallback(async () => {
-    setIsLoading(true);
     try {
       const result = await companyService.getAllCompanies();
       if (result.success) {
         setCompanies(result.data);
-        setIsLoading(false);
       } else {
         setError(result.message);
-        setIsLoading(false);
       }
     } catch (error: any) {
       console.error('❌ Error loading companies:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลบริษัท');
-      setIsLoading(false);
     }
   }, []);
 
@@ -100,7 +96,7 @@ export default function CompanyPage() {
 
   // === EARLY RETURN AFTER ALL HOOKS ===
   // ถ้ามี error ให้แสดง Error State
-  if (error && !isLoading) {
+  if (error) {
     return (
       <Container className="py-8">
         <div className="flex-1 py-8 flex flex-col items-center justify-center">
@@ -202,49 +198,47 @@ export default function CompanyPage() {
     }
 
     setSortConfig({ key: direction ? key : null, direction });
-    setCurrentPage(1); // Reset to first page when sorting
   };
 
   const getSortIcon = (columnKey: keyof Company) => {
-    if (sortConfig.key !== columnKey) {
-      return (
-        <svg
-          className="w-4 h-4 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-          />
-        </svg>
-      );
+    if (sortConfig.key === columnKey) {
+      if (sortConfig.direction === 'asc') {
+        return (
+          <svg
+            className="w-4 h-4 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
+        );
+      } else if (sortConfig.direction === 'desc') {
+        return (
+          <svg
+            className="w-4 h-4 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        );
+      }
     }
-
-    if (sortConfig.direction === 'asc') {
-      return (
-        <svg
-          className="w-4 h-4 text-blue-600"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M5 15l7-7 7 7"
-          />
-        </svg>
-      );
-    }
-
     return (
       <svg
-        className="w-4 h-4 text-blue-600"
+        className="w-4 h-4 text-gray-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -253,7 +247,7 @@ export default function CompanyPage() {
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="2"
-          d="M19 9l-7 7-7-7"
+          d="M8 9l4-4 4 4m0 6l-4 4-4-4"
         />
       </svg>
     );
@@ -280,7 +274,7 @@ export default function CompanyPage() {
       address: company.address,
       phone: company.phone,
       email: company.email,
-      status: company.status === 1,
+      status: !!company.status,
     });
     setIsModalOpen(true);
   };
@@ -288,7 +282,6 @@ export default function CompanyPage() {
   const closeModal = () => {
     setIsModalOpen(false);
     setEditCompany(null);
-    setError(null);
     setForm({
       name: '',
       tax_id: '',
@@ -309,7 +302,7 @@ export default function CompanyPage() {
     e.preventDefault();
 
     try {
-      setIsLoading(true);
+      setIsSubmitting(true);
       setError(null);
 
       // แปลง status จาก boolean เป็น number สำหรับ API
@@ -336,6 +329,7 @@ export default function CompanyPage() {
         if (result.success) {
           await loadCompanies();
           closeModal();
+          alert('อัปเดทข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
           console.error('❌ Failed to update company:', result.message);
           setError(result.message);
@@ -356,6 +350,7 @@ export default function CompanyPage() {
         if (result.success) {
           await loadCompanies();
           closeModal();
+          alert('เพิ่มข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
           console.error('❌ Failed to create company:', result.message);
           setError(result.message);
@@ -365,7 +360,7 @@ export default function CompanyPage() {
       console.error('❌ Error saving company:', error);
       setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -373,11 +368,12 @@ export default function CompanyPage() {
     if (!confirm('คุณแน่ใจว่าต้องการลบบริษัทนี้?')) return;
 
     try {
-      setIsLoading(true);
+      setDeletingId(id);
       const result = await companyService.deleteCompany(id);
 
       if (result.success) {
         await loadCompanies();
+        alert('ลบข้อมูลบริษัทเรียบร้อยแล้ว');
       } else {
         console.error('❌ Failed to delete company:', result.message);
         setError(result.message);
@@ -386,7 +382,7 @@ export default function CompanyPage() {
       console.error('❌ Error deleting company:', error);
       setError('เกิดข้อผิดพลาดในการลบบริษัท');
     } finally {
-      setIsLoading(false);
+      setDeletingId(null);
     }
   };
 
@@ -754,23 +750,46 @@ export default function CompanyPage() {
                                 handleDelete(company.id);
                               }
                             }}
-                            className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                            title="ลบ"
+                            disabled={deletingId === company.id}
+                            className={`inline-flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                              deletingId === company.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-red-600 hover:text-red-900 hover:bg-red-50'
+                            }`}
+                            title={
+                              deletingId === company.id ? 'กำลังลบ...' : 'ลบ'
+                            }
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                              />
-                            </svg>
+                            {deletingId === company.id ? (
+                              <svg
+                                className="w-4 h-4 animate-spin"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                            ) : (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                />
+                              </svg>
+                            )}
                           </button>
                         </div>
                       </td>
@@ -1134,13 +1153,22 @@ export default function CompanyPage() {
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
-                      rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
-                      focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                    disabled={isSubmitting}
+                    className={`group px-3 py-1.5 text-sm font-medium border border-gray-200 
+                      rounded-lg focus:outline-none focus:ring-2 
+                      focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                        isSubmitting
+                          ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                          : 'text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                      }`}
                   >
                     <div className="flex items-center gap-1.5">
                       <svg
-                        className="w-4 h-4 text-gray-500 group-hover:text-gray-600"
+                        className={`w-4 h-4 ${
+                          isSubmitting
+                            ? 'text-gray-400'
+                            : 'text-gray-500 group-hover:text-gray-600'
+                        }`}
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1158,13 +1186,34 @@ export default function CompanyPage() {
                   <button
                     type="submit"
                     form="companyForm"
-                    className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
-                      border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
+                    disabled={isSubmitting}
+                    className={`group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
-                      transition-all duration-200 shadow-sm hover:shadow-md"
+                      transition-all duration-200 shadow-md hover:shadow-md ${
+                        isSubmitting
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                      }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      {editCompany ? (
+                      {isSubmitting ? (
+                        <>
+                          <svg
+                            className="w-4 h-4 text-white animate-spin"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          {editCompany ? 'กำลังบันทึก...' : 'กำลังเพิ่ม...'}
+                        </>
+                      ) : editCompany ? (
                         <>
                           <svg
                             className="w-4 h-4 text-white"
