@@ -1,12 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Container from '@/app/components/ui/Container';
-import {
-  Language,
-  languages as initialLanguages,
-  LanguageCode,
-} from '@/app/model/language_Temp';
+import { Language } from '@/app/model/language';
+import { languageService } from '@/app/services/languageService';
 import TransectionLanguage from '@/app/components/language/LanguageText';
 
 interface FormData {
@@ -22,6 +19,8 @@ export default function LanguagePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editLanguage, setEditLanguage] = useState<Language | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState<FormData>({
     language_code: '',
     language_name: '',
@@ -30,21 +29,25 @@ export default function LanguagePage() {
     status: 1,
   });
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // จำลองการโหลดข้อมูลจริง
-        setLanguages(initialLanguages);
-      } catch (error) {
-        console.error('Error loading languages:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const loadLanguages = useCallback(async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
 
-    loadData();
+      // โหลดข้อมูลจาก API ผ่าน languageService
+      const data = await languageService.loadLanguagesFromAPI();
+      setLanguages(data);
+    } catch (error: any) {
+      console.error('❌ Error loading languages:', error);
+      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลภาษา');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadLanguages();
+  }, [loadLanguages]);
 
   // Remove search filtering
   const filteredLanguages = languages;
@@ -71,6 +74,7 @@ export default function LanguagePage() {
       is_default: false,
       status: 1,
     });
+    setError(null);
   };
 
   const handleChange = (
@@ -91,52 +95,123 @@ export default function LanguagePage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate language code
-    if (!['th', 'en', 'zh'].includes(form.language_code)) {
-      alert('รหัสภาษาไม่ถูกต้อง กรุณาระบุ th, en หรือ zh');
-      return;
-    }
+    if (!editLanguage) return;
 
-    const languageData: Language = {
-      ...form,
-      language_code: form.language_code as LanguageCode,
-    };
+    try {
+      setIsSubmitting(true);
+      setError(null);
 
-    if (editLanguage) {
-      // If setting this language as default, unset others
-      if (languageData.is_default) {
-        setLanguages(
-          languages.map((l) => ({
-            ...l,
-            is_default:
-              l.language_code === editLanguage.language_code ? true : false,
-          }))
-        );
-      } else {
-        setLanguages(
-          languages.map((l) =>
-            l.language_code === editLanguage.language_code ? languageData : l
-          )
-        );
-      }
-    }
-    closeModal();
-  };
-
-  const handleStatusChange = (code: string) => {
-    if (window.confirm('คุณต้องการเปลี่ยนสถานะภาษานี้ใช่หรือไม่?')) {
-      setLanguages(
-        languages.map((language) =>
-          language.language_code === code
-            ? { ...language, status: language.status === 1 ? 0 : 1 }
-            : language
-        )
+      // ใช้ languageService แทน direct API call
+      const result = await languageService.updateLanguage(
+        editLanguage.language_code,
+        {
+          language_name: form.language_name,
+          flag: form.flag,
+          is_default: form.is_default,
+          status: form.status,
+        }
       );
+
+      if (result.success) {
+        // รีโหลดข้อมูลภาษา
+        await loadLanguages();
+        closeModal();
+        alert('อัปเดตข้อมูลภาษาเรียบร้อยแล้ว');
+      } else {
+        setError(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+      }
+    } catch (error: any) {
+      console.error('❌ Error updating language:', error);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleDelete = async (code: string) => {
+    const language = languages.find((l) => l.language_code === code);
+    if (!language) return;
+
+    if (
+      !window.confirm(
+        `คุณต้องการลบภาษา "${language.language_name}" ใช่หรือไม่?`
+      )
+    )
+      return;
+
+    try {
+      setError(null);
+
+      // เรียก API ลบภาษาโดยตรง
+      const response = await fetch(`/api/languages/${code}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // รีโหลดข้อมูลภาษา
+        await loadLanguages();
+        alert(`ลบภาษาเรียบร้อยแล้ว`);
+      } else {
+        setError(result.message || 'เกิดข้อผิดพลาดในการลบภาษา');
+      }
+    } catch (error: any) {
+      console.error('❌ Error deleting language:', error);
+      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+    }
+  };
+
+  // ถ้ามี error ให้แสดง Error State
+  if (error && !isLoading) {
+    return (
+      <Container className="py-8">
+        <div className="flex-1 py-8 flex flex-col items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+            <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              เกิดข้อผิดพลาด
+            </h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-y-3">
+              <button
+                onClick={loadLanguages}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ลองใหม่
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                รีเฟรชหน้า
+              </button>
+            </div>
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container className="py-8">
@@ -412,15 +487,7 @@ export default function LanguagePage() {
                             </svg>
                           </button>
                           <button
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  `คุณต้องการลบภาษา "${language.language_name}" หรือไม่?`
-                                )
-                              ) {
-                                handleStatusChange(language.language_code);
-                              }
-                            }}
+                            onClick={() => handleDelete(language.language_code)}
                             className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
                             title="ลบ"
                           >
@@ -461,12 +528,59 @@ export default function LanguagePage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden w-full max-w-md relative">
+            {/* Error Toast */}
+            {error && (
+              <div className="fixed top-4 right-4 z-50 max-w-md bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-red-800">
+                      เกิดข้อผิดพลาด
+                    </h3>
+                    <p className="mt-1 text-sm text-red-700">{error}</p>
+                  </div>
+                  <div className="ml-4 flex-shrink-0 flex">
+                    <button
+                      onClick={() => setError(null)}
+                      className="bg-red-50 rounded-md inline-flex text-red-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      <span className="sr-only">ปิด</span>
+                      <svg
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Modal Header */}
             <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50 relative">
               <button
                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
                   hover:bg-gray-100/80 rounded-lg p-1"
                 onClick={closeModal}
+                disabled={isSubmitting}
               >
                 <svg
                   className="w-4 h-4"
@@ -543,7 +657,7 @@ export default function LanguagePage() {
                     value={form.language_code}
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
-                      focus:ring-blue-500 focus:border-transparent"
+                      focus:ring-blue-500 focus:border-transparent bg-gray-50"
                     placeholder="th"
                     required
                     disabled
@@ -577,6 +691,7 @@ export default function LanguagePage() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                       focus:ring-blue-500 focus:border-transparent"
                     placeholder="ภาษาไทย"
+                    disabled={isSubmitting}
                     required
                   />
                 </div>
@@ -608,6 +723,7 @@ export default function LanguagePage() {
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                       focus:ring-blue-500 focus:border-transparent"
                     placeholder="🇹🇭"
+                    disabled={isSubmitting}
                   />
                 </div>
 
@@ -617,6 +733,7 @@ export default function LanguagePage() {
                     name="is_default"
                     checked={form.is_default}
                     onChange={handleChange}
+                    disabled={isSubmitting}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
@@ -643,6 +760,7 @@ export default function LanguagePage() {
                     name="status"
                     checked={form.status === 1}
                     onChange={handleChange}
+                    disabled={isSubmitting}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
@@ -671,13 +789,22 @@ export default function LanguagePage() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="group px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 
-                    rounded-lg hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 
-                    focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                  disabled={isSubmitting}
+                  className={`group px-3 py-1.5 text-sm font-medium border border-gray-200 
+                    rounded-lg focus:outline-none focus:ring-2 
+                    focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                      isSubmitting
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                    }`}
                 >
                   <div className="flex items-center gap-1.5">
                     <svg
-                      className="w-4 h-4 text-gray-500 group-hover:text-gray-600"
+                      className={`w-4 h-4 ${
+                        isSubmitting
+                          ? 'text-gray-400'
+                          : 'text-gray-500 group-hover:text-gray-600'
+                      }`}
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -695,26 +822,51 @@ export default function LanguagePage() {
                 <button
                   type="submit"
                   form="languageForm"
-                  className="group px-3 py-1.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-500 
-                    border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-600 
+                  disabled={isSubmitting}
+                  className={`group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
-                    transition-all duration-200 shadow-sm hover:shadow-md"
+                    transition-all duration-200 shadow-sm hover:shadow-md ${
+                      isSubmitting
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                    }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    บันทึกการแก้ไข
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        กำลังบันทึก...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        บันทึกการแก้ไข
+                      </>
+                    )}
                   </div>
                 </button>
               </div>

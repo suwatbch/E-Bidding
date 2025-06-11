@@ -210,6 +210,81 @@ export class LanguageService {
     this.lastUpdateTime = 0; // Reset timer
     await this.refreshLanguageData();
   }
+
+  // อัปเดตข้อมูลภาษา
+  async updateLanguage(
+    languageCode: string,
+    data: Partial<Language>
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      console.log('🔄 ส่งข้อมูลไป API:', {
+        languageCode,
+        data,
+        url: `${API_URL}/api/languages/${languageCode}`,
+      });
+
+      const response = await axios.post(
+        `${API_URL}/api/languages/${languageCode}`,
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('✅ ได้รับ response จาก API:', response.data);
+
+      if (response.data.success) {
+        // รีเฟรชข้อมูลหลังจากอัปเดต
+        await this.refreshLanguageData();
+      }
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error updating language:', error);
+      console.error('❌ Error response:', error.response?.data);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
+      };
+    }
+  }
+
+  // เปลี่ยนสถานะภาษา (เปิด/ปิดใช้งาน)
+  async toggleLanguageStatus(
+    languageCode: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // หาข้อมูลภาษาปัจจุบัน
+      const currentLanguage = dataLanguage.find(
+        (lang) => lang.language_code === languageCode
+      );
+      if (!currentLanguage) {
+        return {
+          success: false,
+          message: 'ไม่พบข้อมูลภาษาที่ต้องการ',
+        };
+      }
+
+      // สลับสถานะ
+      const newStatus = currentLanguage.status === 1 ? 0 : 1;
+
+      return await this.updateLanguage(languageCode, {
+        language_name: currentLanguage.language_name,
+        flag: currentLanguage.flag,
+        is_default: currentLanguage.is_default,
+        status: newStatus,
+      });
+    } catch (error: any) {
+      console.error('Error toggling language status:', error);
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ',
+      };
+    }
+  }
 }
 
 // Export singleton instance

@@ -10,7 +10,6 @@ async function getAllLanguages() {
       is_default,
       status
     FROM language 
-    WHERE status = 1 
     ORDER BY is_default DESC, language_name ASC
   `;
 
@@ -62,7 +61,7 @@ async function createLanguage(languageData) {
 
 // อัปเดตข้อมูลภาษา
 async function updateLanguage(languageCode, languageData) {
-  const { language_name, flag, is_default } = languageData;
+  const { language_name, flag, is_default, status } = languageData;
 
   // ถ้าเป็นภาษาเริ่มต้น ให้อัปเดตภาษาอื่นให้ไม่เป็นเริ่มต้น
   if (is_default) {
@@ -71,7 +70,7 @@ async function updateLanguage(languageCode, languageData) {
 
   const query = `
     UPDATE language 
-    SET language_name = ?, flag = ?, is_default = ?
+    SET language_name = ?, flag = ?, is_default = ?, status = ?
     WHERE language_code = ?
   `;
 
@@ -79,6 +78,7 @@ async function updateLanguage(languageCode, languageData) {
     language_name,
     flag,
     is_default,
+    status !== undefined ? status : 1, // ค่าเริ่มต้นเป็น 1 ถ้าไม่ส่ง status มา
     languageCode,
   ]);
 }
