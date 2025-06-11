@@ -151,7 +151,6 @@ export default function LoginPage() {
         }
 
         login(userData, response.data.token, formData.rememberMe);
-        console.log('🔍 User Data:', userData);
 
         setTimeout(() => {
           router.push('/auctions');

@@ -128,8 +128,6 @@ const getUserFromJWT = (token: string): User | null => {
       decoded.username ||
       `${decoded.firstName || ''} ${decoded.lastName || ''}`.trim();
 
-    console.log('🔍 decoded.image', decoded.image);
-
     return {
       user_id: decoded.user_id || decoded.id,
       username: decoded.username || decoded.sub,
@@ -286,9 +284,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // ถ้าไม่มี cookie ให้ลองอ่านจาก storage
-      const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true';
-      const storage = rememberMe ? localStorage : sessionStorage;
+      // ดึงข้อมูลจาก localStorage เท่านั้น
+      const storage = localStorage;
       const sessionData = storage.getItem(STORAGE_KEYS.SESSION);
 
       if (sessionData) {
@@ -340,14 +337,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Store remember preference
       localStorage.setItem(STORAGE_KEYS.REMEMBER, rememberMe.toString());
 
-      // Choose storage based on remember me
-      const storage = rememberMe ? localStorage : sessionStorage;
+      // ใช้แค่ localStorage เท่านั้น
+      const storage = localStorage;
 
       // Save session
       storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
 
       // Also save individual items for compatibility
       storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+
       if (authToken) {
         storage.setItem(STORAGE_KEYS.TOKEN, authToken);
       }
@@ -359,11 +357,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Clear session from storage
   const clearSession = () => {
     try {
-      // Clear from both storages
-      [localStorage, sessionStorage].forEach((storage) => {
-        Object.values(STORAGE_KEYS).forEach((key) => {
-          storage.removeItem(key);
-        });
+      // ลบข้อมูลจาก localStorage เท่านั้น
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        localStorage.removeItem(key);
       });
 
       // Clear legacy keys
@@ -380,25 +376,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(userData);
     setToken(authToken || null);
 
-    // บันทึกข้อมูลใน storage ทันที
-    const tokenExpiresAt = getFallbackTokenExpiresAt();
+    // ดึงวันหมดอายุจาก token หรือใช้ fallback
+    const tokenExpiresAt = authToken
+      ? getTokenExpirationFromJWT(authToken) || getFallbackTokenExpiresAt()
+      : getFallbackTokenExpiresAt();
+
     setTokenExpiresAt(tokenExpiresAt);
+
+    // บันทึกข้อมูลลง localStorage ทันที
     saveSession(userData, authToken, rememberMe);
 
-    // ตั้ง cookie สำหรับ middleware (ฝั่ง server)
+    // ตั้ง cookie สำหรับ middleware (ฝั่ง server) - ใช้วันหมดอายุจาก token
     if (authToken) {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 1); // 1 วัน
-
-      document.cookie = `auth_token=${authToken}; path=/; expires=${expires.toUTCString()}; SameSite=Strict`;
+      document.cookie = `auth_token=${authToken}; path=/; expires=${tokenExpiresAt.toUTCString()}; SameSite=Strict`;
     }
 
     // ลอง sync จาก cookie หลังจากนั้น (กรณี backend set cookie แล้ว)
     setTimeout(() => {
       const cookieToken = getAuthTokenFromCookie();
-      if (syncFromCookie()) {
-        // Cookie sync successful
-      }
+      syncFromCookie();
     }, 500); // เพิ่มเวลารอให้ cookie ถูก set
   };
 
@@ -420,7 +416,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
 
-      // Update session with new user data
+      // Update session with new user data - ใช้ localStorage เท่านั้น
       const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true';
       saveSession(updatedUser, token || undefined, rememberMe);
     }
@@ -520,7 +516,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setTokenExpiresAt(cookieExpiration);
         }, 0);
 
-        // อัพเดต storage ด้วย
+        // อัพเดต localStorage เท่านั้น
         const session: AuthSession = {
           user: userFromJWT,
           token: cookieToken,
@@ -528,7 +524,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           remember_me: localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true',
         };
 
-        const storage = session.remember_me ? localStorage : sessionStorage;
+        const storage = localStorage;
         storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
         storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userFromJWT));
         storage.setItem(STORAGE_KEYS.TOKEN, cookieToken);

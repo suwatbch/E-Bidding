@@ -75,6 +75,13 @@ export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialForm);
 
+  // เพิ่ม state สำหรับเก็บข้อมูลจาก localStorage
+  const [localUserData, setLocalUserData] = useState<{
+    fullname?: string;
+    email?: string;
+    image?: string;
+  }>({});
+
   // สร้าง ref สำหรับเมนูโปรไฟล์, เมนูข้อมูล และเมนูมือถือ
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const dataDropdownRef = useRef<HTMLDivElement>(null);
@@ -85,6 +92,49 @@ export default function Navbar() {
   const { currentLang, languages, translate, changeLanguage } = useLanguage();
   const { updateProfile, updateUser } = useUser();
   const { logout, user, isLoading: isAuthLoading } = useAuth();
+
+  // เพิ่ม useEffect สำหรับโหลดข้อมูลจาก localStorage
+  useEffect(() => {
+    const loadUserDataFromStorage = () => {
+      try {
+        // ดึงข้อมูลจาก localStorage เท่านั้น
+        let userData = {
+          fullname: '',
+          email: '',
+          image: '',
+        };
+
+        // 1. ดึงข้อมูลจาก localStorage (auth_user) - แหล่งหลัก
+        const authUser = localStorage.getItem('auth_user');
+        if (authUser) {
+          const authUserData = JSON.parse(authUser);
+          userData = {
+            fullname: authUserData.fullname || '',
+            email: authUserData.email || '',
+            image: authUserData.image || '',
+          };
+        }
+
+        setLocalUserData(userData);
+      } catch (error) {
+        console.error('Error loading user data from storage:', error);
+        setLocalUserData({});
+      }
+    };
+
+    // โหลดข้อมูลครั้งแรก
+    loadUserDataFromStorage();
+
+    // ตั้ง interval เพื่อเช็คการเปลี่ยนแปลงทุก 1 วินาที
+    const checkInterval = setInterval(() => {
+      const currentAuthUser = localStorage.getItem('auth_user');
+      if (currentAuthUser) {
+        loadUserDataFromStorage();
+      }
+    }, 1000);
+
+    return () => clearInterval(checkInterval);
+  }, []);
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -184,7 +234,6 @@ export default function Navbar() {
   const handleEditProfile = () => {
     setIsProfileOpen(false);
     if (user) {
-      console.log('Profile data:', user);
       const newFormData = {
         username: user.username,
         password: '',
@@ -200,7 +249,6 @@ export default function Navbar() {
         is_profile: true,
         image: user.image || undefined,
       };
-      console.log('Form data being set:', newFormData);
       setFormData(newFormData);
       setIsModalOpen(true);
     }
@@ -525,10 +573,10 @@ export default function Navbar() {
                     className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 text-white hover:bg-white/10"
                   >
                     <div className="transform group-hover:scale-110 transition duration-300">
-                      {user?.image ? (
+                      {localUserData.image ? (
                         <img
-                          src={user.image}
-                          alt={user.fullname || 'User'}
+                          src={localUserData.image}
+                          alt={localUserData.fullname || 'User'}
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
@@ -559,15 +607,15 @@ export default function Navbar() {
                         <>
                           <span
                             className="text-left text-sm text-white truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={user?.fullname || 'ไม่ระบุชื่อ'}
+                            title={localUserData.fullname || 'ไม่ระบุชื่อ'}
                           >
-                            {user?.fullname || 'ไม่ระบุชื่อ'}
+                            {localUserData.fullname || 'ไม่ระบุชื่อ'}
                           </span>
                           <span
                             className="text-left text-xs text-white/80 truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={user?.email || 'ไม่ระบุอีเมล'}
+                            title={localUserData.email || 'ไม่ระบุอีเมล'}
                           >
-                            {user?.email || 'ไม่ระบุอีเมล'}
+                            {localUserData.email || 'ไม่ระบุอีเมล'}
                           </span>
                         </>
                       )}

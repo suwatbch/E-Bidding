@@ -162,6 +162,7 @@ async function loginUser(username, password) {
       email: user.email,
       phone: user.phone,
       language_code: user.language_code,
+      image: user.image, // เพิ่ม image field
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 ชั่วโมง
     };
