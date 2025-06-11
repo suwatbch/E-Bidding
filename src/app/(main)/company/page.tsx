@@ -293,9 +293,24 @@ export default function CompanyPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value =
-      e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm({ ...form, [e.target.name]: value });
+    const { name, value, type, checked } = e.target;
+
+    // ถ้าเป็นช่องโทรศัพท์ ให้ filter เฉพาะตัวเลขและ -
+    if (name === 'phone') {
+      const filteredValue = value.replace(/[^0-9-]/g, '');
+      setForm({ ...form, [name]: filteredValue });
+      return;
+    }
+
+    // ถ้าเป็นช่อง email ให้ตรวจสอบรูปแบบ
+    if (name === 'email') {
+      // อนุญาตให้พิมพ์ได้ แต่จะเช็ครูปแบบตอน submit
+      setForm({ ...form, [name]: value.toLowerCase().trim() });
+      return;
+    }
+
+    const newValue = type === 'checkbox' ? checked : value;
+    setForm({ ...form, [name]: newValue });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -304,6 +319,13 @@ export default function CompanyPage() {
     try {
       setIsSubmitting(true);
       setError(null);
+
+      // ตรวจสอบรูปแบบอีเมล
+      const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(form.email)) {
+        setError('กรุณากรอกอีเมลในรูปแบบที่ถูกต้อง เช่น user@example.com');
+        return;
+      }
 
       // แปลง status จาก boolean เป็น number สำหรับ API
       const formData = {
@@ -1085,6 +1107,10 @@ export default function CompanyPage() {
                       name="phone"
                       value={form.phone}
                       onChange={handleChange}
+                      pattern="[0-9\-]+"
+                      inputMode="numeric"
+                      placeholder="02-123-4567 หรือ 0812345678"
+                      title="กรุณากรอกเฉพาะตัวเลขและเครื่องหมาย - เท่านั้น"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                         focus:ring-blue-500 focus:border-transparent"
                       required
@@ -1114,6 +1140,9 @@ export default function CompanyPage() {
                       name="email"
                       value={form.email}
                       onChange={handleChange}
+                      pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                      placeholder="example@company.com"
+                      title="กรุณากรอกอีเมลในรูปแบบที่ถูกต้อง เช่น user@example.com"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                         focus:ring-blue-500 focus:border-transparent"
                       required
