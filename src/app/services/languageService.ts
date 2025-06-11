@@ -101,7 +101,16 @@ export class LanguageService {
         },
       });
 
-      return response.data.data || [];
+      // แปลงข้อมูลจาก API format เป็น LanguageText format
+      const apiData = response.data.data || [];
+      const languageTexts: LanguageText[] = apiData.map((item: any) => ({
+        text_id: item.id,
+        text_key: item.keyname,
+        language_code: item.language_code,
+        text_value: item.text,
+      }));
+
+      return languageTexts;
     } catch (error) {
       console.error('Error loading language texts from API:', error);
       throw error;
@@ -293,19 +302,176 @@ export class LanguageService {
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากลบ
+        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
         await this.refreshLanguageData();
+        return {
+          success: true,
+          message: 'ลบภาษาเรียบร้อยแล้ว',
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'เกิดข้อผิดพลาดในการลบภาษา',
+        };
       }
-
-      return response.data;
     } catch (error: any) {
-      console.error('❌ Error deleting language:', error);
-      console.error('❌ Error response:', error.response?.data);
+      console.error('Error deleting language:', error);
       return {
         success: false,
-        message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบภาษา',
+        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
       };
     }
+  }
+
+  // ===== Language Text Functions =====
+
+  // อัพเดทข้อความภาษา
+  async updateLanguageText(
+    textId: number,
+    data: Partial<LanguageText>
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // แปลงข้อมูลจาก LanguageText format เป็น API format
+      const apiData: any = {};
+      if (data.text_key !== undefined) apiData.keyname = data.text_key;
+      if (data.language_code !== undefined)
+        apiData.language_code = data.language_code;
+      if (data.text_value !== undefined) apiData.text = data.text_value;
+
+      const response = await axios.put(
+        `${API_URL}/api/languages/texts/${textId}`,
+        apiData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // รีเฟรชข้อมูลหลังจากอัพเดทสำเร็จ
+        await this.refreshLanguageData();
+        return {
+          success: true,
+          message: 'อัพเดทข้อความเรียบร้อยแล้ว',
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'เกิดข้อผิดพลาดในการอัพเดทข้อความ',
+        };
+      }
+    } catch (error: any) {
+      console.error('Error updating language text:', error);
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+      };
+    }
+  }
+
+  // ลบข้อความภาษา
+  async deleteLanguageText(
+    textId: number
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await axios.delete(
+        `${API_URL}/api/languages/texts/${textId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
+        await this.refreshLanguageData();
+        return {
+          success: true,
+          message: 'ลบข้อความเรียบร้อยแล้ว',
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'เกิดข้อผิดพลาดในการลบข้อความ',
+        };
+      }
+    } catch (error: any) {
+      console.error('Error deleting language text:', error);
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+      };
+    }
+  }
+
+  // เพิ่มข้อความภาษาใหม่
+  async createLanguageText(
+    data: Omit<LanguageText, 'text_id'>
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      // แปลงข้อมูลจาก LanguageText format เป็น API format
+      const apiData = {
+        keyname: data.text_key,
+        language_code: data.language_code,
+        text: data.text_value,
+      };
+
+      const response = await axios.post(
+        `${API_URL}/api/languages/texts`,
+        apiData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.data.success) {
+        // รีเฟรชข้อมูลหลังจากเพิ่มสำเร็จ
+        await this.refreshLanguageData();
+        return {
+          success: true,
+          message: 'เพิ่มข้อความเรียบร้อยแล้ว',
+        };
+      } else {
+        return {
+          success: false,
+          message: response.data.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อความ',
+        };
+      }
+    } catch (error: any) {
+      console.error('Error creating language text:', error);
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+      };
+    }
+  }
+
+  // จัดกลุ่มข้อความตาม key สำหรับแสดงผลในตาราง
+  getGroupedTexts(): Record<string, Record<string, string>> {
+    const grouped: Record<string, Record<string, string>> = {};
+
+    dataLanguageText.forEach((item) => {
+      if (!grouped[item.text_key]) {
+        grouped[item.text_key] = {};
+      }
+      grouped[item.text_key][item.language_code] = item.text_value;
+    });
+
+    return grouped;
+  }
+
+  // ค้นหาข้อความตาม text_key และ language_code
+  findLanguageText(
+    textKey: string,
+    languageCode: string
+  ): LanguageText | undefined {
+    return dataLanguageText.find(
+      (item) => item.text_key === textKey && item.language_code === languageCode
+    );
   }
 }
 
