@@ -23,7 +23,7 @@ export default function CompanyPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useLocalStorage('companyPerPage', 10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -653,9 +653,7 @@ export default function CompanyPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {isLoading ? (
-                  <LoadingState colSpan={7} />
-                ) : filteredCompanies.length === 0 ? (
+                {filteredCompanies.length === 0 ? (
                   <EmptyState
                     title="ไม่พบข้อมูล"
                     description="ไม่พบข้อมูลที่ตรงกับการค้นหา"

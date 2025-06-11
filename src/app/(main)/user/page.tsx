@@ -49,7 +49,7 @@ export default function UserPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [perPage, setPerPage] = useLocalStorage('userPerPage', 5);
+  const [perPage, setPerPage] = useLocalStorage('userPerPage', 10);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{
     key: keyof User;

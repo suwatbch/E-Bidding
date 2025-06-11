@@ -11,13 +11,12 @@ const socket = io(SOCKET_URL, {
   timeout: 10000, // timeout 10 วินาที
 });
 
-// เพิ่ม event listeners สำหรับ debug
 socket.on('connect', () => {
-  console.log('🟢 Socket connected');
+  // console.log('🟢 Socket connected');
 });
 
 socket.on('disconnect', () => {
-  console.log('🔴 Socket disconnected');
+  // console.log('🔴 Socket disconnected');
 });
 
 socket.on('connect_error', (error: any) => {
