@@ -1,72 +1,43 @@
 import axios, { AxiosResponse } from 'axios';
 
-// Base API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-// ฟังก์ชันสำหรับอ่าน token จาก cookie และ localStorage
-const getAuthTokenFromStorage = (): string | null => {
-  if (typeof window === 'undefined') return null;
-
-  // 1. ลองอ่านจาก cookie ก่อน (สำหรับ middleware compatibility)
-  const getCookieToken = (): string | null => {
-    const allCookies = document.cookie.split('; ');
-    const authTokenCookie = allCookies.find((row) =>
-      row.startsWith('auth_token=')
-    );
-    return authTokenCookie?.split('=')[1] || null;
-  };
-
-  let token = getCookieToken();
-  if (token) return token;
-
-  // 2. ถ้าไม่มี cookie ลองหาใน localStorage (สำหรับ remember me)
-  token = localStorage.getItem('auth_token');
-  if (token) return token;
-
-  // 3. ถ้าไม่มีใน localStorage ลองหาใน sessionStorage
-  token = sessionStorage.getItem('auth_token');
-  if (token) return token;
-
-  // 4. ถ้ายังไม่มี ลองหาใน session object
-  const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
-  const storage = rememberMe ? localStorage : sessionStorage;
-  const sessionData = storage.getItem('auth_session');
-
-  if (sessionData) {
-    try {
-      const session = JSON.parse(sessionData);
-      token = session.token;
-    } catch (error) {
-      console.error('Error parsing session data:', error);
-    }
-  }
-
-  return token || null;
-};
+// Get base URL from environment or use default
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
 // Create axios instance with base configuration
 const companyApi = axios.create({
   baseURL: `${API_URL}/api/company`,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 15000, // เพิ่มเป็น 15 วินาที
-  withCredentials: true,
 });
 
-// Add request interceptor to include Bearer token
+// Helper function to get auth token from localStorage
+const getAuthTokenFromStorage = (): string | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const token = localStorage.getItem('auth_token');
+    return token;
+  } catch (error) {
+    console.error('Error getting auth token from localStorage:', error);
+    return null;
+  }
+};
+
+// Add request interceptor to include auth token
 companyApi.interceptors.request.use(
   (config) => {
     const token = getAuthTokenFromStorage();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn(`⚠️ No auth token found - API call may fail`);
     }
     return config;
   },
   (error) => {
-    console.error('❌ Request interceptor error:', error);
+    console.error('🔥 Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -127,7 +98,7 @@ export interface CreateCompanyRequest {
 }
 
 export interface UpdateCompanyRequest {
-  name?: string;
+  name: string;
   tax_id?: string;
   address?: string;
   email?: string;
@@ -142,49 +113,36 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
-// Error response type
-export interface ErrorResponse {
-  success: false;
-  message: string;
-  error?: string;
-}
+// Helper function to handle API errors consistently
+const handleApiError = (error: any, action: string): CompanyResponse => {
+  console.error(`❌ Error ${action}:`, error);
 
-// Utility function for better error handling
-const handleApiError = (error: any, operation: string): any => {
-  const isNetworkError = !error.response;
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
+  let userMessage = `เกิดข้อผิดพลาดในการ${action}`;
 
-  let message = `เกิดข้อผิดพลาดในการ${operation}`;
-
-  if (isNetworkError) {
-    if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
-      message =
-        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ API ได้ กรุณาตรวจสอบว่าเซิร์ฟเวอร์ทำงานอยู่หรือไม่';
-    } else {
-      message =
-        'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต';
-    }
+  if (status === 400) {
+    userMessage = serverMessage || 'ข้อมูลไม่ถูกต้อง';
   } else if (status === 401) {
-    message = 'กรุณาเข้าสู่ระบบใหม่';
+    userMessage = 'กรุณาเข้าสู่ระบบใหม่';
   } else if (status === 403) {
-    message = 'ไม่มีสิทธิ์เข้าถึงข้อมูลนี้';
+    userMessage = 'คุณไม่มีสิทธิ์ในการดำเนินการนี้';
+  } else if (status === 404) {
+    userMessage = 'ไม่พบข้อมูลที่ต้องการ';
   } else if (status >= 500) {
-    message = 'เซิร์ฟเวอร์มีปัญหา กรุณาลองใหม่ในภายหลัง';
-  } else if (serverMessage) {
-    message = serverMessage;
+    userMessage = 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์';
+  } else if (error.code === 'ECONNABORTED') {
+    userMessage = 'การเชื่อมต่อใช้เวลาเกินกำหนด';
+  } else if (error.code === 'NETWORK_ERROR') {
+    userMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
   }
 
-  console.error(`❌ ${operation} failed:`, {
-    status,
-    message: serverMessage,
-    isNetworkError,
-    errorCode: error.code,
-    url: error.config?.url,
-    method: error.config?.method,
-  });
-
-  return { success: false, message, data: [], total: 0 };
+  return {
+    success: false,
+    message: userMessage,
+    data: [],
+    total: 0,
+  };
 };
 
 // Company Service
@@ -321,31 +279,6 @@ export const companyService = {
         message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบบริษัท',
       };
     }
-  },
-
-  /**
-   * Utility: ตรวจสอบการเชื่อมต่อ API
-   */
-  healthCheck: async (): Promise<{ success: boolean; message: string }> => {
-    try {
-      const response = await axios.get(`${API_URL}/api/health`, {
-        timeout: 5000,
-      });
-      return { success: true, message: 'API connection is healthy' };
-    } catch (error) {
-      return { success: false, message: 'API connection failed' };
-    }
-  },
-
-  /**
-   * Utility: ตรวจสอบ Authentication Status
-   */
-  checkAuth: (): { hasToken: boolean; token: string | null } => {
-    const token = getAuthTokenFromStorage();
-    return {
-      hasToken: !!token,
-      token: token,
-    };
   },
 };
 

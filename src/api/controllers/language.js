@@ -3,16 +3,12 @@ const router = express.Router();
 const {
   getAllLanguages,
   getLanguageByCode,
-  createLanguage,
   updateLanguage,
   deleteLanguage,
   getAllLanguageTexts,
-  getLanguageTextsByKey,
-  getLanguageTextsByLanguage,
   createLanguageText,
   updateLanguageText,
   deleteLanguageText,
-  getGroupedLanguageTexts,
 } = require('../helper/languageHelper');
 
 // Routes for Languages
@@ -80,48 +76,6 @@ router.get('/:languageCode', async (req, res) => {
     }
   } catch (error) {
     console.error('Error in getLanguage:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
-      error: error.message,
-    });
-  }
-});
-
-// POST /api/languages - เพิ่มภาษาใหม่
-router.post('/', async (req, res) => {
-  try {
-    const { language_code, language_name, flag, is_default } = req.body;
-
-    if (!language_code || !language_name) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณาระบุรหัสภาษาและชื่อภาษา',
-      });
-    }
-
-    const result = await createLanguage({
-      language_code,
-      language_name,
-      flag,
-      is_default: is_default || false,
-    });
-
-    if (result.success) {
-      res.status(201).json({
-        success: true,
-        message: 'เพิ่มภาษาใหม่สำเร็จ',
-        data: { id: result.insertId },
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการเพิ่มภาษา',
-        error: result.error,
-      });
-    }
-  } catch (error) {
-    console.error('Error in addLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -238,108 +192,6 @@ router.get('/texts/all', async (req, res) => {
     }
   } catch (error) {
     console.error('Error in getLanguageTexts:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
-      error: error.message,
-    });
-  }
-});
-
-// GET /api/languages/texts/grouped - ดึงข้อความแปลในรูปแบบ grouped
-router.get('/texts/grouped', async (req, res) => {
-  try {
-    const result = await getGroupedLanguageTexts();
-
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        message: 'ดึงข้อมูลข้อความแปลสำเร็จ',
-        data: result.data,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข้อความแปล',
-        error: result.error,
-      });
-    }
-  } catch (error) {
-    console.error('Error in getGroupedTexts:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
-      error: error.message,
-    });
-  }
-});
-
-// GET /api/languages/texts/key/:keyname - ดึงข้อความแปลตาม keyname
-router.get('/texts/key/:keyname', async (req, res) => {
-  try {
-    const { keyname } = req.params;
-
-    if (!keyname) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณาระบุ keyname',
-      });
-    }
-
-    const result = await getLanguageTextsByKey(keyname);
-
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        message: 'ดึงข้อมูลข้อความแปลสำเร็จ',
-        data: result.data,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข้อความแปล',
-        error: result.error,
-      });
-    }
-  } catch (error) {
-    console.error('Error in getLanguageTextByKey:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
-      error: error.message,
-    });
-  }
-});
-
-// GET /api/languages/texts/lang/:languageCode - ดึงข้อความแปลตามภาษา
-router.get('/texts/lang/:languageCode', async (req, res) => {
-  try {
-    const { languageCode } = req.params;
-
-    if (!languageCode) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณาระบุรหัสภาษา',
-      });
-    }
-
-    const result = await getLanguageTextsByLanguage(languageCode);
-
-    if (result.success) {
-      res.status(200).json({
-        success: true,
-        message: 'ดึงข้อมูลข้อความแปลสำเร็จ',
-        data: result.data,
-      });
-    } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข้อความแปล',
-        error: result.error,
-      });
-    }
-  } catch (error) {
-    console.error('Error in getLanguageTextByLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

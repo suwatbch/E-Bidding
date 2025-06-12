@@ -20,99 +20,6 @@ async function getAllCompanies() {
   return await executeQuery(query);
 }
 
-// ดึงข้อมูลบริษัทแบบ pagination
-async function getCompaniesPaginated(page = 1, limit = 10, search = '') {
-  const offset = (page - 1) * limit;
-
-  let whereClause = '';
-  let countWhereClause = '';
-  let queryParams = [];
-  let countParams = [];
-
-  if (search && search.trim()) {
-    whereClause =
-      'WHERE (name LIKE ? OR address LIKE ? OR email LIKE ? OR phone LIKE ?)';
-    countWhereClause = whereClause;
-    const searchPattern = `%${search.trim()}%`;
-    queryParams = [
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      searchPattern,
-      limit,
-      offset,
-    ];
-    countParams = [searchPattern, searchPattern, searchPattern, searchPattern];
-  } else {
-    queryParams = [limit, offset];
-  }
-
-  // Query สำหรับดึงข้อมูล
-  const dataQuery = `
-    SELECT 
-      company_id as id,
-      name,
-      tax_id,
-      address,
-      email,
-      phone,
-      status,
-      created_dt,
-      updated_dt
-    FROM company 
-    ${whereClause}
-    ORDER BY name ASC
-    LIMIT ? OFFSET ?
-  `;
-
-  // Query สำหรับนับจำนวนทั้งหมด
-  const countQuery = `
-    SELECT COUNT(*) as total
-    FROM company 
-    ${countWhereClause}
-  `;
-
-  try {
-    // Execute both queries
-    const [dataResult, countResult] = await Promise.all([
-      executeQuery(dataQuery, queryParams),
-      executeQuery(countQuery, countParams),
-    ]);
-
-    if (dataResult.success && countResult.success) {
-      const total = countResult.data[0]?.total || 0;
-      const totalPages = Math.ceil(total / limit);
-
-      return {
-        success: true,
-        data: dataResult.data,
-        pagination: {
-          currentPage: page,
-          perPage: limit,
-          total: total,
-          totalPages: totalPages,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
-        },
-      };
-    } else {
-      return {
-        success: false,
-        error: dataResult.error || countResult.error,
-        data: [],
-        pagination: null,
-      };
-    }
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-      data: [],
-      pagination: null,
-    };
-  }
-}
-
 // ดึงข้อมูลบริษัทตาม ID
 async function getCompanyById(companyId) {
   const query = `
@@ -234,7 +141,6 @@ async function searchCompanies(searchTerm) {
 
 module.exports = {
   getAllCompanies,
-  getCompaniesPaginated,
   getCompanyById,
   getActiveCompanies,
   createCompany,
