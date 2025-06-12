@@ -102,37 +102,37 @@ export default function ForgetPasswordPage() {
 
     // ตรวจสอบข้อมูลทั้งหมด
     if (!username.trim()) {
-      alert('กรุณากรอกชื่อผู้ใช้');
+      alert(t('forget_alert_username_required'));
       return;
     }
 
     if (!newPassword.trim()) {
-      alert('กรุณากรอกรหัสผ่านใหม่');
+      alert(t('forget_alert_password_required'));
       return;
     }
 
     if (newPassword.length < 6) {
-      alert('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+      alert(t('forget_alert_password_min_length'));
       return;
     }
 
     if (!confirmPassword.trim()) {
-      alert('กรุณายืนยันรหัสผ่าน');
+      alert(t('forget_alert_confirm_password_required'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      alert('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+      alert(t('forget_alert_password_mismatch'));
       return;
     }
 
     if (!otp.trim()) {
-      alert('กรุณากรอกรหัส OTP');
+      alert(t('forget_alert_otp_required'));
       return;
     }
 
     if (otp.length !== 6) {
-      alert('รหัส OTP ต้องมี 6 หลัก');
+      alert(t('forget_alert_otp_length'));
       return;
     }
 
@@ -148,11 +148,11 @@ export default function ForgetPasswordPage() {
         alert(t('forget_success_message'));
         router.push('/login');
       } else {
-        alert(response.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน');
+        alert(response.message || t('forget_alert_reset_error'));
       }
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+      alert(t('forget_alert_connection_error'));
     } finally {
       setIsResetting(false);
     }

@@ -26,6 +26,7 @@ interface LanguageContextType {
   // สถานะการโหลด
   isLoading: boolean;
   error: string | null;
+  isHydrated: boolean;
 
   // ฟังก์ชันสำหรับแปลข้อความ
   t: (key: string, language?: string) => string;
@@ -59,6 +60,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentLanguage, setCurrentLanguage] = useState<string>('th');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
   // ฟังก์ชันสำหรับโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
@@ -93,9 +95,15 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // โหลดภาษาที่ผู้ใช้เลือกไว้จาก localStorage
   useEffect(() => {
-    const storedLanguage = localStorage.getItem('preferred_language');
-    if (storedLanguage) {
-      setCurrentLanguage(storedLanguage);
+    // ตั้งค่า hydrated เป็น true หลังจาก component mount
+    setIsHydrated(true);
+
+    // โหลดภาษาที่ผู้ใช้เลือกไว้
+    if (typeof window !== 'undefined') {
+      const storedLanguage = localStorage.getItem('preferred_language');
+      if (storedLanguage) {
+        setCurrentLanguage(storedLanguage);
+      }
     }
 
     // โหลดข้อมูลภาษา
@@ -104,8 +112,20 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // ฟังก์ชันสำหรับแปลข้อความ
   const t = (key: string, language?: string): string => {
+    // ถ้ายังไม่ hydrated ให้ return key เป็น fallback
+    if (!isHydrated) {
+      return key;
+    }
+
     const targetLanguage = language || currentLanguage;
-    return languageService.getText(key, targetLanguage);
+    const result = languageService.getText(key, targetLanguage);
+
+    // ถ้าไม่เจอข้อความ และยัง loading อยู่ ให้ return key แทน
+    if (result === `[${key}]` && isLoading) {
+      return key;
+    }
+
+    return result;
   };
 
   // ฟังก์ชันสำหรับรีเฟรชข้อมูล
@@ -116,7 +136,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   // ฟังก์ชันสำหรับเปลี่ยนภาษา
   const handleSetCurrentLanguage = (language: string) => {
     setCurrentLanguage(language);
-    localStorage.setItem('preferred_language', language);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred_language', language);
+    }
   };
 
   const value: LanguageContextType = {
@@ -126,6 +148,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     setCurrentLanguage: handleSetCurrentLanguage,
     isLoading,
     error,
+    isHydrated,
     t,
     refreshData,
   };
