@@ -223,8 +223,10 @@ export class LanguageService {
         };
       } catch (tempError) {
         console.error('❌ Failed to load from temp files too:', tempError);
+
+        // ถ้าทั้งคู่ล้มเหลว → ไม่มี fallback แล้ว ให้ throw error
         throw new Error(
-          'Failed to load language data from both API and temp files'
+          'ไม่สามารถโหลดข้อมูลภาษาได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'
         );
       }
     } finally {
