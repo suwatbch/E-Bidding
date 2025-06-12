@@ -125,7 +125,6 @@ export class LanguageService {
         JSON.stringify(languageTexts)
       );
       localStorage.setItem('lastLanguageUpdate', Date.now().toString());
-      console.log('💾 Language data saved to localStorage');
     } catch (error) {
       console.error('❌ Failed to save to localStorage:', error);
     }
@@ -150,7 +149,6 @@ export class LanguageService {
         this.languages = JSON.parse(cachedLanguages);
         this.languageTexts = JSON.parse(cachedTexts);
         this.lastUpdateTime = lastUpdate ? parseInt(lastUpdate) : 0;
-        console.log('✅ Loaded language data from localStorage');
       } else {
         this.languages = [];
         this.languageTexts = [];
@@ -229,11 +227,6 @@ export class LanguageService {
       this.saveToStorage(languages, languageTexts);
 
       this.lastUpdateTime = Date.now();
-
-      console.log('✅ Successfully loaded from API:', {
-        languages: this.languages.length,
-        texts: this.languageTexts.length,
-      });
 
       return {
         languages: this.languages,

@@ -82,18 +82,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         setLanguages(cachedData.languages);
         setLanguageTexts(cachedData.languageTexts);
         setIsLoading(false);
-        console.log('✅ Using cached language data');
       }
 
       // โหลดข้อมูลใหม่จาก API
       const data = await languageService.refreshLanguageData();
       setLanguages(data.languages);
       setLanguageTexts(data.languageTexts);
-
-      console.log('✅ Language data loaded:', {
-        languages: data.languages.length,
-        texts: data.languageTexts.length,
-      });
     } catch (error) {
       console.error('❌ Error loading language data:', error);
       setError('Failed to load language data');
@@ -107,7 +101,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         ) {
           setLanguages(cachedData.languages);
           setLanguageTexts(cachedData.languageTexts);
-          console.log('✅ Using cached data after error');
         }
       } catch (cacheError) {
         console.error('❌ Failed to load cached data:', cacheError);
