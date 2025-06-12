@@ -29,7 +29,7 @@ interface LanguageContextType {
   isHydrated: boolean;
 
   // ฟังก์ชันสำหรับแปลข้อความ
-  t: (key: string, language?: string) => string;
+  t: (key: string) => string;
 
   // ฟังก์ชันสำหรับรีเฟรชข้อมูล
   refreshData: () => Promise<void>;
@@ -51,101 +51,138 @@ export const useLanguageContext = () => {
   return context;
 };
 
-// Provider Component
-export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children,
 }) => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languageTexts, setLanguageTexts] = useState<LanguageText[]>([]);
   const [currentLanguage, setCurrentLanguage] = useState<string>('th');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isHydrated, setIsHydrated] = useState<boolean>(false);
 
-  // ฟังก์ชันสำหรับโหลดข้อมูลภาษา
+  // ฟังก์ชันโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('🔄 Loading language data...');
-      const result = await languageService.refreshLanguageData();
-
-      // อัปเดต state
-      setLanguages(result.languages);
-      setLanguageTexts(result.languageTexts);
-
-      console.log('✅ Language data loaded successfully');
-    } catch (error) {
-      console.error('❌ Failed to load language data:', error);
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'เกิดข้อผิดพลาดในการโหลดข้อมูลภาษา'
-      );
-
-      // ลองใช้ข้อมูลที่มีใน cache
+      // ตรวจสอบว่ามีข้อมูลใน cache หรือไม่
       const cachedData = languageService.getCurrentLanguageData();
-      setLanguages(cachedData.languages);
-      setLanguageTexts(cachedData.languageTexts);
+
+      // ถ้ามี cache ให้ใช้ก่อน แล้วโหลด API ใหม่ในพื้นหลัง
+      if (
+        cachedData.languages.length > 0 &&
+        cachedData.languageTexts.length > 0
+      ) {
+        setLanguages(cachedData.languages);
+        setLanguageTexts(cachedData.languageTexts);
+        setIsLoading(false);
+        console.log('✅ Using cached language data');
+      }
+
+      // โหลดข้อมูลใหม่จาก API
+      const data = await languageService.refreshLanguageData();
+      setLanguages(data.languages);
+      setLanguageTexts(data.languageTexts);
+
+      console.log('✅ Language data loaded:', {
+        languages: data.languages.length,
+        texts: data.languageTexts.length,
+      });
+    } catch (error) {
+      console.error('❌ Error loading language data:', error);
+      setError('Failed to load language data');
+
+      // หากเกิดข้อผิดพลาด ให้ลองใช้ cached data
+      try {
+        const cachedData = languageService.getCurrentLanguageData();
+        if (
+          cachedData.languages.length > 0 ||
+          cachedData.languageTexts.length > 0
+        ) {
+          setLanguages(cachedData.languages);
+          setLanguageTexts(cachedData.languageTexts);
+          console.log('✅ Using cached data after error');
+        }
+      } catch (cacheError) {
+        console.error('❌ Failed to load cached data:', cacheError);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  // โหลดภาษาที่ผู้ใช้เลือกไว้จาก localStorage
   useEffect(() => {
-    // ตั้งค่า hydrated เป็น true หลังจาก component mount
-    setIsHydrated(true);
-
-    // โหลดภาษาที่ผู้ใช้เลือกไว้
     if (typeof window !== 'undefined') {
-      const storedLanguage = localStorage.getItem('preferred_language');
-      if (storedLanguage) {
-        setCurrentLanguage(storedLanguage);
-      }
-    }
+      setIsHydrated(true);
 
-    // โหลดข้อมูลภาษา
-    loadLanguageData();
+      // โหลดภาษาที่ผู้ใช้เลือกไว้จาก localStorage
+      const savedLanguage = localStorage.getItem('selectedLanguage');
+      if (savedLanguage) {
+        setCurrentLanguage(savedLanguage);
+      }
+
+      // โหลดข้อมูลภาษา
+      loadLanguageData();
+    }
   }, []);
 
-  // ฟังก์ชันสำหรับแปลข้อความ
-  const t = (key: string, language?: string): string => {
-    // ถ้ายังไม่ hydrated ให้ return key เป็น fallback
+  // ฟังก์ชันแปลข้อความ
+  const t = (key: string): string => {
+    // ถ้ายังไม่ hydrated ให้แสดง key
     if (!isHydrated) {
       return key;
     }
 
-    const targetLanguage = language || currentLanguage;
-    const result = languageService.getText(key, targetLanguage);
-
-    // ถ้าไม่เจอข้อความ และยัง loading อยู่ ให้ return key แทน
-    if (result === `[${key}]` && isLoading) {
+    // ถ้ากำลังโหลดและไม่มีข้อมูลเลย ให้แสดง key
+    if (isLoading && languageTexts.length === 0) {
       return key;
     }
 
-    return result;
+    try {
+      return languageService.getText(key, currentLanguage);
+    } catch (error) {
+      console.warn(`Translation key not found: ${key}`);
+      return key;
+    }
   };
 
-  // ฟังก์ชันสำหรับรีเฟรชข้อมูล
+  // ฟังก์ชันเปลี่ยนภาษา
+  const changeLanguage = (languageCode: string) => {
+    setCurrentLanguage(languageCode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('selectedLanguage', languageCode);
+    }
+  };
+
+  // ฟังก์ชัน refresh ข้อมูล
   const refreshData = async () => {
     await loadLanguageData();
   };
 
-  // ฟังก์ชันสำหรับเปลี่ยนภาษา
-  const handleSetCurrentLanguage = (language: string) => {
-    setCurrentLanguage(language);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred_language', language);
-    }
-  };
+  // แสดงหน้า loading เมื่อยังไม่ hydrated หรือกำลังโหลดข้อมูลครั้งแรก
+  if (!isHydrated || (isLoading && languageTexts.length === 0)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 font-medium">กำลังโหลด...</p>
+          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
   const value: LanguageContextType = {
     languages,
     languageTexts,
     currentLanguage,
-    setCurrentLanguage: handleSetCurrentLanguage,
+    setCurrentLanguage: changeLanguage,
     isLoading,
     error,
     isHydrated,
