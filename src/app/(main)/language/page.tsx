@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Container from '@/app/components/ui/Container';
 import EmptyState from '@/app/components/ui/EmptyState';
-import { Language } from '@/app/model/language';
-import { languageService } from '@/app/services/languageService';
+import { Language, languageService } from '@/app/services/languageService';
 import TransectionLanguage from '@/app/components/language/LanguageText';
 
 interface FormData {
@@ -12,7 +11,7 @@ interface FormData {
   language_name: string;
   flag: string;
   is_default: boolean;
-  status: 1 | 0;
+  status: number;
 }
 
 export default function LanguagePage() {

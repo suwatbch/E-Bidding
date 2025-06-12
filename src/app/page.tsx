@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 import { redirect } from 'next/navigation';
-import { useLanguage } from './contexts/LanguageContext';
+import { useLanguageContext } from './contexts/LanguageContext';
 import { LogoIcon } from '@/app/components/ui/Icons';
 
 export default function HomePage() {
-  const { isLoading } = useLanguage();
+  const { isLoading } = useLanguageContext();
 
   // โหลดข้อมูลภาษาเสร็จแล้ว redirect ไป login ทันที
   useEffect(() => {

@@ -7,165 +7,131 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { Language, dataLanguage } from '../model/language';
-import { LanguageText, dataLanguageText } from '../model/language_text';
-import { languageService } from '../services/languageService';
+import {
+  languageService,
+  Language,
+  LanguageText,
+} from '../services/languageService';
 
-// Types
+// Type สำหรับ Context
 interface LanguageContextType {
+  // ข้อมูลภาษา
   languages: Language[];
   languageTexts: LanguageText[];
+
+  // ภาษาปัจจุบัน
   currentLanguage: string;
+  setCurrentLanguage: (language: string) => void;
+
+  // สถานะการโหลด
   isLoading: boolean;
   error: string | null;
 
-  // Methods
-  setCurrentLanguage: (languageCode: string) => void;
-  getText: (textKey: string, languageCode?: string) => string;
-  refreshLanguageData: () => Promise<void>;
+  // ฟังก์ชันสำหรับแปลข้อความ
+  t: (key: string, language?: string) => string;
+
+  // ฟังก์ชันสำหรับรีเฟรชข้อมูล
+  refreshData: () => Promise<void>;
 }
 
-// Create Context
+// สร้าง Context
 const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined
 );
 
-// Custom Hook
-export const useLanguage = () => {
+// Hook สำหรับใช้งาน Context
+export const useLanguageContext = () => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
+  if (!context) {
+    throw new Error(
+      'useLanguageContext must be used within a LanguageProvider'
+    );
   }
   return context;
 };
 
-// Provider Props
-interface LanguageProviderProps {
-  children: ReactNode;
-  defaultLanguage?: string;
-}
-
-// Language Provider Component
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({
+// Provider Component
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
-  defaultLanguage = 'th',
 }) => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [languageTexts, setLanguageTexts] = useState<LanguageText[]>([]);
-  const [currentLanguage, setCurrentLanguageState] =
-    useState<string>(defaultLanguage);
+  const [currentLanguage, setCurrentLanguage] = useState<string>('th');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // อัพเดทข้อมูลจาก service
-  const updateDataFromService = () => {
-    setLanguages([...dataLanguage]);
-    setLanguageTexts([...dataLanguageText]);
-  };
-
-  // โหลดข้อมูลภาษาจาก API ผ่าน Language Service
+  // ฟังก์ชันสำหรับโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // ใช้ Language Service โหลดข้อมูล (จะลอง API ก่อน แล้ว fallback ไป temp)
-      await languageService.refreshLanguageData();
+      console.log('🔄 Loading language data...');
+      const result = await languageService.refreshLanguageData();
 
-      // อัพเดทข้อมูลใน state
-      updateDataFromService();
-    } catch (err) {
-      console.error('❌ LanguageContext: Error loading language data:', err);
+      // อัปเดต state
+      setLanguages(result.languages);
+      setLanguageTexts(result.languageTexts);
+
+      console.log('✅ Language data loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load language data:', error);
       setError(
-        err instanceof Error ? err.message : 'Failed to load language data'
+        error instanceof Error
+          ? error.message
+          : 'เกิดข้อผิดพลาดในการโหลดข้อมูลภาษา'
       );
 
-      // ยังคงอัพเดทข้อมูลใน state (อาจจะมีข้อมูล fallback)
-      updateDataFromService();
+      // ลองใช้ข้อมูลที่มีใน cache
+      const cachedData = languageService.getCurrentLanguageData();
+      setLanguages(cachedData.languages);
+      setLanguageTexts(cachedData.languageTexts);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Get text by key and language (ใช้ API format)
-  const getText = (textKey: string, languageCode?: string): string => {
-    const lang = languageCode || currentLanguage;
-
-    // หาข้อความจาก dataLanguageText (API format)
-    const textEntry = languageTexts.find(
-      (item) => item.text_key === textKey && item.language_code === lang
-    );
-
-    if (textEntry) {
-      return textEntry.text_value;
-    }
-
-    // Fallback ไปภาษาไทย
-    if (lang !== 'th') {
-      const fallbackEntry = languageTexts.find(
-        (item) => item.text_key === textKey && item.language_code === 'th'
-      );
-
-      if (fallbackEntry) {
-        return fallbackEntry.text_value;
-      }
-    }
-
-    // Return key if no text found (for debugging)
-    return `[${textKey}]`;
-  };
-
-  // Set current language with validation
-  const setCurrentLanguage = (languageCode: string) => {
-    const languageExists = languages.some(
-      (lang) => lang.language_code === languageCode
-    );
-
-    if (languageExists) {
-      setCurrentLanguageState(languageCode);
-      // Store in localStorage for persistence
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('preferred_language', languageCode);
-      }
-    } else {
-      console.warn(`Language code '${languageCode}' not found`);
-    }
-  };
-
-  // Refresh language data
-  const refreshLanguageData = async () => {
-    await loadLanguageData();
-  };
-
-  // Load preferred language from localStorage on mount
+  // โหลดภาษาที่ผู้ใช้เลือกไว้จาก localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('preferred_language');
-      if (savedLanguage) {
-        setCurrentLanguageState(savedLanguage);
-      }
+    const storedLanguage = localStorage.getItem('preferred_language');
+    if (storedLanguage) {
+      setCurrentLanguage(storedLanguage);
     }
-  }, []);
 
-  // Load language data on mount
-  useEffect(() => {
+    // โหลดข้อมูลภาษา
     loadLanguageData();
   }, []);
 
-  // Context value
-  const contextValue: LanguageContextType = {
+  // ฟังก์ชันสำหรับแปลข้อความ
+  const t = (key: string, language?: string): string => {
+    const targetLanguage = language || currentLanguage;
+    return languageService.getText(key, targetLanguage);
+  };
+
+  // ฟังก์ชันสำหรับรีเฟรชข้อมูล
+  const refreshData = async () => {
+    await loadLanguageData();
+  };
+
+  // ฟังก์ชันสำหรับเปลี่ยนภาษา
+  const handleSetCurrentLanguage = (language: string) => {
+    setCurrentLanguage(language);
+    localStorage.setItem('preferred_language', language);
+  };
+
+  const value: LanguageContextType = {
     languages,
     languageTexts,
     currentLanguage,
+    setCurrentLanguage: handleSetCurrentLanguage,
     isLoading,
     error,
-    setCurrentLanguage,
-    getText,
-    refreshLanguageData,
+    t,
+    refreshData,
   };
 
   return (
-    <LanguageContext.Provider value={contextValue}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

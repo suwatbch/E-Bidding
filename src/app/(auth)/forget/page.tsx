@@ -16,7 +16,7 @@ import {
   ButtonSendIcon,
   LinkBackIcon,
 } from '@/app/components/ui/Icons';
-import { useLanguage } from '@/app/hooks/useLanguage';
+import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
 // Eye icons for password visibility toggle (same as login page)
@@ -60,7 +60,7 @@ const EyeOffIcon = () => (
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
-  const { translate } = useLanguage();
+  const { t } = useLanguageContext();
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
   const [otpRequested, setOtpRequested] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -145,7 +145,7 @@ export default function ForgetPasswordPage() {
       });
 
       if (response.success) {
-        alert(translate('forget_success_message'));
+        alert(t('forget_success_message'));
         router.push('/login');
       } else {
         alert(response.message || 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน');
@@ -203,11 +203,11 @@ export default function ForgetPasswordPage() {
         setOtpRequested(true);
         setOtpCountdown(300); // 5 minutes = 300 seconds
       } else {
-        alert(response.message || translate('otp_request_error'));
+        alert(response.message || t('otp_request_error'));
       }
     } catch (error) {
       console.error('Error requesting OTP:', error);
-      alert(translate('otp_request_error'));
+      alert(t('otp_request_error'));
     } finally {
       setIsRequestingOTP(false);
     }
@@ -247,10 +247,10 @@ export default function ForgetPasswordPage() {
                 </div>
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {translate('forget_title')}
+                {t('forget_title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                {translate('forget_subtitle')}
+                {t('forget_subtitle')}
               </p>
             </div>
 
@@ -260,7 +260,7 @@ export default function ForgetPasswordPage() {
                 {/* Username Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('username_label')}
+                    {t('username_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -274,7 +274,7 @@ export default function ForgetPasswordPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900"
-                      placeholder={translate('username_placeholder')}
+                      placeholder={t('username_placeholder')}
                       required
                     />
                   </div>
@@ -283,7 +283,7 @@ export default function ForgetPasswordPage() {
                 {/* New Password Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('forget_new_password_label')}
+                    {t('forget_new_password_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -301,7 +301,7 @@ export default function ForgetPasswordPage() {
                             ? 'border-green-500 focus:ring-green-500'
                             : 'border-gray-300 focus:ring-red-400'
                         }`}
-                      placeholder={translate('forget_new_password_placeholder')}
+                      placeholder={t('forget_new_password_placeholder')}
                       required
                       minLength={6}
                     />
@@ -314,14 +314,14 @@ export default function ForgetPasswordPage() {
                     </button>
                   </div>
                   <p className="mt-1 text-sm text-gray-500 text-right">
-                    {translate('forget_new_password_hint')}
+                    {t('forget_new_password_hint')}
                   </p>
                 </div>
 
                 {/* Confirm Password */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('confirm_password_label')}
+                    {t('confirm_password_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -341,7 +341,7 @@ export default function ForgetPasswordPage() {
                             ? 'border-green-500 focus:ring-green-500'
                             : 'border-gray-300 focus:ring-red-400'
                         }`}
-                      placeholder={translate('confirm_password_placeholder')}
+                      placeholder={t('confirm_password_placeholder')}
                       required
                     />
                     <button
@@ -355,7 +355,7 @@ export default function ForgetPasswordPage() {
                     </button>
                   </div>
                   <p className="mt-1 text-sm text-gray-500 text-right">
-                    {translate('confirm_password_hint')}
+                    {t('confirm_password_hint')}
                   </p>
                 </div>
 
@@ -379,22 +379,22 @@ export default function ForgetPasswordPage() {
                       {isRequestingOTP ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                          {translate('requesting_otp')}
+                          {t('requesting_otp')}
                         </>
                       ) : otpRequested && otpCountdown > 0 ? (
                         <>
-                          {translate('otp_countdown_prefix')}{' '}
+                          {t('otp_countdown_prefix')}{' '}
                           {formatCountdown(otpCountdown)}
                         </>
                       ) : (
-                        <>{translate('request_otp_button')}</>
+                        <>{t('request_otp_button')}</>
                       )}
                     </button>
                   </div>
                   {otpRequested && otpCountdown > 0 && (
                     <div className="mt-2 text-center">
                       <p className="text-sm text-green-600">
-                        {translate('otp_sent_message')}
+                        {t('otp_sent_message')}
                       </p>
                     </div>
                   )}
@@ -403,7 +403,7 @@ export default function ForgetPasswordPage() {
                 {/* OTP Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('forget_otp_label')}
+                    {t('forget_otp_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -417,12 +417,12 @@ export default function ForgetPasswordPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900 tracking-[0.5em] text-center font-mono"
-                      placeholder={translate('forget_otp_placeholder')}
+                      placeholder={t('forget_otp_placeholder')}
                       required
                     />
                   </div>
                   <p className="mt-1 text-sm text-gray-500 text-right">
-                    {translate('forget_otp_hint')}
+                    {t('forget_otp_hint')}
                   </p>
                 </div>
               </div>
@@ -442,12 +442,12 @@ export default function ForgetPasswordPage() {
                 {isResetting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {translate('resetting_password')}
+                    {t('resetting_password')}
                   </>
                 ) : (
                   <>
                     <ButtonSendIcon />
-                    {translate('forget_button')}
+                    {t('forget_button')}
                   </>
                 )}
               </button>
@@ -459,7 +459,7 @@ export default function ForgetPasswordPage() {
                   className="inline-flex items-center text-blue-600 hover:underline gap-1"
                 >
                   <LinkBackIcon />
-                  <span>{translate('back_to_login')}</span>
+                  <span>{t('back_to_login')}</span>
                 </Link>
               </div>
             </form>

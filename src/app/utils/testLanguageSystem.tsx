@@ -1,134 +1,133 @@
-// ฟังก์ชันทดสอบระบบภาษาใหม่
-import { languageService } from '../services/languageService';
-import { dataLanguage, updateLanguageData } from '../model/language';
+// Test Language System - ทดสอบระบบภาษาใหม่
 import {
-  dataLanguageText,
-  updateLanguageTextData,
-} from '../model/language_text';
+  languageService,
+  Language,
+  LanguageText,
+} from '../services/languageService';
 
-// ฟังก์ชันทดสอบการโหลดข้อมูล
 export const testLanguageSystem = async () => {
-  console.log('🧪 Testing Language System...');
+  console.log('🧪 Testing New Language System...');
 
   try {
-    // 1. ทดสอบการโหลดข้อมูลจาก service
-    console.log('1. Testing language service...');
+    // 1. โหลดข้อมูลจาก API/Cache
+    console.log('📥 Loading language data...');
     const result = await languageService.refreshLanguageData();
 
-    console.log('Languages loaded:', result.languages.length);
-    console.log('Language texts loaded:', result.languageTexts.length);
-
-    // 2. ทดสอบการอ่านข้อมูลจากไฟล์
-    console.log('\n2. Testing data from files...');
-    console.log('dataLanguage:', dataLanguage.length, 'items');
-    console.log('dataLanguageText:', dataLanguageText.length, 'items');
-
-    // 3. ทดสอบการหาข้อความ
-    console.log('\n3. Testing getText function...');
-    const appTitle = languageService.getText('app_title', 'th');
-    const appTitleEn = languageService.getText('app_title', 'en');
-
-    console.log('app_title (th):', appTitle);
-    console.log('app_title (en):', appTitleEn);
-
-    // 4. แสดงข้อมูลภาษาที่รองรับ
-    console.log('\n4. Supported languages:');
-    dataLanguage.forEach((lang) => {
-      console.log(
-        `- ${lang.language_code}: ${lang.language_name} ${lang.flag}`
-      );
+    console.log('✅ Loaded data:', {
+      languages: result.languages.length,
+      texts: result.languageTexts.length,
     });
 
-    // 5. แสดงตัวอย่างข้อความ
-    console.log('\n5. Sample texts:');
-    const sampleKeys = ['app_title', 'app_subtitle', 'login_title'];
-    sampleKeys.forEach((key) => {
-      const th = languageService.getText(key, 'th');
-      const en = languageService.getText(key, 'en');
-      console.log(`${key}:`);
-      console.log(`  TH: ${th}`);
-      console.log(`  EN: ${en}`);
+    // 2. ทดสอบการหาข้อความ
+    console.log('\n🔤 Testing text retrieval:');
+    console.log('Thai:', languageService.getText('welcome', 'th'));
+    console.log('English:', languageService.getText('welcome', 'en'));
+    console.log(
+      'Not found:',
+      languageService.getText('non_existent_key', 'th')
+    );
+
+    // 3. ทดสอบการ group ข้อความ
+    console.log('\n📊 Testing grouped texts:');
+    const grouped = languageService.getGroupedTexts();
+    Object.keys(grouped).forEach((lang) => {
+      console.log(`${lang}:`, Object.keys(grouped[lang]).length, 'texts');
     });
 
-    console.log('\n✅ Language system test completed successfully!');
-    return true;
+    // 4. ทดสอบการหาข้อความเฉพาะ
+    console.log('\n🔍 Testing find text:');
+    const foundText = languageService.findLanguageText('welcome', 'th');
+    console.log('Found:', foundText);
+
+    // 5. ทดสอบการ cache
+    console.log('\n💾 Testing cache:');
+    console.log('Cache expired?', languageService.isCacheExpired());
+
+    // 6. ทดสอบข้อมูลปัจจุบัน
+    console.log('\n📋 Current data:');
+    const currentData = languageService.getCurrentLanguageData();
+    console.log(
+      'Languages:',
+      currentData.languages.map((l) => l.language_code)
+    );
+    console.log(
+      'Text keys sample:',
+      currentData.languageTexts.slice(0, 5).map((t) => t.text_key)
+    );
   } catch (error) {
-    console.error('❌ Language system test failed:', error);
-    return false;
+    console.error('❌ Test failed:', error);
   }
 };
 
-// ฟังก์ชันสำหรับจำลองการอัพเดทข้อมูลจากแอดมิน
-export const simulateAdminUpdate = async () => {
-  console.log('🔄 Simulating admin update...');
+// ฟังก์ชันทดสอบ CRUD operations
+export const testLanguageCRUD = async () => {
+  console.log('🧪 Testing Language CRUD Operations...');
 
-  // จำลองข้อมูลใหม่จากแอดมิน
-  const newLanguages = [
-    {
+  try {
+    // ทดสอบการสร้างข้อความใหม่
+    console.log('➕ Testing create text...');
+    const createResult = await languageService.createLanguageText({
+      text_key: 'test_key',
       language_code: 'th',
-      language_name: 'ไทย (Updated)',
-      flag: '🇹🇭',
-      is_default: true,
-      status: 1 as 0 | 1,
-    },
-    {
-      language_code: 'en',
-      language_name: 'English (Updated)',
-      flag: '🇬🇧',
-      is_default: false,
-      status: 1 as 0 | 1,
-    },
-  ];
+      text_value: 'ข้อความทดสอบ',
+    });
+    console.log('Create result:', createResult);
 
-  const newTexts = [
-    {
-      text_id: 1,
-      text_key: 'app_title',
-      language_code: 'th',
-      text_value: 'ระบบประมูลอิเล็กทรอนิกส์ (อัพเดท)',
-    },
-    {
-      text_id: 2,
-      text_key: 'app_title',
-      language_code: 'en',
-      text_value: 'E-Bidding System (Updated)',
-    },
-    {
-      text_id: 3,
-      text_key: 'admin_message',
-      language_code: 'th',
-      text_value: 'ข้อความจากแอดมิน',
-    },
-    {
-      text_id: 4,
-      text_key: 'admin_message',
-      language_code: 'en',
-      text_value: 'Message from Admin',
-    },
-  ];
+    // ทดสอบการอัปเดต (ถ้าสร้างสำเร็จ)
+    if (createResult.success) {
+      console.log('✏️ Testing update text...');
+      // หา text_id ที่เพิ่งสร้าง
+      const newText = languageService.findLanguageText('test_key', 'th');
+      if (newText) {
+        const updateResult = await languageService.updateLanguageText(
+          newText.text_id,
+          {
+            text_value: 'ข้อความทดสอบที่แก้ไขแล้ว',
+          }
+        );
+        console.log('Update result:', updateResult);
 
-  // อัพเดทข้อมูลในไฟล์
-  updateLanguageData(newLanguages);
-  updateLanguageTextData(newTexts);
-
-  console.log('✅ Simulated admin update completed');
-  console.log(
-    'New app_title (th):',
-    languageService.getText('app_title', 'th')
-  );
-  console.log(
-    'New app_title (en):',
-    languageService.getText('app_title', 'en')
-  );
-  console.log(
-    'New admin_message (th):',
-    languageService.getText('admin_message', 'th')
-  );
+        // ทดสอบการลบ
+        console.log('🗑️ Testing delete text...');
+        const deleteResult = await languageService.deleteLanguageText(
+          newText.text_id
+        );
+        console.log('Delete result:', deleteResult);
+      }
+    }
+  } catch (error) {
+    console.error('❌ CRUD Test failed:', error);
+  }
 };
 
-// ฟังก์ชันรีเซ็ตข้อมูลกลับเป็นต้นฉบับ
-export const resetToOriginal = async () => {
-  console.log('🔄 Resetting to original data...');
-  await languageService.forceRefresh();
-  console.log('✅ Reset completed');
+// ฟังก์ชันแสดงสถิติ
+export const showLanguageStats = () => {
+  console.log('📊 Language System Statistics:');
+
+  const data = languageService.getCurrentLanguageData();
+
+  console.log(`Languages: ${data.languages.length}`);
+  console.log(`Text entries: ${data.languageTexts.length}`);
+
+  // สถิติข้อความแต่ละภาษา
+  const textsByLanguage: Record<string, number> = {};
+  data.languageTexts.forEach((text) => {
+    textsByLanguage[text.language_code] =
+      (textsByLanguage[text.language_code] || 0) + 1;
+  });
+
+  console.log('Texts by language:');
+  Object.entries(textsByLanguage).forEach(([lang, count]) => {
+    console.log(`  ${lang}: ${count} texts`);
+  });
+
+  // ภาษาที่เปิดใช้งาน
+  const activeLanguages = data.languages.filter((lang) => lang.status === 1);
+  console.log(
+    `Active languages: ${activeLanguages.length}/${data.languages.length}`
+  );
+
+  // ภาษาเริ่มต้น
+  const defaultLanguage = data.languages.find((lang) => lang.is_default);
+  console.log(`Default language: ${defaultLanguage?.language_code || 'None'}`);
 };

@@ -11,7 +11,7 @@ import {
   FormLockIcon,
   ButtonLoginIcon,
 } from '@/app/components/ui/Icons';
-import { useLanguage } from '@/app/hooks/useLanguage';
+import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';
 
@@ -60,7 +60,7 @@ const EyeOffIcon = () => (
 
 export default function LoginPage() {
   const router = useRouter();
-  const { translate } = useLanguage();
+  const { t } = useLanguageContext();
   const { login, clearSession } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -156,7 +156,7 @@ export default function LoginPage() {
           router.push('/auctions');
         }, 100);
       } else {
-        alert(response.message || translate('login_error'));
+        alert(response.message || t('login_error'));
       }
     } catch (error: any) {
       console.error('Login error:', error);
@@ -167,14 +167,14 @@ export default function LoginPage() {
         const errorMessage =
           error.response.data?.message ||
           error.response.data?.error ||
-          translate('login_error_server');
+          t('login_error_server');
         alert(errorMessage);
       } else if (error.request) {
         // Network error
-        alert(translate('login_error_network'));
+        alert(t('login_error_network'));
       } else {
         // Other error
-        alert(translate('login_error_unknown'));
+        alert(t('login_error_unknown'));
       }
     } finally {
       setIsLoading(false);
@@ -209,10 +209,10 @@ export default function LoginPage() {
                 </div>
               </div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {translate('login_title')}
+                {t('login_title')}
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                {translate('login_subtitle')}
+                {t('login_subtitle')}
               </p>
             </div>
 
@@ -222,7 +222,7 @@ export default function LoginPage() {
                 {/* Username Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('username_label')}
+                    {t('username_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -237,7 +237,7 @@ export default function LoginPage() {
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-                      placeholder={translate('username_placeholder')}
+                      placeholder={t('username_placeholder')}
                       required
                     />
                   </div>
@@ -246,7 +246,7 @@ export default function LoginPage() {
                 {/* Password Input */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {translate('password_label')}
+                    {t('password_label')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -261,7 +261,7 @@ export default function LoginPage() {
                       className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg
                         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                         placeholder:text-gray-400 text-gray-900 disabled:bg-gray-50 disabled:cursor-not-allowed"
-                      placeholder={translate('password_placeholder')}
+                      placeholder={t('password_placeholder')}
                       required
                     />
                     <button
@@ -292,11 +292,11 @@ export default function LoginPage() {
                     htmlFor="remember-me"
                     className="ml-2 block text-sm text-gray-700"
                   >
-                    {translate('remember_me')}
+                    {t('remember_me')}
                   </label>
                 </div>
                 <Link href="/forget" className="text-blue-600 hover:underline">
-                  {translate('forgot_password')}
+                  {t('forgot_password')}
                 </Link>
               </div>
 
@@ -313,12 +313,12 @@ export default function LoginPage() {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    {translate('login_loading')}
+                    {t('login_loading')}
                   </>
                 ) : (
                   <>
                     <ButtonLoginIcon />
-                    {translate('login_button')}
+                    {t('login_button')}
                   </>
                 )}
               </button>
@@ -328,9 +328,7 @@ export default function LoginPage() {
                 <div className="text-sm text-gray-500 font-medium">
                   BIC CORPORATION CO.,LTD.
                 </div>
-                <div className="text-xs text-gray-400">
-                  {translate('no_account')}
-                </div>
+                <div className="text-xs text-gray-400">{t('no_account')}</div>
               </div>
             </form>
           </div>

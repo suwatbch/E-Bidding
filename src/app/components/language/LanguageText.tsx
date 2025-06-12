@@ -2,11 +2,11 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { languageService } from '@/app/services/languageService';
-import { LanguageText } from '@/app/model/language_text';
+import { languageService, LanguageText } from '@/app/services/languageService';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import { useLanguageContext } from '@/app/contexts/LanguageContext';
 
 interface TransectionLanguageProps {
   onEdit?: (key: string) => void;
@@ -18,6 +18,38 @@ interface FormData {
   en: string;
   zh: string;
 }
+
+interface LanguageTextProps {
+  textKey: string;
+  language?: string;
+  fallbackText?: string;
+  className?: string;
+}
+
+const LanguageTextComponent: React.FC<LanguageTextProps> = ({
+  textKey,
+  language,
+  fallbackText,
+  className,
+}) => {
+  const { t, currentLanguage } = useLanguageContext();
+
+  const displayLanguage = language || currentLanguage;
+  const text = t(textKey, displayLanguage);
+
+  // ถ้าไม่พบข้อความและมี fallbackText
+  const displayText =
+    text === `[${textKey}]` && fallbackText ? fallbackText : text;
+
+  return (
+    <span
+      className={className}
+      title={`Key: ${textKey}, Lang: ${displayLanguage}`}
+    >
+      {displayText}
+    </span>
+  );
+};
 
 export default function TransectionLanguage({
   onEdit,

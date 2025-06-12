@@ -1,13 +1,121 @@
 // Language Service สำหรับจัดการข้อมูลภาษาจาก API
 import axios from 'axios';
-import { Language, dataLanguage, updateLanguageData } from '../model/language';
-import {
-  LanguageText,
-  dataLanguageText,
-  updateLanguageTextData,
-} from '../model/language_text';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// Types สำหรับภาษา
+export interface Language {
+  language_code: string;
+  language_name: string;
+  flag: string | null;
+  is_default: boolean;
+  status: number;
+}
+
+// Types สำหรับข้อความภาษา
+export interface LanguageText {
+  text_id: number;
+  text_key: string;
+  language_code: string;
+  text_value: string;
+}
+
+// ข้อมูลภาษาเริ่มต้น
+const DEFAULT_LANGUAGES: Language[] = [
+  {
+    language_code: 'th',
+    language_name: 'ไทย',
+    flag: '🇹🇭',
+    is_default: true,
+    status: 1,
+  },
+  {
+    language_code: 'en',
+    language_name: 'English',
+    flag: '🇬🇧',
+    is_default: false,
+    status: 1,
+  },
+];
+
+// ข้อความภาษาเริ่มต้น
+const DEFAULT_LANGUAGE_TEXTS: LanguageText[] = [
+  // ข้อความพื้นฐานสำหรับระบบ
+  {
+    text_id: 1,
+    text_key: 'login_title',
+    language_code: 'th',
+    text_value: 'เข้าสู่ระบบ',
+  },
+  {
+    text_id: 2,
+    text_key: 'login_title',
+    language_code: 'en',
+    text_value: 'Login',
+  },
+  {
+    text_id: 3,
+    text_key: 'logout',
+    language_code: 'th',
+    text_value: 'ออกจากระบบ',
+  },
+  { text_id: 4, text_key: 'logout', language_code: 'en', text_value: 'Logout' },
+  {
+    text_id: 5,
+    text_key: 'forget_title',
+    language_code: 'th',
+    text_value: 'ลืมรหัสผ่าน',
+  },
+  {
+    text_id: 6,
+    text_key: 'forget_title',
+    language_code: 'en',
+    text_value: 'Forgot Password',
+  },
+  {
+    text_id: 7,
+    text_key: 'username',
+    language_code: 'th',
+    text_value: 'ชื่อผู้ใช้',
+  },
+  {
+    text_id: 8,
+    text_key: 'username',
+    language_code: 'en',
+    text_value: 'Username',
+  },
+  {
+    text_id: 9,
+    text_key: 'password',
+    language_code: 'th',
+    text_value: 'รหัสผ่าน',
+  },
+  {
+    text_id: 10,
+    text_key: 'password',
+    language_code: 'en',
+    text_value: 'Password',
+  },
+  { text_id: 11, text_key: 'submit', language_code: 'th', text_value: 'ส่ง' },
+  {
+    text_id: 12,
+    text_key: 'submit',
+    language_code: 'en',
+    text_value: 'Submit',
+  },
+  {
+    text_id: 13,
+    text_key: 'cancel',
+    language_code: 'th',
+    text_value: 'ยกเลิก',
+  },
+  {
+    text_id: 14,
+    text_key: 'cancel',
+    language_code: 'en',
+    text_value: 'Cancel',
+  },
+];
 
 // ฟังก์ชันสำหรับอ่าน token จาก cookie และ localStorage
 const getAuthTokenFromStorage = (): string | null => {
@@ -74,7 +182,19 @@ export class LanguageService {
   private isLoading = false;
   private lastUpdateTime = 0;
 
-  private constructor() {}
+  // เก็บข้อมูลใน Service Class แทนการใช้ไฟล์ model
+  private languages: Language[] = [];
+  private languageTexts: LanguageText[] = [];
+
+  private constructor() {
+    // โหลดข้อมูลจาก localStorage หากมี
+    this.loadFromStorage();
+
+    // ถ้าไม่มีข้อมูลใน localStorage ให้ใช้ข้อมูลเริ่มต้น
+    if (this.languages.length === 0 || this.languageTexts.length === 0) {
+      this.useDefaultData();
+    }
+  }
 
   public static getInstance(): LanguageService {
     if (!LanguageService.instance) {
@@ -83,53 +203,61 @@ export class LanguageService {
     return LanguageService.instance;
   }
 
-  // บันทึกข้อมูลใน memory
-  private async saveToMemory(
+  // เก็บข้อมูลลง localStorage เป็น backup
+  private saveToStorage(
     languages: Language[],
     languageTexts: LanguageText[]
-  ): Promise<void> {
-    // บันทึกข้อมูลลง temp files หรือ memory cache
-    console.log('💾 Saving to memory cache...');
+  ): void {
+    try {
+      localStorage.setItem('cached_languages', JSON.stringify(languages));
+      localStorage.setItem(
+        'cached_language_texts',
+        JSON.stringify(languageTexts)
+      );
+      localStorage.setItem('language_cache_time', Date.now().toString());
+      console.log('💾 Saved to localStorage cache');
+    } catch (error) {
+      console.error('❌ Failed to save to localStorage:', error);
+    }
   }
 
-  // โหลดข้อมูลจาก temp files
-  private async loadFromTempFiles(): Promise<{
-    languages: Language[];
-    languageTexts: LanguageText[];
-  }> {
+  // โหลดข้อมูลจาก localStorage
+  private loadFromStorage(): void {
     try {
-      console.log('🔄 Loading from temp files...');
+      const cachedLanguages = localStorage.getItem('cached_languages');
+      const cachedTexts = localStorage.getItem('cached_language_texts');
 
-      // โหลดจาก temp files โดยใช้ dynamic import
-      const languageTemp = await import('../model/language_Temp').catch(
-        () => null
-      );
-      const languageTextTemp = await import(
-        '../model/language_text_Temp'
-      ).catch(() => null);
-
-      if (!languageTemp || !languageTextTemp) {
-        throw new Error('Temp files not found');
+      if (cachedLanguages && cachedTexts) {
+        this.languages = JSON.parse(cachedLanguages);
+        this.languageTexts = JSON.parse(cachedTexts);
+        console.log('✅ Loaded from localStorage cache:', {
+          languages: this.languages.length,
+          texts: this.languageTexts.length,
+        });
       }
-
-      // แปลง temp format เป็น API format
-      const languages = languageTemp.languages;
-      const languageTexts = languageTextTemp.languageTexts.map((item: any) => ({
-        text_id: item.id,
-        text_key: item.keyname,
-        language_code: item.language_code,
-        text_value: item.text,
-      }));
-
-      console.log('✅ Loaded from temp files:', {
-        languages: languages.length,
-        texts: languageTexts.length,
-      });
-
-      return { languages, languageTexts };
     } catch (error) {
-      console.error('❌ Failed to load from temp files:', error);
-      throw error;
+      console.error('❌ Failed to load from localStorage:', error);
+      this.languages = [];
+      this.languageTexts = [];
+    }
+  }
+
+  // ใช้ข้อมูลเริ่มต้นแทนการโหลดจาก temp files
+  private useDefaultData(): void {
+    try {
+      console.log('🔄 Using default language data...');
+
+      this.languages = [...DEFAULT_LANGUAGES];
+      this.languageTexts = [...DEFAULT_LANGUAGE_TEXTS];
+
+      console.log('✅ Loaded default data:', {
+        languages: this.languages.length,
+        texts: this.languageTexts.length,
+      });
+    } catch (error) {
+      console.error('❌ Failed to use default data:', error);
+      this.languages = DEFAULT_LANGUAGES;
+      this.languageTexts = DEFAULT_LANGUAGE_TEXTS;
     }
   }
 
@@ -177,8 +305,8 @@ export class LanguageService {
   }> {
     if (this.isLoading) {
       return {
-        languages: dataLanguage,
-        languageTexts: dataLanguageText,
+        languages: this.languages,
+        languageTexts: this.languageTexts,
       };
     }
 
@@ -191,44 +319,44 @@ export class LanguageService {
         this.loadLanguageTextsFromAPI(),
       ]);
 
-      // ถ้าโหลดจาก API สำเร็จ → บันทึกลง temp files
-      await this.saveToMemory(languages, languageTexts);
+      // เก็บข้อมูลใน Service Class
+      this.languages = languages;
+      this.languageTexts = languageTexts;
 
-      // อัพเดทข้อมูลในไฟล์
-      updateLanguageData(languages);
-      updateLanguageTextData(languageTexts);
+      // บันทึกลง localStorage เป็น backup
+      this.saveToStorage(languages, languageTexts);
 
       this.lastUpdateTime = Date.now();
 
+      console.log('✅ Successfully loaded from API:', {
+        languages: this.languages.length,
+        texts: this.languageTexts.length,
+      });
+
       return {
-        languages: dataLanguage,
-        languageTexts: dataLanguageText,
+        languages: this.languages,
+        languageTexts: this.languageTexts,
       };
     } catch (error) {
-      console.error('❌ Failed to load from API, trying temp files...', error);
+      console.error('❌ Failed to load from API, using fallback...', error);
 
-      try {
-        // ถ้า API ไม่สำเร็จ → โหลดจาก temp files
-        const tempData = await this.loadFromTempFiles();
-
-        // อัพเดทข้อมูลในไฟล์
-        updateLanguageData(tempData.languages);
-        updateLanguageTextData(tempData.languageTexts);
-
-        console.log('✅ Successfully loaded from temp files');
-
+      // ถ้า API ไม่สำเร็จ → ใช้ข้อมูลที่มีอยู่ใน memory/localStorage
+      if (this.languages.length > 0 || this.languageTexts.length > 0) {
+        console.log('✅ Using cached data from memory/localStorage');
         return {
-          languages: dataLanguage,
-          languageTexts: dataLanguageText,
+          languages: this.languages,
+          languageTexts: this.languageTexts,
         };
-      } catch (tempError) {
-        console.error('❌ Failed to load from temp files too:', tempError);
-
-        // ถ้าทั้งคู่ล้มเหลว → ไม่มี fallback แล้ว ให้ throw error
-        throw new Error(
-          'ไม่สามารถโหลดข้อมูลภาษาได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต'
-        );
       }
+
+      // ถ้าไม่มีข้อมูลเลย → ใช้ข้อมูลเริ่มต้น
+      console.log('⚠️ No cached data, using default data');
+      this.useDefaultData();
+
+      return {
+        languages: this.languages,
+        languageTexts: this.languageTexts,
+      };
     } finally {
       this.isLoading = false;
     }
@@ -240,14 +368,14 @@ export class LanguageService {
     languageTexts: LanguageText[];
   } {
     return {
-      languages: [...dataLanguage],
-      languageTexts: [...dataLanguageText],
+      languages: [...this.languages],
+      languageTexts: [...this.languageTexts],
     };
   }
 
   // ฟังก์ชันสำหรับหาข้อความตาม key
   getText(textKey: string, languageCode: string = 'th'): string {
-    const textEntry = dataLanguageText.find(
+    const textEntry = this.languageTexts.find(
       (item) => item.text_key === textKey && item.language_code === languageCode
     );
 
@@ -257,7 +385,7 @@ export class LanguageService {
 
     // Fallback ไปภาษาไทย
     if (languageCode !== 'th') {
-      const fallbackEntry = dataLanguageText.find(
+      const fallbackEntry = this.languageTexts.find(
         (item) => item.text_key === textKey && item.language_code === 'th'
       );
 
@@ -312,7 +440,7 @@ export class LanguageService {
   ): Promise<{ success: boolean; message: string }> {
     try {
       // หาข้อมูลภาษาปัจจุบัน
-      const currentLanguage = dataLanguage.find(
+      const currentLanguage = this.languages.find(
         (lang) => lang.language_code === languageCode
       );
       if (!currentLanguage) {
@@ -426,7 +554,7 @@ export class LanguageService {
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากลบ
+        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
         await this.refreshLanguageData();
         return {
           success: true,
@@ -468,7 +596,7 @@ export class LanguageService {
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากสร้าง
+        // รีเฟรชข้อมูลหลังจากสร้างสำเร็จ
         await this.refreshLanguageData();
       }
 
@@ -483,28 +611,50 @@ export class LanguageService {
     }
   }
 
-  // จัดกลุ่มข้อความตาม key สำหรับแสดงผลในตาราง
+  // ===== Utility Functions =====
+
+  // จัดกลุ่มข้อความตามภาษา
   getGroupedTexts(): Record<string, Record<string, string>> {
     const grouped: Record<string, Record<string, string>> = {};
 
-    dataLanguageText.forEach((item) => {
-      if (!grouped[item.text_key]) {
-        grouped[item.text_key] = {};
+    this.languageTexts.forEach((item) => {
+      if (!grouped[item.language_code]) {
+        grouped[item.language_code] = {};
       }
-      grouped[item.text_key][item.language_code] = item.text_value;
+      grouped[item.language_code][item.text_key] = item.text_value;
     });
 
     return grouped;
   }
 
-  // ค้นหาข้อความตาม text_key และ language_code
+  // หาข้อความตาม key และ language_code
   findLanguageText(
     textKey: string,
     languageCode: string
   ): LanguageText | undefined {
-    return dataLanguageText.find(
+    return this.languageTexts.find(
       (item) => item.text_key === textKey && item.language_code === languageCode
     );
+  }
+
+  // เคลียร์ cache
+  clearCache(): void {
+    this.languages = [...DEFAULT_LANGUAGES];
+    this.languageTexts = [...DEFAULT_LANGUAGE_TEXTS];
+    localStorage.removeItem('cached_languages');
+    localStorage.removeItem('cached_language_texts');
+    localStorage.removeItem('language_cache_time');
+    console.log('🗑️ Language cache cleared, using default data');
+  }
+
+  // ตรวจสอบว่า cache หมดอายุหรือไม่
+  isCacheExpired(maxAgeMs: number = 30 * 60 * 1000): boolean {
+    // 30 นาที
+    const cacheTime = localStorage.getItem('language_cache_time');
+    if (!cacheTime) return true;
+
+    const age = Date.now() - parseInt(cacheTime);
+    return age > maxAgeMs;
   }
 }
 

@@ -26,7 +26,7 @@ import {
   subscribeToNotifications,
   unsubscribeFromNotifications,
 } from '@/app/services/socketService';
-import { useLanguage } from '@/app/hooks/useLanguage';
+import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
 import Container from './ui/Container';
@@ -89,7 +89,7 @@ export default function Navbar() {
 
   const pathname = usePathname();
   const router = useRouter();
-  const { currentLang, languages, translate, changeLanguage } = useLanguage();
+  const { currentLanguage, languages, t } = useLanguageContext();
   const { updateProfile, updateUser } = useUser();
   const { logout, user, isLoading: isAuthLoading } = useAuth();
 
@@ -231,17 +231,17 @@ export default function Navbar() {
 
   const navigation = [
     {
-      name: translate('auctions'),
+      name: t('auctions'),
       href: '/auctions',
       icon: <NavAuctionIcon />,
     },
     {
-      name: translate('my_auctions'),
+      name: t('my_auctions'),
       href: '/my-auctions',
       icon: <NavMyAuctionIcon />,
     },
     {
-      name: translate('notifications'),
+      name: t('notifications'),
       href: '/notifications',
       icon: <NavNotificationIcon />,
     },
@@ -447,7 +447,7 @@ export default function Navbar() {
                   <NavHomeIcon className="w-5 h-5" />
                 </div>
                 <span className="transform group-hover:scale-105">
-                  {translate('auctions')}
+                  {t('auctions')}
                 </span>
               </Link>
               <Link
@@ -462,7 +462,7 @@ export default function Navbar() {
                   <NavMyAuctionIcon />
                 </div>
                 <span className="transform group-hover:scale-105">
-                  {translate('my_auctions')}
+                  {t('my_auctions')}
                 </span>
               </Link>
 
@@ -487,7 +487,7 @@ export default function Navbar() {
                       <NavDataIcon />
                     </div>
                     <span className="transform group-hover:scale-105">
-                      {translate('data_management')}
+                      {t('data_management')}
                     </span>
                     <div className="transform group-hover:scale-110 transition duration-300">
                       <NavArrowDownIcon
@@ -523,7 +523,7 @@ export default function Navbar() {
                           : 'text-gray-700 group-hover:text-blue-600'
                       }`}
                     >
-                      {translate('company_info')}
+                      {t('company_info')}
                     </span>
                   </button>
                   <button
@@ -549,7 +549,7 @@ export default function Navbar() {
                           : 'text-gray-700 group-hover:text-blue-600'
                       }`}
                     >
-                      {translate('user_info')}
+                      {t('user_info')}
                     </span>
                   </button>
                   <button
@@ -575,7 +575,7 @@ export default function Navbar() {
                           : 'text-gray-700 group-hover:text-blue-600'
                       }`}
                     >
-                      {translate('language_info')}
+                      {t('language_info')}
                     </span>
                   </button>
                 </div>
@@ -593,7 +593,7 @@ export default function Navbar() {
                 <div className="transform group-hover:scale-110 transition duration-300">
                   <NavNotificationIcon />
                 </div>
-                <span className="transform group-hover:scale-105">{translate('notifications')}</span>
+                <span className="transform group-hover:scale-105">{t('notifications')}</span>
                 {notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center shadow-md animate-pulse">
                     {notificationCount}
@@ -678,7 +678,7 @@ export default function Navbar() {
                       <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
                     </div>
                     <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
-                      {translate('edit_profile')}
+                      {t('edit_profile')}
                     </span>
                   </button>
                   <button
@@ -689,7 +689,7 @@ export default function Navbar() {
                       <NavLogoutIcon className="text-red-600" />
                     </div>
                     <span className="transform group-hover:scale-105 text-red-600">
-                      {translate('logout')}
+                      {t('logout')}
                     </span>
                   </button>
                 </div>
@@ -726,7 +726,7 @@ export default function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   <NavHomeIcon className="w-5 h-5" />
-                  {translate('auctions')}
+                  {t('auctions')}
                 </Link>
                 <Link
                   href="/my-auctions"
@@ -738,7 +738,7 @@ export default function Navbar() {
                   onClick={() => setIsOpen(false)}
                 >
                   <NavMyAuctionIcon className="w-5 h-5" />
-                  {translate('my_auctions')}
+                  {t('my_auctions')}
                 </Link>
                 <Link
                   href="/alerts"
@@ -753,7 +753,7 @@ export default function Navbar() {
                   }}
                 >
                   <NavNotificationIcon className="w-5 h-5" />
-                  {translate('notifications')}
+                  {t('notifications')}
                   {notificationCount > 0 && (
                     <span className="absolute top-2 left-7 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
                       {notificationCount}
@@ -775,7 +775,7 @@ export default function Navbar() {
                     }`}
                   >
                     <NavCompanyIcon className="w-5 h-5 mr-2" />
-                    {translate('company_info')}
+                    {t('company_info')}
                   </button>
                   <button
                     onClick={() => {
@@ -789,7 +789,7 @@ export default function Navbar() {
                     }`}
                   >
                     <NavUserIcon className="w-5 h-5 mr-2" />
-                    {translate('user_info')}
+                    {t('user_info')}
                   </button>
                 </div>
 
@@ -811,7 +811,7 @@ export default function Navbar() {
                     }`}
                   >
                     <NavEditIcon className="w-5 h-5 mr-2" />
-                    {translate('edit_profile')}
+                    {t('edit_profile')}
                   </button>
                   <button
                     onClick={() => {
@@ -821,7 +821,7 @@ export default function Navbar() {
                     className="flex items-center w-full px-4 py-2.5 text-red-600 hover:bg-red-50/80 rounded-lg mt-1"
                   >
                     <NavLogoutIcon className="w-5 h-5 mr-2" />
-                    {translate('logout')}
+                    {t('logout')}
                   </button>
                 </div>
               </div>
