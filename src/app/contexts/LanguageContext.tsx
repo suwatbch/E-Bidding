@@ -87,10 +87,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
           const data = await languageService.refreshLanguageData();
           setLanguages(data.languages);
           setLanguageTexts(data.languageTexts);
+          return data.languages; // return ข้อมูลล่าสุด
         } catch (apiError) {
           console.warn('⚠️ Background API update failed, using cache');
+          return cachedData.languages; // return cache data
         }
-        return;
       }
 
       // ถ้าไม่มี cache ให้แสดง loading และโหลดจาก API
@@ -99,6 +100,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       const data = await languageService.refreshLanguageData();
       setLanguages(data.languages);
       setLanguageTexts(data.languageTexts);
+      return data.languages; // return ข้อมูลที่โหลดมา
     } catch (error) {
       console.error('❌ Error loading language data:', error);
       setError('Failed to load language data');
@@ -112,10 +114,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         ) {
           setLanguages(cachedData.languages);
           setLanguageTexts(cachedData.languageTexts);
+          return cachedData.languages;
         }
       } catch (cacheError) {
         console.error('❌ Failed to load cached data:', cacheError);
       }
+      return []; // return empty array if all fails
     } finally {
       setIsLoading(false);
     }
@@ -125,14 +129,35 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     if (typeof window !== 'undefined') {
       setIsHydrated(true);
 
-      // โหลดภาษาที่ผู้ใช้เลือกไว้จาก localStorage
-      const savedLanguage = localStorage.getItem('selectedLanguage');
-      if (savedLanguage) {
-        setCurrentLanguage(savedLanguage);
-      }
+      // โหลดข้อมูลภาษาก่อน
+      loadLanguageData().then((loadedLanguages) => {
+        // หลังจากโหลดข้อมูลแล้ว จึงตรวจสอบภาษาที่จะใช้
+        const savedLanguage = localStorage.getItem('selectedLanguage');
 
-      // โหลดข้อมูลภาษา
-      loadLanguageData();
+        if (savedLanguage) {
+          // ถ้ามี localStorage ใช้ภาษาที่บันทึกไว้
+          setCurrentLanguage(savedLanguage);
+        } else {
+          // ถ้าไม่มี localStorage ให้หาภาษาเริ่มต้นจากฐานข้อมูล
+          const defaultLanguage = loadedLanguages.find(
+            (lang) => lang.is_default && lang.status === 1
+          );
+          if (defaultLanguage) {
+            setCurrentLanguage(defaultLanguage.language_code);
+          } else {
+            // ถ้าไม่มีภาษาเริ่มต้น ให้ใช้ภาษาแรกที่เปิดใช้งาน
+            const firstActiveLanguage = loadedLanguages.find(
+              (lang) => lang.status === 1
+            );
+            if (firstActiveLanguage) {
+              setCurrentLanguage(firstActiveLanguage.language_code);
+            } else {
+              // fallback สุดท้าย
+              setCurrentLanguage('th');
+            }
+          }
+        }
+      });
     }
   }, []);
 
