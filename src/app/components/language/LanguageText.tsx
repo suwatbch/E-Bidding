@@ -35,7 +35,7 @@ const LanguageTextComponent: React.FC<LanguageTextProps> = ({
   const { t, currentLanguage } = useLanguageContext();
 
   const displayLanguage = language || currentLanguage;
-  const text = t(textKey, displayLanguage);
+  const text = t(textKey);
 
   // ถ้าไม่พบข้อความและมี fallbackText
   const displayText =
@@ -206,6 +206,8 @@ export default function TransectionLanguage({
         if (existingText && existingText.text_id) {
           // อัพเดทข้อความที่มีอยู่
           return languageService.updateLanguageText(existingText.text_id, {
+            text_key: editKey,
+            language_code: lang,
             text_value: newValue,
           });
         } else if (newValue.trim()) {
