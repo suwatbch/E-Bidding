@@ -111,7 +111,6 @@ export class LanguageService {
   ): void {
     // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
     if (typeof window === 'undefined') {
-      console.log('Server-side rendering detected, skipping localStorage save');
       return;
     }
 
@@ -131,7 +130,6 @@ export class LanguageService {
   private loadFromStorage(): void {
     // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
     if (typeof window === 'undefined') {
-      console.log('Server-side rendering detected, skipping localStorage');
       this.languages = [];
       this.languageTexts = [];
       return;
@@ -149,7 +147,6 @@ export class LanguageService {
       } else {
         this.languages = [];
         this.languageTexts = [];
-        console.log('📝 No cached data found, initialized empty arrays');
       }
     } catch (error) {
       console.error('❌ Failed to load from localStorage:', error);
@@ -234,7 +231,6 @@ export class LanguageService {
 
       // ถ้า API ไม่สำเร็จ → ใช้ข้อมูลที่มีอยู่ใน memory/localStorage
       if (this.languages.length > 0 || this.languageTexts.length > 0) {
-        console.log('✅ Using cached data from memory/localStorage');
         return {
           languages: this.languages,
           languageTexts: this.languageTexts,
@@ -242,7 +238,6 @@ export class LanguageService {
       }
 
       // ถ้าไม่มีข้อมูลเลย → ส่งกลับ array ว่าง
-      console.log('⚠️ No data available - API failed and no cache found');
       return {
         languages: [],
         languageTexts: [],
@@ -478,9 +473,6 @@ export class LanguageService {
 
       const headers = getHeaders(true); // ต้อง token
 
-      console.log(`➕ Creating new language text:`, apiData);
-      console.log(`📋 Headers being sent:`, headers);
-
       const response = await axios.post(
         `${API_URL}/api/languages/texts`,
         apiData,
@@ -537,9 +529,6 @@ export class LanguageService {
   clearCache(): void {
     // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
     if (typeof window === 'undefined') {
-      console.log(
-        'Server-side rendering detected, skipping localStorage clear'
-      );
       this.languages = [];
       this.languageTexts = [];
       return;
@@ -554,8 +543,6 @@ export class LanguageService {
     this.languages = [];
     this.languageTexts = [];
     this.lastUpdateTime = 0;
-
-    console.log('🗑️ All language cache cleared');
   }
 
   // ตรวจสอบว่า cache หมดอายุหรือไม่
