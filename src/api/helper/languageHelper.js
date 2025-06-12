@@ -32,9 +32,40 @@ async function getLanguageByCode(languageCode) {
   return await executeQuery(query, [languageCode]);
 }
 
+// ตรวจสอบว่ามี user ที่ใช้ภาษานี้อยู่หรือไม่ (status = 1)
+async function checkUsersUsingLanguage(languageCode) {
+  const query = `
+    SELECT COUNT(*) as user_count 
+    FROM users 
+    WHERE language_code = ? AND status = 1
+  `;
+
+  return await executeQuery(query, [languageCode]);
+}
+
 // อัปเดตข้อมูลภาษา
 async function updateLanguage(languageCode, languageData) {
   const { language_name, flag, is_default, status } = languageData;
+
+  // ถ้ามีการปิดใช้งานภาษา (status = 0) ให้ตรวจสอบ user ก่อน
+  if (status === 0) {
+    const checkResult = await checkUsersUsingLanguage(languageCode);
+
+    if (!checkResult.success) {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้',
+      };
+    }
+
+    const userCount = checkResult.data[0].user_count;
+    if (userCount > 0) {
+      return {
+        success: false,
+        error: `ไม่สามารถปิดใช้งานภาษานี้ได้ เนื่องจากมีผู้ใช้ ${userCount} คนที่ใช้ภาษานี้อยู่`,
+      };
+    }
+  }
 
   const query = `
     UPDATE language 
@@ -57,6 +88,24 @@ async function updateLanguage(languageCode, languageData) {
 
 // ลบภาษา (soft delete)
 async function deleteLanguage(languageCode) {
+  // ตรวจสอบ user ที่ใช้ภาษานี้ก่อนลบ
+  const checkResult = await checkUsersUsingLanguage(languageCode);
+
+  if (!checkResult.success) {
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้',
+    };
+  }
+
+  const userCount = checkResult.data[0].user_count;
+  if (userCount > 0) {
+    return {
+      success: false,
+      error: `ไม่สามารถลบภาษานี้ได้ เนื่องจากมีผู้ใช้ ${userCount} คนที่ใช้ภาษานี้อยู่`,
+    };
+  }
+
   const query = `UPDATE language SET status = 0 WHERE language_code = ?`;
   return await executeQuery(query, [languageCode]);
 }
@@ -107,4 +156,5 @@ module.exports = {
   createLanguageText,
   updateLanguageText,
   deleteLanguageText,
+  checkUsersUsingLanguage,
 };

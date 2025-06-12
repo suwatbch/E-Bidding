@@ -119,10 +119,9 @@ router.post('/:languageCode', async (req, res) => {
         message: 'อัปเดตข้อมูลภาษาสำเร็จ',
       });
     } else {
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลภาษา',
-        error: result.error,
+        message: result.error || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลภาษา',
       });
     }
   } catch (error) {
@@ -155,10 +154,9 @@ router.delete('/:languageCode', async (req, res) => {
         message: 'ลบภาษาสำเร็จ',
       });
     } else {
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการลบภาษา',
-        error: result.error,
+        message: result.error || 'เกิดข้อผิดพลาดในการลบภาษา',
       });
     }
   } catch (error) {
