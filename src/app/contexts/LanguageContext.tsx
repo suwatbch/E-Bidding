@@ -81,14 +81,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         setLanguages(cachedData.languages);
         setLanguageTexts(cachedData.languageTexts);
         setIsLoading(false); // ปิด loading ทันทีเมื่อมี cache
-        console.log('✅ Using cached language data - No loading screen');
 
         // โหลด API ใหม่ในพื้นหลัง (ไม่แสดง loading)
         try {
           const data = await languageService.refreshLanguageData();
           setLanguages(data.languages);
           setLanguageTexts(data.languageTexts);
-          console.log('✅ Background API update completed');
         } catch (apiError) {
           console.warn('⚠️ Background API update failed, using cache');
         }
@@ -96,17 +94,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       }
 
       // ถ้าไม่มี cache ให้แสดง loading และโหลดจาก API
-      console.log('📡 No cache found - Loading from API with loading screen');
       setIsLoading(true);
 
       const data = await languageService.refreshLanguageData();
       setLanguages(data.languages);
       setLanguageTexts(data.languageTexts);
-
-      console.log('✅ Language data loaded from API:', {
-        languages: data.languages.length,
-        texts: data.languageTexts.length,
-      });
     } catch (error) {
       console.error('❌ Error loading language data:', error);
       setError('Failed to load language data');
@@ -120,7 +112,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         ) {
           setLanguages(cachedData.languages);
           setLanguageTexts(cachedData.languageTexts);
-          console.log('✅ Using cached data after error');
         }
       } catch (cacheError) {
         console.error('❌ Failed to load cached data:', cacheError);

@@ -309,8 +309,6 @@ export class LanguageService {
 
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating language:', error);
-      console.error('❌ Error response:', error.response?.data);
       return {
         success: false,
         message:
@@ -379,10 +377,10 @@ export class LanguageService {
         };
       }
     } catch (error: any) {
-      console.error('Error deleting language:', error);
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message:
+          error.response?.data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
       };
     }
   }
@@ -451,7 +449,6 @@ export class LanguageService {
         };
       }
     } catch (error: any) {
-      console.error('Error deleting language text:', error);
       return {
         success: false,
         message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',

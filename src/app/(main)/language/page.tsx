@@ -118,10 +118,9 @@ export default function LanguagePage() {
         closeModal();
         alert('อัปเดตข้อมูลภาษาเรียบร้อยแล้ว');
       } else {
-        setError(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+        alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
       }
     } catch (error: any) {
-      console.error('❌ Error updating language:', error);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
     } finally {
       setIsSubmitting(false);
@@ -150,10 +149,9 @@ export default function LanguagePage() {
         await loadLanguages();
         alert('ลบภาษาเรียบร้อยแล้ว');
       } else {
-        setError(result.message || 'เกิดข้อผิดพลาดในการลบภาษา');
+        alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
       }
     } catch (error: any) {
-      console.error('❌ Error deleting language:', error);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
     } finally {
       setDeletingId(null);
