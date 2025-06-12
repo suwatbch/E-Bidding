@@ -68,26 +68,45 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   // ฟังก์ชันโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
     try {
-      setIsLoading(true);
       setError(null);
 
       // ตรวจสอบว่ามีข้อมูลใน cache หรือไม่
       const cachedData = languageService.getCurrentLanguageData();
 
-      // ถ้ามี cache ให้ใช้ก่อน แล้วโหลด API ใหม่ในพื้นหลัง
+      // ถ้ามี cache ให้ใช้ก่อน และไม่ต้องแสดง loading
       if (
         cachedData.languages.length > 0 &&
         cachedData.languageTexts.length > 0
       ) {
         setLanguages(cachedData.languages);
         setLanguageTexts(cachedData.languageTexts);
-        setIsLoading(false);
+        setIsLoading(false); // ปิด loading ทันทีเมื่อมี cache
+        console.log('✅ Using cached language data - No loading screen');
+
+        // โหลด API ใหม่ในพื้นหลัง (ไม่แสดง loading)
+        try {
+          const data = await languageService.refreshLanguageData();
+          setLanguages(data.languages);
+          setLanguageTexts(data.languageTexts);
+          console.log('✅ Background API update completed');
+        } catch (apiError) {
+          console.warn('⚠️ Background API update failed, using cache');
+        }
+        return;
       }
 
-      // โหลดข้อมูลใหม่จาก API
+      // ถ้าไม่มี cache ให้แสดง loading และโหลดจาก API
+      console.log('📡 No cache found - Loading from API with loading screen');
+      setIsLoading(true);
+
       const data = await languageService.refreshLanguageData();
       setLanguages(data.languages);
       setLanguageTexts(data.languageTexts);
+
+      console.log('✅ Language data loaded from API:', {
+        languages: data.languages.length,
+        texts: data.languageTexts.length,
+      });
     } catch (error) {
       console.error('❌ Error loading language data:', error);
       setError('Failed to load language data');
@@ -101,6 +120,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         ) {
           setLanguages(cachedData.languages);
           setLanguageTexts(cachedData.languageTexts);
+          console.log('✅ Using cached data after error');
         }
       } catch (cacheError) {
         console.error('❌ Failed to load cached data:', cacheError);
@@ -158,7 +178,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     await loadLanguageData();
   };
 
-  // แสดงหน้า loading เมื่อยังไม่ hydrated หรือกำลังโหลดข้อมูลครั้งแรก
+  // แสดงหน้า loading เฉพาะเมื่อ:
+  // 1. ยังไม่ hydrated หรือ
+  // 2. กำลังโหลดและไม่มีข้อมูลเลย (ไม่มี cache)
   if (!isHydrated || (isLoading && languageTexts.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
