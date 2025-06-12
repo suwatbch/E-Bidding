@@ -1,9 +1,6 @@
 // Language Service สำหรับจัดการข้อมูลภาษาจาก API
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-// Types สำหรับภาษา
 export interface Language {
   language_code: string;
   language_name: string;
@@ -12,7 +9,6 @@ export interface Language {
   status: number;
 }
 
-// Types สำหรับข้อความภาษา
 export interface LanguageText {
   text_id: number;
   text_key: string;
@@ -20,102 +16,7 @@ export interface LanguageText {
   text_value: string;
 }
 
-// ข้อมูลภาษาเริ่มต้น
-const DEFAULT_LANGUAGES: Language[] = [
-  {
-    language_code: 'th',
-    language_name: 'ไทย',
-    flag: '🇹🇭',
-    is_default: true,
-    status: 1,
-  },
-  {
-    language_code: 'en',
-    language_name: 'English',
-    flag: '🇬🇧',
-    is_default: false,
-    status: 1,
-  },
-];
-
-// ข้อความภาษาเริ่มต้น
-const DEFAULT_LANGUAGE_TEXTS: LanguageText[] = [
-  // ข้อความพื้นฐานสำหรับระบบ
-  {
-    text_id: 1,
-    text_key: 'login_title',
-    language_code: 'th',
-    text_value: 'เข้าสู่ระบบ',
-  },
-  {
-    text_id: 2,
-    text_key: 'login_title',
-    language_code: 'en',
-    text_value: 'Login',
-  },
-  {
-    text_id: 3,
-    text_key: 'logout',
-    language_code: 'th',
-    text_value: 'ออกจากระบบ',
-  },
-  { text_id: 4, text_key: 'logout', language_code: 'en', text_value: 'Logout' },
-  {
-    text_id: 5,
-    text_key: 'forget_title',
-    language_code: 'th',
-    text_value: 'ลืมรหัสผ่าน',
-  },
-  {
-    text_id: 6,
-    text_key: 'forget_title',
-    language_code: 'en',
-    text_value: 'Forgot Password',
-  },
-  {
-    text_id: 7,
-    text_key: 'username',
-    language_code: 'th',
-    text_value: 'ชื่อผู้ใช้',
-  },
-  {
-    text_id: 8,
-    text_key: 'username',
-    language_code: 'en',
-    text_value: 'Username',
-  },
-  {
-    text_id: 9,
-    text_key: 'password',
-    language_code: 'th',
-    text_value: 'รหัสผ่าน',
-  },
-  {
-    text_id: 10,
-    text_key: 'password',
-    language_code: 'en',
-    text_value: 'Password',
-  },
-  { text_id: 11, text_key: 'submit', language_code: 'th', text_value: 'ส่ง' },
-  {
-    text_id: 12,
-    text_key: 'submit',
-    language_code: 'en',
-    text_value: 'Submit',
-  },
-  {
-    text_id: 13,
-    text_key: 'cancel',
-    language_code: 'th',
-    text_value: 'ยกเลิก',
-  },
-  {
-    text_id: 14,
-    text_key: 'cancel',
-    language_code: 'en',
-    text_value: 'Cancel',
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 // ฟังก์ชันสำหรับอ่าน token จาก cookie และ localStorage
 const getAuthTokenFromStorage = (): string | null => {
@@ -190,9 +91,12 @@ export class LanguageService {
     // โหลดข้อมูลจาก localStorage หากมี
     this.loadFromStorage();
 
-    // ถ้าไม่มีข้อมูลใน localStorage ให้ใช้ข้อมูลเริ่มต้น
-    if (this.languages.length === 0 || this.languageTexts.length === 0) {
-      this.useDefaultData();
+    // ถ้าไม่มีข้อมูลใน localStorage ให้เริ่มต้นเป็น array ว่าง
+    if (this.languages.length === 0) {
+      this.languages = [];
+    }
+    if (this.languageTexts.length === 0) {
+      this.languageTexts = [];
     }
   }
 
@@ -208,14 +112,20 @@ export class LanguageService {
     languages: Language[],
     languageTexts: LanguageText[]
   ): void {
+    // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
+    if (typeof window === 'undefined') {
+      console.log('Server-side rendering detected, skipping localStorage save');
+      return;
+    }
+
     try {
-      localStorage.setItem('cached_languages', JSON.stringify(languages));
+      localStorage.setItem('cachedLanguages', JSON.stringify(languages));
       localStorage.setItem(
-        'cached_language_texts',
+        'cachedLanguageTexts',
         JSON.stringify(languageTexts)
       );
-      localStorage.setItem('language_cache_time', Date.now().toString());
-      console.log('💾 Saved to localStorage cache');
+      localStorage.setItem('lastLanguageUpdate', Date.now().toString());
+      console.log('💾 Language data saved to localStorage');
     } catch (error) {
       console.error('❌ Failed to save to localStorage:', error);
     }
@@ -223,41 +133,33 @@ export class LanguageService {
 
   // โหลดข้อมูลจาก localStorage
   private loadFromStorage(): void {
+    // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
+    if (typeof window === 'undefined') {
+      console.log('Server-side rendering detected, skipping localStorage');
+      this.languages = [];
+      this.languageTexts = [];
+      return;
+    }
+
     try {
-      const cachedLanguages = localStorage.getItem('cached_languages');
-      const cachedTexts = localStorage.getItem('cached_language_texts');
+      const cachedLanguages = localStorage.getItem('cachedLanguages');
+      const cachedTexts = localStorage.getItem('cachedLanguageTexts');
+      const lastUpdate = localStorage.getItem('lastLanguageUpdate');
 
       if (cachedLanguages && cachedTexts) {
         this.languages = JSON.parse(cachedLanguages);
         this.languageTexts = JSON.parse(cachedTexts);
-        console.log('✅ Loaded from localStorage cache:', {
-          languages: this.languages.length,
-          texts: this.languageTexts.length,
-        });
+        this.lastUpdateTime = lastUpdate ? parseInt(lastUpdate) : 0;
+        console.log('✅ Loaded language data from localStorage');
+      } else {
+        this.languages = [];
+        this.languageTexts = [];
+        console.log('📝 No cached data found, initialized empty arrays');
       }
     } catch (error) {
       console.error('❌ Failed to load from localStorage:', error);
       this.languages = [];
       this.languageTexts = [];
-    }
-  }
-
-  // ใช้ข้อมูลเริ่มต้นแทนการโหลดจาก temp files
-  private useDefaultData(): void {
-    try {
-      console.log('🔄 Using default language data...');
-
-      this.languages = [...DEFAULT_LANGUAGES];
-      this.languageTexts = [...DEFAULT_LANGUAGE_TEXTS];
-
-      console.log('✅ Loaded default data:', {
-        languages: this.languages.length,
-        texts: this.languageTexts.length,
-      });
-    } catch (error) {
-      console.error('❌ Failed to use default data:', error);
-      this.languages = DEFAULT_LANGUAGES;
-      this.languageTexts = DEFAULT_LANGUAGE_TEXTS;
     }
   }
 
@@ -349,13 +251,11 @@ export class LanguageService {
         };
       }
 
-      // ถ้าไม่มีข้อมูลเลย → ใช้ข้อมูลเริ่มต้น
-      console.log('⚠️ No cached data, using default data');
-      this.useDefaultData();
-
+      // ถ้าไม่มีข้อมูลเลย → ส่งกลับ array ว่าง
+      console.log('⚠️ No data available - API failed and no cache found');
       return {
-        languages: this.languages,
-        languageTexts: this.languageTexts,
+        languages: [],
+        languageTexts: [],
       };
     } finally {
       this.isLoading = false;
@@ -639,12 +539,27 @@ export class LanguageService {
 
   // เคลียร์ cache
   clearCache(): void {
-    this.languages = [...DEFAULT_LANGUAGES];
-    this.languageTexts = [...DEFAULT_LANGUAGE_TEXTS];
-    localStorage.removeItem('cached_languages');
-    localStorage.removeItem('cached_language_texts');
-    localStorage.removeItem('language_cache_time');
-    console.log('🗑️ Language cache cleared, using default data');
+    // ตรวจสอบว่าอยู่ในฝั่ง client หรือไม่
+    if (typeof window === 'undefined') {
+      console.log(
+        'Server-side rendering detected, skipping localStorage clear'
+      );
+      this.languages = [];
+      this.languageTexts = [];
+      return;
+    }
+
+    // ลบข้อมูลใน localStorage
+    localStorage.removeItem('cachedLanguages');
+    localStorage.removeItem('cachedLanguageTexts');
+    localStorage.removeItem('lastLanguageUpdate');
+
+    // รีเซ็ตข้อมูลให้เป็น array เปล่า
+    this.languages = [];
+    this.languageTexts = [];
+    this.lastUpdateTime = 0;
+
+    console.log('🗑️ All language cache cleared');
   }
 
   // ตรวจสอบว่า cache หมดอายุหรือไม่
