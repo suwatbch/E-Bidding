@@ -171,7 +171,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 font-medium">กำลังโหลด...</p>
+          <p className="text-gray-600 font-medium">Loading...</p>
           {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
         </div>
       </div>
