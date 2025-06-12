@@ -9,6 +9,66 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
+// ฟังก์ชันสำหรับอ่าน token จาก cookie และ localStorage
+const getAuthTokenFromStorage = (): string | null => {
+  if (typeof window === 'undefined') return null;
+
+  // 1. ลองอ่านจาก cookie ก่อน (สำหรับ middleware compatibility)
+  const getCookieToken = (): string | null => {
+    const allCookies = document.cookie.split('; ');
+    const authTokenCookie = allCookies.find((row) =>
+      row.startsWith('auth_token=')
+    );
+    return authTokenCookie?.split('=')[1] || null;
+  };
+
+  let token = getCookieToken();
+  if (token) return token;
+
+  // 2. ถ้าไม่มี cookie ลองหาใน localStorage (สำหรับ remember me)
+  token = localStorage.getItem('auth_token');
+  if (token) return token;
+
+  // 3. ถ้าไม่มีใน localStorage ลองหาใน sessionStorage
+  token = sessionStorage.getItem('auth_token');
+  if (token) return token;
+
+  // 4. ถ้ายังไม่มี ลองหาใน session object
+  const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
+  const storage = rememberMe ? localStorage : sessionStorage;
+  const sessionData = storage.getItem('auth_session');
+
+  if (sessionData) {
+    try {
+      const session = JSON.parse(sessionData);
+      token = session.token;
+    } catch (error) {
+      console.error('Error parsing session data:', error);
+    }
+  }
+
+  return token || null;
+};
+
+// ฟังก์ชันสำหรับสร้าง headers
+const getHeaders = (includeAuth: boolean = true) => {
+  const headers: any = {
+    'Content-Type': 'application/json',
+  };
+
+  // เพิ่ม Authorization header เฉพาะ API ที่ต้องการ authentication
+  if (includeAuth) {
+    const token = getAuthTokenFromStorage();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn(`⚠️ No auth token found - API call may fail`);
+    }
+  }
+
+  return headers;
+};
+
 export class LanguageService {
   private static instance: LanguageService;
   private isLoading = false;
@@ -23,16 +83,13 @@ export class LanguageService {
     return LanguageService.instance;
   }
 
-  // บันทึกข้อมูลลงใน memory (ไม่สามารถเขียนไฟล์ใน browser ได้)
+  // บันทึกข้อมูลใน memory
   private async saveToMemory(
     languages: Language[],
     languageTexts: LanguageText[]
   ): Promise<void> {
-    try {
-      // ข้อมูลจะถูกเก็บใน dataLanguage และ dataLanguageText อยู่แล้ว
-    } catch (error) {
-      console.error('❌ Failed to save to memory:', error);
-    }
+    // บันทึกข้อมูลลง temp files หรือ memory cache
+    console.log('💾 Saving to memory cache...');
   }
 
   // โหลดข้อมูลจาก temp files
@@ -76,13 +133,11 @@ export class LanguageService {
     }
   }
 
-  // โหลดข้อมูลภาษาจาก API
+  // โหลดข้อมูลภาษาจาก API (ไม่ต้อง token)
   async loadLanguagesFromAPI(): Promise<Language[]> {
     try {
       const response = await axios.get(`${API_URL}/api/languages`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(false), // ไม่ต้อง token
       });
 
       return response.data.data || [];
@@ -92,13 +147,11 @@ export class LanguageService {
     }
   }
 
-  // โหลดข้อมูลข้อความภาษาจาก API
+  // โหลดข้อมูลข้อความภาษาจาก API (ไม่ต้อง token)
   async loadLanguageTextsFromAPI(): Promise<LanguageText[]> {
     try {
       const response = await axios.get(`${API_URL}/api/languages/texts/all`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(false), // ไม่ต้อง token
       });
 
       // แปลงข้อมูลจาก API format เป็น LanguageText format
@@ -220,7 +273,7 @@ export class LanguageService {
     await this.refreshLanguageData();
   }
 
-  // อัปเดตข้อมูลภาษา
+  // อัปเดตข้อมูลภาษา (ต้อง token)
   async updateLanguage(
     languageCode: string,
     data: Partial<Language>
@@ -230,9 +283,7 @@ export class LanguageService {
         `${API_URL}/api/languages/${languageCode}`,
         data,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(true), // ต้อง token
         }
       );
 
@@ -253,7 +304,7 @@ export class LanguageService {
     }
   }
 
-  // เปลี่ยนสถานะภาษา (เปิด/ปิดใช้งาน)
+  // เปลี่ยนสถานะภาษา (เปิด/ปิดใช้งาน) (ต้อง token)
   async toggleLanguageStatus(
     languageCode: string
   ): Promise<{ success: boolean; message: string }> {
@@ -287,7 +338,7 @@ export class LanguageService {
     }
   }
 
-  // ลบภาษา (soft delete)
+  // ลบภาษา (soft delete) (ต้อง token)
   async deleteLanguage(
     languageCode: string
   ): Promise<{ success: boolean; message: string }> {
@@ -295,9 +346,7 @@ export class LanguageService {
       const response = await axios.delete(
         `${API_URL}/api/languages/${languageCode}`,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(true), // ต้อง token
         }
       );
 
@@ -325,64 +374,44 @@ export class LanguageService {
 
   // ===== Language Text Functions =====
 
-  // อัพเดทข้อความภาษา
+  // อัปเดตข้อความภาษา (ต้อง token)
   async updateLanguageText(
     textId: number,
     data: Partial<LanguageText>
   ): Promise<{ success: boolean; message: string }> {
     try {
-      // ค้นหาข้อมูลปัจจุบันเพื่อเอา keyname และ language_code
-      const existingText = dataLanguageText.find(
-        (item) => item.text_id === textId
-      );
-
-      if (!existingText) {
-        return {
-          success: false,
-          message: 'ไม่พบข้อมูลที่ต้องการอัพเดท',
-        };
-      }
-
-      // เตรียมข้อมูลที่จะส่งไป API (ต้องครบทั้ง 3 field)
+      // แปลงข้อมูลเป็นรูปแบบที่ API ต้องการ
       const apiData = {
-        keyname: data.text_key || existingText.text_key,
-        language_code: data.language_code || existingText.language_code,
-        text: data.text_value || existingText.text_value,
+        keyname: data.text_key,
+        language_code: data.language_code,
+        text: data.text_value,
       };
 
       const response = await axios.post(
         `${API_URL}/api/languages/texts/${textId}`,
         apiData,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(true), // ต้อง token
         }
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากอัพเดทสำเร็จ
+        // รีเฟรชข้อมูลหลังจากอัปเดต
         await this.refreshLanguageData();
-        return {
-          success: true,
-          message: 'อัพเดทข้อความเรียบร้อยแล้ว',
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'เกิดข้อผิดพลาดในการอัพเดทข้อความ',
-        };
       }
+
+      return response.data;
     } catch (error: any) {
-      console.error('Error updating language text:', error);
+      console.error('❌ Error updating language text:', error);
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message:
+          error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อความ',
       };
     }
   }
 
-  // ลบข้อความภาษา
+  // ลบข้อความภาษา (ต้อง token)
   async deleteLanguageText(
     textId: number
   ): Promise<{ success: boolean; message: string }> {
@@ -390,14 +419,12 @@ export class LanguageService {
       const response = await axios.delete(
         `${API_URL}/api/languages/texts/${textId}`,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(true), // ต้อง token
         }
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
+        // รีเฟรชข้อมูลหลังจากลบ
         await this.refreshLanguageData();
         return {
           success: true,
@@ -418,12 +445,12 @@ export class LanguageService {
     }
   }
 
-  // เพิ่มข้อความภาษาใหม่
+  // สร้างข้อความภาษาใหม่ (ต้อง token)
   async createLanguageText(
     data: Omit<LanguageText, 'text_id'>
   ): Promise<{ success: boolean; message: string }> {
     try {
-      // แปลงข้อมูลจาก LanguageText format เป็น API format
+      // แปลงข้อมูลเป็นรูปแบบที่ API ต้องการ
       const apiData = {
         keyname: data.text_key,
         language_code: data.language_code,
@@ -434,30 +461,22 @@ export class LanguageService {
         `${API_URL}/api/languages/texts`,
         apiData,
         {
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(true), // ต้อง token
         }
       );
 
       if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากเพิ่มสำเร็จ
+        // รีเฟรชข้อมูลหลังจากสร้าง
         await this.refreshLanguageData();
-        return {
-          success: true,
-          message: 'เพิ่มข้อความเรียบร้อยแล้ว',
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อความ',
-        };
       }
+
+      return response.data;
     } catch (error: any) {
-      console.error('Error creating language text:', error);
+      console.error('❌ Error creating language text:', error);
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message:
+          error.response?.data?.message || 'เกิดข้อผิดพลาดในการสร้างข้อความ',
       };
     }
   }

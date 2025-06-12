@@ -7,7 +7,7 @@ const PUBLIC_ROUTES = [
   '/api/auth/otp',
   '/api/auth/reset-password',
   '/api/languages',
-  '/api/languages/',
+  '/api/languages/texts/all',
 ];
 
 // รายการ API ที่ต้องเป็น Admin เท่านั้น

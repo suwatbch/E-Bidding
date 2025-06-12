@@ -13,30 +13,22 @@ const {
 // GET /api/company - ดึงข้อมูลบริษัททั้งหมด
 router.get('/', async (req, res) => {
   try {
-    console.log('📋 Getting all companies...');
-
     // ตรวจสอบ query parameters
     const { active_only, search } = req.query;
 
     let result;
 
     if (search) {
-      // ค้นหาบริษัท
-      console.log('🔍 Searching companies with term:', search);
       result = await searchCompanies(search);
     } else if (active_only === 'true') {
       // ดึงเฉพาะบริษัทที่เปิดใช้งาน
-      console.log('✅ Getting active companies only...');
       result = await getActiveCompanies();
     } else {
       // ดึงบริษัททั้งหมด
-      console.log('📊 Getting all companies...');
       result = await getAllCompanies();
     }
 
     if (result.success) {
-      console.log(`✅ Found ${result.data.length} companies`);
-
       res.json({
         success: true,
         data: result.data,
@@ -75,20 +67,16 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    console.log('🔍 Getting company by ID:', companyId);
-
     const result = await getCompanyById(companyId);
 
     if (result.success) {
       if (result.data.length > 0) {
-        console.log('✅ Company found:', result.data[0].name);
         res.json({
           success: true,
           data: result.data[0],
           message: 'ดึงข้อมูลบริษัทสำเร็จ',
         });
       } else {
-        console.log('❌ Company not found');
         res.status(404).json({
           success: false,
           message: 'ไม่พบข้อมูลบริษัทที่ระบุ',
@@ -134,8 +122,6 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    console.log('✏️ Updating company ID:', companyId);
-
     const result = await updateCompany(companyId, {
       name,
       tax_id,
@@ -146,7 +132,6 @@ router.put('/:id', async (req, res) => {
     });
 
     if (result.success) {
-      console.log('✅ Company updated successfully');
       res.json({
         success: true,
         message: 'อัพเดทข้อมูลบริษัทสำเร็จ',
@@ -183,8 +168,6 @@ router.post('/', async (req, res) => {
       });
     }
 
-    console.log('➕ Creating new company:', name);
-
     const result = await createCompany({
       name,
       tax_id,
@@ -195,7 +178,6 @@ router.post('/', async (req, res) => {
     });
 
     if (result.success) {
-      console.log('✅ Company created successfully');
       res.status(201).json({
         success: true,
         message: 'สร้างบริษัทใหม่สำเร็จ',
@@ -231,12 +213,9 @@ router.delete('/:id', async (req, res) => {
       });
     }
 
-    console.log('🗑️ Deleting company ID:', companyId);
-
     const result = await deleteCompany(companyId);
 
     if (result.success) {
-      console.log('✅ Company deleted successfully');
       res.json({
         success: true,
         message: 'ลบบริษัทสำเร็จ',

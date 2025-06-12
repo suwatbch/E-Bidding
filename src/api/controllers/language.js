@@ -136,12 +136,6 @@ router.post('/:languageCode', async (req, res) => {
     const { languageCode } = req.params;
     const { language_name, flag, is_default, status } = req.body;
 
-    console.log('🔄 API ได้รับข้อมูล:', {
-      languageCode,
-      body: req.body,
-      extractedData: { language_name, flag, is_default, status },
-    });
-
     if (!languageCode) {
       return res.status(400).json({
         success: false,
@@ -163,11 +157,7 @@ router.post('/:languageCode', async (req, res) => {
       status: status !== undefined ? status : 1, // รองรับ status field
     };
 
-    console.log('📝 ข้อมูลที่จะส่งไป Database:', updateData);
-
     const result = await updateLanguage(languageCode, updateData);
-
-    console.log('💾 ผลลัพธ์จาก Database:', result);
 
     if (result.success) {
       res.status(200).json({
