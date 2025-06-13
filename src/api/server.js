@@ -6,6 +6,7 @@ const { authMiddleware } = require('./config/authMiddleware');
 const authRouter = require('./controllers/auth');
 const languageRouter = require('./controllers/language');
 const companyRouter = require('./controllers/company');
+const userRouter = require('./controllers/users');
 
 const app = express();
 
@@ -41,6 +42,8 @@ const io = new Server(httpServer, {
 app.use('/api/auth', authRouter);
 app.use('/api/languages', languageRouter);
 app.use('/api/company', companyRouter);
+app.use('/api/users', userRouter);
+
 // Make io accessible to routes
 app.set('io', io);
 

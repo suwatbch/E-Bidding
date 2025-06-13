@@ -14,7 +14,7 @@ async function getAllCompanies() {
       created_dt,
       updated_dt
     FROM company 
-    ORDER BY name ASC
+    ORDER BY company_id ASC
   `;
 
   return await executeQuery(query);
@@ -55,7 +55,7 @@ async function getActiveCompanies() {
       updated_dt
     FROM company 
     WHERE status = 1
-    ORDER BY name ASC
+    ORDER BY company_id ASC
   `;
 
   return await executeQuery(query);
@@ -127,7 +127,7 @@ async function searchCompanies(searchTerm) {
       updated_dt
     FROM company 
     WHERE (name LIKE ? OR address LIKE ? OR email LIKE ? OR phone LIKE ?)
-    ORDER BY name ASC
+    ORDER BY company_id ASC
   `;
 
   const searchPattern = `%${searchTerm}%`;

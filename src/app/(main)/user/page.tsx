@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { User, initialUsers } from '@/app/model/dataUser';
+import React, { useEffect, useState, useCallback } from 'react';
+import { User, userService } from '@/app/services/userService';
 import Container from '@/app/components/ui/Container';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { LockTableIcon } from '@/app/components/ui/Icons';
-import UserFormModal from '@/app/components/user/FormDataUser';
-import { useUser } from '@/app/contexts/UserContext';
 import Pagination from '@/app/components/ui/Pagination';
-import LoadingState from '@/app/components/ui/LoadingState';
 import EmptyState from '@/app/components/ui/EmptyState';
+import LoadingState from '@/app/components/ui/LoadingState';
 
 interface FormData {
   username: string;
@@ -23,7 +21,6 @@ interface FormData {
   type: 'admin' | 'user';
   status: boolean;
   is_locked: boolean;
-  is_profile: boolean;
   image?: string;
 }
 
@@ -39,13 +36,14 @@ const initialForm: FormData = {
   type: 'user',
   status: true,
   is_locked: false,
-  is_profile: false,
   image: '',
 };
 
 export default function UserPage() {
-  const { users, setUsers, updateUser, profile, updateProfile } = useUser();
+  const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,47 +58,105 @@ export default function UserPage() {
   });
 
   const [form, setForm] = useState<FormData>(initialForm);
-
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // จำลองการโหลดข้อมูลจริง
-        setUsers(initialUsers);
-      } catch (error) {
-        console.error('Error loading users:', error);
-      } finally {
-        setIsLoading(false);
+  const loadUsers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await userService.getAllUsers(searchTerm);
+      if (result.success && result.data) {
+        setUsers(result.data);
+      } else {
+        setError(result.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้งาน');
+        setUsers([]);
       }
+    } catch (error: any) {
+      console.error('❌ Error loading users:', error);
+      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้งาน');
+      setUsers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchTerm]);
+
+  const handleRetry = useCallback(async () => {
+    setRetryCount((prev) => prev + 1);
+    await loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      await loadUsers();
     };
 
-    loadData();
+    initializeData();
     setMounted(true);
-  }, [setUsers]);
+  }, [loadUsers]);
 
-  // Filter users based on search term
-  const filteredUsers = users.filter((user) => {
-    const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
+  // If there's an error, show error page
+  if (error) {
     return (
-      user.fullname.toLowerCase().includes(searchTermLower) ||
-      (user.address || '').toLowerCase().includes(searchTermLower) ||
-      user.phone.toString().replace(/\s/g, '').includes(searchTermLower) ||
-      user.email.toLowerCase().includes(searchTermLower)
+      <Container className="py-8">
+        <div className="flex-1 py-8 flex flex-col items-center justify-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+            <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-red-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              เกิดข้อผิดพลาด
+            </h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-y-3">
+              <button
+                onClick={handleRetry}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                ลองใหม่ (ครั้งที่ {retryCount + 1})
+              </button>
+              <button
+                onClick={() => window.location.reload()}
+                className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                รีเฟรชหน้า
+              </button>
+            </div>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  const filteredUsers = users.filter((user) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.fullname?.toLowerCase().includes(searchLower) ||
+      user.username?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.phone?.toLowerCase().includes(searchLower) ||
+      user.address?.toLowerCase().includes(searchLower)
     );
   });
 
-  // Sort users
   const sortedUsers = React.useMemo(() => {
     const sorted = [...filteredUsers];
     if (sortConfig.direction !== null) {
       sorted.sort((a, b) => {
-        const aValue = String(a[sortConfig.key]).toLowerCase();
-        const bValue = String(b[sortConfig.key]).toLowerCase();
-
-        if (aValue === null || aValue === undefined) return 1;
-        if (bValue === null || bValue === undefined) return -1;
+        const aValue = String(a[sortConfig.key] || '').toLowerCase();
+        const bValue = String(b[sortConfig.key] || '').toLowerCase();
 
         if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -110,12 +166,10 @@ export default function UserPage() {
     return sorted;
   }, [filteredUsers, sortConfig]);
 
-  // Calculate pagination
   const totalPages = Math.ceil(sortedUsers.length / perPage);
   const startIndex = (currentPage - 1) * perPage;
   const currentUsers = sortedUsers.slice(startIndex, startIndex + perPage);
 
-  // Sort function
   const requestSort = (key: keyof User) => {
     let direction: 'asc' | 'desc' | null = 'asc';
     if (sortConfig.key === key) {
@@ -126,7 +180,6 @@ export default function UserPage() {
     setCurrentPage(1);
   };
 
-  // Get sort icon
   const getSortIcon = (key: keyof User) => {
     if (sortConfig.key !== key) {
       return (
@@ -182,7 +235,6 @@ export default function UserPage() {
     return null;
   };
 
-  // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -195,9 +247,6 @@ export default function UserPage() {
 
   const handleEdit = (user: User) => {
     setEditUser(user);
-    // เช็คว่าผู้ใช้นี้เป็นโปรไฟล์ปัจจุบันหรือไม่
-    const isCurrentProfile = profile?.user_id === user.user_id;
-
     setForm({
       username: user.username,
       password: '',
@@ -206,11 +255,10 @@ export default function UserPage() {
       tax_id: user.tax_id || '',
       address: user.address || '',
       email: user.email,
-      phone: user.phone,
-      type: user.type,
-      status: user.status,
+      phone: user.phone || '',
+      type: user.type as 'admin' | 'user',
+      status: user.status === 1,
       is_locked: user.is_locked,
-      is_profile: isCurrentProfile,
       image: user.image || '',
     });
     setIsModalOpen(true);
@@ -233,60 +281,72 @@ export default function UserPage() {
   };
 
   const handleSubmit = async (formData: FormData) => {
-    if (editUser) {
-      const updatedUser: User = {
-        ...editUser,
-        ...formData,
-        updated_dt: new Date().toISOString(),
-      };
+    try {
+      if (editUser) {
+        const result = await userService.updateUser(editUser.user_id, {
+          username: formData.username,
+          password: formData.password || undefined,
+          fullname: formData.fullname,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          tax_id: formData.tax_id,
+          type: formData.type,
+          status: formData.status ? 1 : 0,
+          is_locked: formData.is_locked,
+          language_code: formData.language_code,
+          image: formData.image,
+        });
 
-      if (!formData.password) {
-        updatedUser.password = editUser.password;
+        if (result.success) {
+          await loadUsers();
+          setIsModalOpen(false);
+          setForm(initialForm);
+        } else {
+          setError(result.message || 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
+        }
+      } else {
+        const result = await userService.createUser({
+          username: formData.username,
+          password: formData.password,
+          fullname: formData.fullname,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          tax_id: formData.tax_id,
+          type: formData.type,
+          status: formData.status ? 1 : 0,
+          is_locked: formData.is_locked,
+          language_code: formData.language_code,
+          image: formData.image,
+        });
+
+        if (result.success) {
+          await loadUsers();
+          setIsModalOpen(false);
+          setForm(initialForm);
+        } else {
+          setError(result.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
+        }
       }
-
-      // ถ้าตั้งค่าเป็นโปรไฟล์
-      if (formData.is_profile) {
-        // อัพเดทโปรไฟล์
-        updateProfile(updatedUser);
-      } else if (profile?.user_id === editUser.user_id) {
-        // ถ้าเป็นโปรไฟล์ปัจจุบันแต่ยกเลิกการตั้งค่าเป็นโปรไฟล์
-        localStorage.removeItem('profile');
-      }
-
-      // อัพเดทข้อมูลผู้ใช้
-      updateUser(updatedUser);
-
-      setIsModalOpen(false);
-      setEditUser(null);
-      setForm(initialForm);
-    } else {
-      const newUser: User = {
-        ...formData,
-        user_id: Date.now(),
-        created_dt: new Date().toISOString(),
-        updated_dt: new Date().toISOString(),
-        login_count: 0,
-      };
-
-      // ถ้าตั้งค่าเป็นโปรไฟล์
-      if (formData.is_profile) {
-        updateProfile(newUser);
-      }
-
-      const newUsers = [...users, newUser];
-      setUsers(newUsers);
-      localStorage.setItem('users', JSON.stringify(newUsers));
-
-      setIsModalOpen(false);
-      setForm(initialForm);
+    } catch (error: any) {
+      console.error('Error submitting form:', error);
+      setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
 
-  const handleStatusChange = (id: number) => {
-    const updatedUsers = users.map((user) =>
-      user.user_id === id ? { ...user, status: !user.status } : user
-    );
-    setUsers(updatedUsers);
+  const handleDelete = async (userId: number) => {
+    try {
+      const result = await userService.deleteUser(userId);
+      if (result.success) {
+        await loadUsers();
+      } else {
+        setError(result.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+      }
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      setError('เกิดข้อผิดพลาดในการลบข้อมูล');
+    }
   };
 
   const handlePerPageChange = (newPerPage: number) => {
@@ -297,7 +357,6 @@ export default function UserPage() {
   return (
     <Container className="py-8">
       <div className="flex-1 py-8 flex flex-col">
-        {/* Header Section */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
@@ -379,7 +438,6 @@ export default function UserPage() {
           </div>
         </div>
 
-        {/* Table Info Section */}
         <Pagination
           currentPage={currentPage}
           totalItems={sortedUsers.length}
@@ -389,7 +447,6 @@ export default function UserPage() {
           mounted={mounted}
         />
 
-        {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="flex flex-col">
             <div className="overflow-x-auto">
@@ -613,9 +670,9 @@ export default function UserPage() {
                           <div className="relative">
                             <div
                               className="text-sm font-medium text-gray-900 truncate cursor-pointer"
-                              title={user.fullname}
+                              title={user.fullname || ''}
                             >
-                              {user.fullname}
+                              {user.fullname || '-'}
                             </div>
                           </div>
                         </td>
@@ -633,9 +690,9 @@ export default function UserPage() {
                           <div className="relative">
                             <div
                               className="text-sm text-gray-500 truncate cursor-pointer"
-                              title={user.phone}
+                              title={user.phone || ''}
                             >
-                              {user.phone}
+                              {user.phone || '-'}
                             </div>
                           </div>
                         </td>
@@ -643,9 +700,9 @@ export default function UserPage() {
                           <div className="relative">
                             <div
                               className="text-sm text-gray-500 truncate cursor-pointer"
-                              title={user.email}
+                              title={user.email || ''}
                             >
-                              {user.email}
+                              {user.email || '-'}
                             </div>
                           </div>
                         </td>
@@ -708,7 +765,7 @@ export default function UserPage() {
                                     `คุณต้องการลบผู้ใช้ "${user.fullname}" หรือไม่?`
                                   )
                                 ) {
-                                  handleStatusChange(user.user_id);
+                                  handleDelete(user.user_id);
                                 }
                               }}
                               className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
@@ -739,18 +796,6 @@ export default function UserPage() {
             </div>
           </div>
         </div>
-
-        {/* Modal */}
-        <UserFormModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onSubmit={handleSubmit}
-          editUser={editUser}
-          initialForm={initialForm}
-          form={form}
-          setForm={setForm}
-          isFromProfileMenu={false}
-        />
       </div>
     </Container>
   );
