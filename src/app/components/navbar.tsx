@@ -30,7 +30,6 @@ import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
 import Container from './ui/Container';
-import UserFormModal from './user/FormDataUser';
 import { User } from '@/app/model/dataUser';
 import { useUser } from '@/app/contexts/UserContext';
 import { useAuth } from '@/app/contexts/AuthContext';
@@ -800,10 +799,6 @@ export default function Navbar() {
 
                 <div className="border-t border-gray-100 pt-2">
                   <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/profile');
-                    }}
                     className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
                       isActivePage('/profile')
                         ? 'text-blue-700 bg-blue-50/80 font-medium'
@@ -849,18 +844,6 @@ export default function Navbar() {
           animation: circuit-flow 4s infinite;
         }
       `}</style>
-
-      {/* Profile Edit Modal */}
-      <UserFormModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        editUser={user as any}
-        initialForm={initialForm}
-        form={formData}
-        setForm={setFormData}
-        isFromProfileMenu={true}
-      />
     </>
   );
 }
