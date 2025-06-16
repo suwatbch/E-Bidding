@@ -336,11 +336,15 @@ export default function UserPage() {
   };
 
   const handleDelete = async (userId: number) => {
+    if (!confirm('คุณแน่ใจว่าต้องการลบผู้ใช้งานนี้?')) return;
+
     try {
       const result = await userService.deleteUser(userId);
       if (result.success) {
         await loadUsers();
+        alert('ลบข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
       } else {
+        console.error('Failed to delete user:', result.message);
         setError(result.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
       }
     } catch (error: any) {
