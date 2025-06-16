@@ -1030,6 +1030,95 @@ export const groupBy = <T, K extends keyof T>(
 };
 
 // =============================================================================
+// FORM HANDLING UTILITIES
+// =============================================================================
+
+/**
+ * Configuration options for handleFormChange function
+ */
+export interface FormChangeConfig {
+  /** รูปแบบการ validate โทรศัพท์ */
+  phoneValidation?: 'thai' | 'numbers-dash' | 'none';
+  /** รูปแบบการ format อีเมล */
+  emailFormat?: 'lowercase-trim' | 'none';
+  /** ฟิลด์พิเศษที่ต้องการ handle แยก */
+  customHandlers?: {
+    [fieldName: string]: (value: string) => string;
+  };
+}
+
+/**
+ * Universal form change handler ที่ใช้ได้ทั้งหน้า user และ company
+ * @param e - React change event
+ * @param setForm - function สำหรับอัพเดท form state
+ * @param config - configuration options
+ */
+export const handleFormChange = <T extends Record<string, any>>(
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  setForm: React.Dispatch<React.SetStateAction<T>>,
+  config?: FormChangeConfig
+) => {
+  const { name, value, type } = e.target;
+
+  // Handle checkbox
+  if (type === 'checkbox') {
+    const checked = (e.target as HTMLInputElement).checked;
+    setForm((prev) => ({ ...prev, [name]: checked }));
+    return;
+  }
+
+  let processedValue = value;
+
+  // Apply custom handlers first
+  if (config?.customHandlers && config.customHandlers[name]) {
+    processedValue = config.customHandlers[name](value);
+  }
+  // Handle phone field
+  else if (name === 'phone') {
+    switch (config?.phoneValidation) {
+      case 'thai':
+        // เฉพาะตัวเลข 0-9 สำหรับหมายเลขโทรศัพท์ไทย
+        processedValue = value.replace(/[^0-9]/g, '');
+        break;
+      case 'numbers-dash':
+        // เฉพาะตัวเลขและ dash สำหรับหมายเลขโทรศัพท์ทั่วไป
+        processedValue = value.replace(/[^0-9-]/g, '');
+        break;
+      case 'none':
+      default:
+        processedValue = value;
+        break;
+    }
+  }
+  // Handle tax_id field - เฉพาะตัวเลข
+  else if (name === 'tax_id') {
+    processedValue = value.replace(/[^0-9]/g, '');
+  }
+  // Handle email field
+  else if (name === 'email') {
+    switch (config?.emailFormat) {
+      case 'lowercase-trim':
+        processedValue = value.toLowerCase().trim();
+        break;
+      case 'none':
+      default:
+        processedValue = value;
+        break;
+    }
+  }
+
+  setForm((prev) => ({ ...prev, [name]: processedValue }));
+};
+
+/**
+ * Default configuration for form handling
+ */
+export const formChangeConfig = {
+  phoneValidation: 'numbers-dash' as const,
+  emailFormat: 'none' as const,
+} satisfies FormChangeConfig;
+
+// =============================================================================
 // EXPORT ALL UTILITIES
 // =============================================================================
 
@@ -1115,4 +1204,8 @@ export default {
   setLocalStorage,
   getLocalStorage,
   removeLocalStorage,
+
+  // Form Handling
+  handleFormChange,
+  formChangeConfig,
 };

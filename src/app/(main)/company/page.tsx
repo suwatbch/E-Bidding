@@ -6,6 +6,7 @@ import Container from '@/app/components/ui/Container';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
+import { handleFormChange, formChangeConfig } from '@/app/utils/globalFunction';
 
 interface FormData {
   name: string;
@@ -292,24 +293,7 @@ export default function CompanyPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-
-    // ถ้าเป็นช่องโทรศัพท์ ให้ filter เฉพาะตัวเลขและ -
-    if (name === 'phone') {
-      const filteredValue = value.replace(/[^0-9-]/g, '');
-      setForm({ ...form, [name]: filteredValue });
-      return;
-    }
-
-    // ถ้าเป็นช่อง email ให้ตรวจสอบรูปแบบ
-    if (name === 'email') {
-      // อนุญาตให้พิมพ์ได้ แต่จะเช็ครูปแบบตอน submit
-      setForm({ ...form, [name]: value.toLowerCase().trim() });
-      return;
-    }
-
-    const newValue = type === 'checkbox' ? checked : value;
-    setForm({ ...form, [name]: newValue });
+    handleFormChange(e, setForm, formChangeConfig);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
