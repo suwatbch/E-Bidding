@@ -96,14 +96,24 @@ export default function Navbar() {
   useEffect(() => {
     const loadUserDataFromStorage = () => {
       try {
-        // ดึงข้อมูลจาก localStorage เท่านั้น
         let userData = {
           fullname: '',
           email: '',
           image: '',
         };
 
-        // 1. ดึงข้อมูลจาก localStorage (auth_user) - แหล่งหลัก
+        // 1. ลองดึงข้อมูลจาก AuthContext ก่อน (ใหม่)
+        if (user && user.fullname) {
+          userData = {
+            fullname: user.fullname || '',
+            email: user.email || '',
+            image: user.image || '',
+          };
+          setLocalUserData(userData);
+          return true;
+        }
+
+        // 2. ถ้าไม่มีใน AuthContext ดึงจาก localStorage
         const authUser = localStorage.getItem('auth_user');
         if (authUser) {
           const authUserData = JSON.parse(authUser);
@@ -112,29 +122,41 @@ export default function Navbar() {
             email: authUserData.email || '',
             image: authUserData.image || '',
           };
+          setLocalUserData(userData);
+          return userData.fullname !== '';
+        }
+
+        // 3. ลองดึงจาก session storage
+        const sessionUser = sessionStorage.getItem('auth_user');
+        if (sessionUser) {
+          const sessionUserData = JSON.parse(sessionUser);
+          userData = {
+            fullname: sessionUserData.fullname || '',
+            email: sessionUserData.email || '',
+            image: sessionUserData.image || '',
+          };
+          setLocalUserData(userData);
+          return userData.fullname !== '';
         }
 
         setLocalUserData(userData);
+        return false;
       } catch (error) {
         console.error('Error loading user data from storage:', error);
         setLocalUserData({});
+        return false;
       }
     };
-
-    // โหลดข้อมูลครั้งแรก
-    loadUserDataFromStorage();
 
     // ฟัง localStorage changes จากหน้าอื่น (same origin)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'auth_user' && e.newValue) {
-        console.log('🔄 [Navbar] localStorage changed from another tab/page');
         loadUserDataFromStorage();
       }
     };
 
     // ฟัง manual localStorage changes ในหน้าเดียวกัน
     const handleCustomStorageChange = () => {
-      console.log('🔄 [Navbar] localStorage changed manually');
       loadUserDataFromStorage();
     };
 
@@ -142,25 +164,49 @@ export default function Navbar() {
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('localStorageChange', handleCustomStorageChange);
 
-    // Smart timeout: เช็คทันที ถ้าไม่มีข้อมูลค่อยรอ 2 วินาที
-    let timeoutId: NodeJS.Timeout | null = null;
+    // Enhanced loading mechanism
+    let retryCount = 0;
+    const maxRetries = 10;
+    let pollingInterval: NodeJS.Timeout | null = null;
 
-    const checkForData = () => {
-      const currentAuthUser = localStorage.getItem('auth_user');
-      if (currentAuthUser) {
-        loadUserDataFromStorage();
-        return true; // มีข้อมูลแล้ว
+    const tryLoadData = () => {
+      const hasData = loadUserDataFromStorage();
+
+      if (hasData) {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+        return true;
       }
-      return false; // ยังไม่มีข้อมูล
+
+      retryCount++;
+
+      if (retryCount >= maxRetries) {
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          pollingInterval = null;
+        }
+        return false;
+      }
+
+      return false;
     };
 
-    // เช็คทันที
-    if (!checkForData()) {
-      // ถ้าไม่มีข้อมูล ค่อยรอ 2 วินาที
-      timeoutId = setTimeout(() => {
-        checkForData(); // เช็คอีกครั้งหลัง 2 วินาที
-      }, 500);
+    // โหลดข้อมูลครั้งแรกทันที
+    if (!tryLoadData()) {
+      // ถ้าไม่ได้ข้อมูล ใช้ polling ทุก 200ms
+      pollingInterval = setInterval(() => {
+        tryLoadData();
+      }, 200);
     }
+
+    // Fallback: เช็คอีกครั้งหลัง 2 วินาที
+    const fallbackTimeout = setTimeout(() => {
+      if (retryCount > 0 && !localUserData.fullname) {
+        tryLoadData();
+      }
+    }, 2000);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -168,11 +214,23 @@ export default function Navbar() {
         'localStorageChange',
         handleCustomStorageChange
       );
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
       }
+      clearTimeout(fallbackTimeout);
     };
-  }, []);
+  }, [user]); // เพิ่ม dependency user
+
+  // เพิ่ม useEffect เพื่อรอการเปลี่ยนแปลงของ user จาก AuthContext
+  useEffect(() => {
+    if (user && user.fullname && !localUserData.fullname) {
+      setLocalUserData({
+        fullname: user.fullname || '',
+        email: user.email || '',
+        image: user.image || '',
+      });
+    }
+  }, [user, localUserData.fullname]);
 
   useEffect(() => {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
@@ -636,24 +694,25 @@ export default function Navbar() {
                       )}
                     </div>
                     <div className="flex flex-col items-start">
-                      {isAuthLoading ? (
+                      {isAuthLoading ||
+                      (!localUserData.fullname && !localUserData.email) ? (
                         <>
                           <div className="h-4 w-[140px] bg-white/20 rounded animate-pulse"></div>
-                          <div className="h-3 w-[140px] bg-white/20 rounded animate-pulse mt-1"></div>
+                          <div className="h-3 w-[100px] bg-white/20 rounded animate-pulse mt-1"></div>
                         </>
                       ) : (
                         <>
                           <span
                             className="text-left text-sm text-white truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={localUserData.fullname || 'ไม่ระบุชื่อ'}
+                            title={localUserData.fullname || 'กำลังโหลด...'}
                           >
-                            {localUserData.fullname || 'ไม่ระบุชื่อ'}
+                            {localUserData.fullname || 'กำลังโหลด...'}
                           </span>
                           <span
                             className="text-left text-xs text-white/80 truncate w-[140px] transform group-hover:scale-105 transition duration-300"
-                            title={localUserData.email || 'ไม่ระบุอีเมล'}
+                            title={localUserData.email || 'กำลังโหลด...'}
                           >
-                            {localUserData.email || 'ไม่ระบุอีเมล'}
+                            {localUserData.email || 'กำลังโหลด...'}
                           </span>
                         </>
                       )}
