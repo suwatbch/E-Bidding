@@ -295,6 +295,11 @@ async function updateUser(userId, userData) {
     if (is_locked !== undefined) {
       updateFields.push('is_locked = ?');
       params.push(is_locked ? 1 : 0);
+
+      if (!is_locked) {
+        updateFields.push('login_count = ?');
+        params.push(0);
+      }
     }
 
     if (updateFields.length === 0) {

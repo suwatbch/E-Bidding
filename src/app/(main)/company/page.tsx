@@ -57,7 +57,7 @@ export default function CompanyPage() {
         setError(result.message);
       }
     } catch (error: any) {
-      console.error('❌ Error loading companies:', error);
+      console.error('Error loading companies:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลบริษัท');
     }
   }, []);
@@ -336,7 +336,7 @@ export default function CompanyPage() {
           closeModal();
           alert('อัปเดทข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          console.error('❌ Failed to update company:', result.message);
+          console.error('Failed to update company:', result.message);
           setError(result.message);
         }
       } else {
@@ -357,12 +357,12 @@ export default function CompanyPage() {
           closeModal();
           alert('เพิ่มข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          console.error('❌ Failed to create company:', result.message);
+          console.error('Failed to create company:', result.message);
           setError(result.message);
         }
       }
     } catch (error: any) {
-      console.error('❌ Error saving company:', error);
+      console.error('Error saving company:', error);
       setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSubmitting(false);

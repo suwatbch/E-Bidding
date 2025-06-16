@@ -7,7 +7,6 @@ import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { LockTableIcon } from '@/app/components/ui/Icons';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
-import LoadingState from '@/app/components/ui/LoadingState';
 import { handleFormChange, formChangeConfig } from '@/app/utils/globalFunction';
 import { Language, languageService } from '@/app/services/languageService';
 
@@ -62,6 +61,7 @@ export default function UserPage() {
   const [form, setForm] = useState<FormData>(initialForm);
   const [mounted, setMounted] = useState(false);
   const [availableLanguages, setAvailableLanguages] = useState<Language[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -75,7 +75,7 @@ export default function UserPage() {
         setUsers([]);
       }
     } catch (error: any) {
-      console.error('❌ Error loading users:', error);
+      console.error('Error loading users:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้งาน');
       setUsers([]);
     } finally {
@@ -90,7 +90,7 @@ export default function UserPage() {
       const activeLanguages = languages.filter((lang) => lang.status === 1);
       setAvailableLanguages(activeLanguages);
     } catch (error: any) {
-      console.error('❌ Error loading languages:', error);
+      console.error('Error loading languages:', error);
       // ถ้าโหลดภาษาไม่ได้ ให้ใช้ค่า default
       setAvailableLanguages([
         {
@@ -305,6 +305,9 @@ export default function UserPage() {
     e.preventDefault();
 
     try {
+      setIsSubmitting(true);
+      setError(null);
+
       if (editUser) {
         const result = await userService.updateUser(editUser.user_id, {
           username: form.username,
@@ -324,7 +327,9 @@ export default function UserPage() {
         if (result.success) {
           await loadUsers();
           closeModal();
+          alert('อัปเดทข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
+          console.error('Failed to update user:', result.message);
           setError(result.message || 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
         }
       } else {
@@ -345,13 +350,17 @@ export default function UserPage() {
         if (result.success) {
           await loadUsers();
           closeModal();
+          alert('เพิ่มข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
+          console.error('Failed to create user:', result.message);
           setError(result.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
         }
       }
     } catch (error: any) {
-      console.error('Error submitting form:', error);
+      console.error('Error saving user:', error);
       setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -661,9 +670,7 @@ export default function UserPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {isLoading ? (
-                    <LoadingState colSpan={8} />
-                  ) : filteredUsers.length === 0 ? (
+                  {filteredUsers.length === 0 ? (
                     <EmptyState
                       title="ไม่พบข้อมูล"
                       description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
@@ -1207,7 +1214,7 @@ export default function UserPage() {
                       }}
                       required
                     >
-                      <option value="user">ผู้ใช้งานทั่วไป</option>
+                      <option value="user">ผู้ใช้งาน</option>
                       <option value="admin">ผู้ดูแลระบบ</option>
                     </select>
                   </div>
@@ -1324,13 +1331,34 @@ export default function UserPage() {
                 <button
                   type="submit"
                   form="userForm"
-                  className="group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
+                  disabled={isSubmitting}
+                  className={`group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
-                    transition-all duration-200 shadow-md hover:shadow-md 
-                    bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+                    transition-all duration-200 shadow-md hover:shadow-md ${
+                      isSubmitting
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                    }`}
                 >
                   <div className="flex items-center gap-1.5">
-                    {editUser ? (
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        {editUser ? 'กำลังบันทึก...' : 'กำลังเพิ่ม...'}
+                      </>
+                    ) : editUser ? (
                       <>
                         <svg
                           className="w-4 h-4 text-white"
