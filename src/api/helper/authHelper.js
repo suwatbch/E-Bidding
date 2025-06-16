@@ -119,8 +119,7 @@ async function loginUser(username, password) {
     if (user.is_locked) {
       return {
         success: false,
-        error:
-          'บัญชีผู้ใช้ถูกล็อคเนื่องจากพยายาม login ผิดเกิน 5 ครั้ง กรุณาติดต่อผู้ดูแลระบบ',
+        error: 'บัญชีผู้ใช้ถูกล็อค กรุณาติดต่อผู้ดูแลระบบ',
       };
     }
 
