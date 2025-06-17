@@ -66,9 +66,15 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Force update mechanism removed - now using localStorage priority
 
   // เพิ่ม useAuth เพื่อดึงข้อมูล user
-  const { user, isAuthenticated, updateUser } = useAuth();
+  const {
+    user,
+    isAuthenticated,
+    updateUser,
+    isLoading: authLoading,
+  } = useAuth();
 
   // ฟังก์ชันโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
@@ -107,7 +113,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       setLanguageTexts(data.languageTexts);
       return data.languages; // return ข้อมูลที่โหลดมา
     } catch (error) {
-      console.error('❌ Error loading language data:', error);
+      console.error('Error loading language data:', error);
       setError('Failed to load language data');
 
       // หากเกิดข้อผิดพลาด ให้ลองใช้ cached data
@@ -122,7 +128,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
           return cachedData.languages;
         }
       } catch (cacheError) {
-        console.error('❌ Failed to load cached data:', cacheError);
+        console.error('Failed to load cached data:', cacheError);
       }
       return []; // return empty array if all fails
     } finally {
@@ -132,30 +138,39 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 
   // ฟังก์ชันสำหรับตั้งค่าภาษาตามลำดับความสำคัญ
   const determineLanguage = (loadedLanguages: Language[]) => {
-    // 1. ถ้า user login แล้วและมี language_code ให้ใช้ภาษาจาก user profile
+    // Debug logs removed for production
+
+    // 1. ถ้า user login แล้วและมี language_code ให้ใช้ภาษาจาก user profile (สำคัญที่สุด)
     if (isAuthenticated && user?.language_code) {
       // ตรวจสอบว่าภาษาของ user มีอยู่ในรายการภาษาที่เปิดใช้งานหรือไม่
       const userLanguage = loadedLanguages.find(
         (lang) => lang.language_code === user.language_code && lang.status === 1
       );
       if (userLanguage) {
+        // Using user language (highest priority)
         setCurrentLanguage(user.language_code);
-        // บันทึกลง localStorage เพื่อให้คงค่าไว้
+        // อัพเดท localStorage ให้ตรงกับ user profile
         localStorage.setItem('selectedLanguage', user.language_code);
         return;
+      } else {
+        console.log('⚠️ User language not valid, checking alternatives...');
       }
     }
 
-    // 2. ถ้าไม่มี user หรือภาษาของ user ไม่ valid ให้ใช้ localStorage
-    const savedLanguage = localStorage.getItem('selectedLanguage');
-    if (savedLanguage) {
-      // ตรวจสอบว่าภาษาที่บันทึกไว้ยังใช้งานได้หรือไม่
-      const savedLanguageValid = loadedLanguages.find(
-        (lang) => lang.language_code === savedLanguage && lang.status === 1
-      );
-      if (savedLanguageValid) {
-        setCurrentLanguage(savedLanguage);
-        return;
+    // 2. ถ้าไม่มี user หรือภาษาของ user ไม่ valid ให้ใช้ localStorage (เฉพาะเมื่อไม่ login)
+    if (!isAuthenticated) {
+      const savedLanguage = localStorage.getItem('selectedLanguage');
+      if (savedLanguage) {
+        // ตรวจสอบว่าภาษาที่บันทึกไว้ยังใช้งานได้หรือไม่
+        const savedLanguageValid = loadedLanguages.find(
+          (lang) => lang.language_code === savedLanguage && lang.status === 1
+        );
+        if (savedLanguageValid) {
+          setCurrentLanguage(savedLanguage);
+          return;
+        } else {
+          localStorage.removeItem('selectedLanguage');
+        }
       }
     }
 
@@ -169,7 +184,17 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       return;
     }
 
-    // 4. ถ้าไม่มีภาษาเริ่มต้น ให้ใช้ภาษาแรกที่เปิดใช้งาน
+    // 4. ถ้าไม่มีภาษาเริ่มต้น ให้หาภาษาไทยก่อน
+    const thaiLanguage = loadedLanguages.find(
+      (lang) => lang.language_code === 'th' && lang.status === 1
+    );
+    if (thaiLanguage) {
+      setCurrentLanguage('th');
+      localStorage.setItem('selectedLanguage', 'th');
+      return;
+    }
+
+    // 5. ถ้าไม่มีภาษาไทย ให้ใช้ภาษาแรกที่เปิดใช้งาน
     const firstActiveLanguage = loadedLanguages.find(
       (lang) => lang.status === 1
     );
@@ -182,7 +207,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       return;
     }
 
-    // 5. fallback สุดท้าย
+    // 6. fallback สุดท้าย
     setCurrentLanguage('th');
     localStorage.setItem('selectedLanguage', 'th');
   };
@@ -202,9 +227,47 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       if (response.success) {
         // อัพเดท user context ด้วย
         updateUser({ language_code: languageCode });
+
+        // Force update localStorage/sessionStorage ด้วย
+        if (typeof window !== 'undefined') {
+          const storage = localStorage;
+          const sessionData = storage.getItem('auth_session');
+          if (sessionData) {
+            try {
+              const session = JSON.parse(sessionData);
+              if (session.user) {
+                session.user.language_code = languageCode;
+                storage.setItem('auth_session', JSON.stringify(session));
+              }
+            } catch (error) {
+              console.error('Error updating session storage:', error);
+            }
+          }
+
+          // อัพเดท user data ใน localStorage ด้วย
+          const userData = storage.getItem('auth_user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              user.language_code = languageCode;
+              storage.setItem('auth_user', JSON.stringify(user));
+            } catch (error) {
+              console.error('Error updating user data:', error);
+            }
+          }
+
+          // Trigger a custom event เพื่อแจ้งให้ AuthContext รู้ว่ามีการเปลี่ยนแปลง
+          window.dispatchEvent(
+            new CustomEvent('languageChanged', {
+              detail: { languageCode, userId: user?.user_id },
+            })
+          );
+        }
+      } else {
+        console.error('Failed to update user language:', response.message);
       }
     } catch (error) {
-      console.error('❌ Error updating user language in backend:', error);
+      console.error('Error updating user language in backend:', error);
     }
   };
 
@@ -222,10 +285,21 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 
   // useEffect สำหรับการอัพเดทภาษาเมื่อ user login/logout
   useEffect(() => {
+    // รอให้ AuthContext โหลดเสร็จก่อน
+    if (authLoading) {
+      return;
+    }
+
     if (isHydrated && languages.length > 0) {
       determineLanguage(languages);
     }
-  }, [isAuthenticated, user?.language_code, isHydrated]);
+  }, [
+    isAuthenticated,
+    user?.language_code,
+    isHydrated,
+    authLoading,
+    user?.updated_dt,
+  ]);
 
   // ฟังก์ชันแปลข้อความ
   const t = (key: string): string => {

@@ -287,13 +287,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Load session from storage
   const loadSession = () => {
     try {
-      // ลองอ่านจาก cookie ก่อนเสมอ
-      if (syncFromCookie()) {
-        setIsLoading(false);
-        return;
-      }
-
-      // ดึงข้อมูลจาก localStorage เท่านั้น
+      // อ่านจาก localStorage ก่อน (เพื่อให้ภาษาที่อัพเดทแล้วมี priority)
       const storage = localStorage;
       const sessionData = storage.getItem(STORAGE_KEYS.SESSION);
 
@@ -318,7 +312,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setTokenExpiresAt(
           session.expires_at ? new Date(session.expires_at) : null
         );
+        setIsLoading(false);
+        return;
       }
+
+      // ถ้าไม่มีใน localStorage ให้ลองอ่านจาก cookie
+      if (syncFromCookie()) {
+        setIsLoading(false);
+        return;
+      }
+
+      // ถ้าไม่มีทั้งสองแหล่ง - ไม่ทำอะไร
     } catch (error) {
       clearSession();
     } finally {
@@ -368,7 +372,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         storage.setItem(STORAGE_KEYS.TOKEN, authToken);
       }
     } catch (error) {
-      console.error('❌ Error saving session:', error);
+      console.error('Error saving session:', error);
     }
   };
 
@@ -530,17 +534,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userFromJWT = getUserFromJWT(cookieToken);
 
       if (userFromJWT && cookieExpiration) {
+        // ตรวจสอบว่ามีภาษาที่อัปเดตแล้วใน localStorage หรือไม่
+        let finalUser = userFromJWT;
+        try {
+          const storage = localStorage;
+          const existingSession = storage.getItem(STORAGE_KEYS.SESSION);
+          if (existingSession) {
+            const session = JSON.parse(existingSession);
+            if (
+              session.user?.language_code &&
+              session.user.user_id === userFromJWT.user_id
+            ) {
+              // ใช้ภาษาจาก localStorage ที่อัปเดตแล้ว
+              finalUser = {
+                ...userFromJWT,
+                language_code: session.user.language_code,
+              };
+            }
+          }
+        } catch (error) {
+          console.warn(
+            'Error checking localStorage for updated language:',
+            error
+          );
+        }
+
         // อัพเดต state จาก cookie - บังคับให้อัพเดทใหม่
         setUser(null); // ล้างข้อมูลเก่าก่อน
         setTimeout(() => {
-          setUser(userFromJWT);
+          setUser(finalUser);
           setToken(cookieToken);
           setTokenExpiresAt(cookieExpiration);
         }, 0);
 
         // อัพเดต localStorage เท่านั้น
         const session: AuthSession = {
-          user: userFromJWT,
+          user: finalUser,
           token: cookieToken,
           expires_at: cookieExpiration.toISOString(),
           remember_me: localStorage.getItem(STORAGE_KEYS.REMEMBER) === 'true',
@@ -548,7 +577,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         const storage = localStorage;
         storage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(session));
-        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(userFromJWT));
+        storage.setItem(STORAGE_KEYS.USER, JSON.stringify(finalUser));
         storage.setItem(STORAGE_KEYS.TOKEN, cookieToken);
 
         return true; // sync สำเร็จ
