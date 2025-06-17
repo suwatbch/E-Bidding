@@ -30,8 +30,7 @@ import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
 import Container from './ui/Container';
-import { User } from '@/app/model/dataUser';
-import { useUser } from '@/app/contexts/UserContext';
+import { User } from '@/app/services/userService';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { authService } from '@/app/services/authService';
 
@@ -89,7 +88,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentLanguage, languages, t } = useLanguageContext();
-  const { updateProfile, updateUser } = useUser();
+
   const { logout, user, isLoading: isAuthLoading } = useAuth();
 
   // เพิ่ม useEffect สำหรับโหลดข้อมูลจาก localStorage
@@ -352,35 +351,23 @@ export default function Navbar() {
 
   const handleSubmit = async (formData: FormData) => {
     if (user) {
-      const updatedProfile = {
+      const updatedProfile: User = {
         ...user,
         username: formData.username,
         email: formData.email,
         fullname: formData.fullname,
-        tax_id: formData.tax_id,
-        address: formData.address,
-        phone: formData.phone,
+        tax_id: formData.tax_id || undefined,
+        address: formData.address || undefined,
+        phone: formData.phone || undefined,
         type: formData.type,
-        status: formData.status,
+        status: formData.status ? 1 : 0, // แปลง boolean เป็น 0 | 1
         is_locked: formData.is_locked,
         language_code: formData.language_code,
         updated_dt: new Date().toISOString(),
-        is_profile: true,
-        image: formData.image,
-        password: formData.password || '',
+        created_dt: user.created_dt || new Date().toISOString(), // ใส่ created_dt
+        image: formData.image || undefined,
         login_count: user.login_count || 0,
-      } as User;
-
-      // อัพเดทรหัสผ่านเฉพาะเมื่อมีการกรอกข้อมูล
-      if (formData.password) {
-        updatedProfile.password = formData.password;
-      }
-
-      // อัพเดทข้อมูลโปรไฟล์
-      updateProfile(updatedProfile);
-
-      // อัพเดทข้อมูลในตารางผู้ใช้ด้วย
-      updateUser(updatedProfile);
+      };
 
       setIsModalOpen(false);
       setFormData(initialForm);
