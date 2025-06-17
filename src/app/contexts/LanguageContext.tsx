@@ -13,6 +13,7 @@ import {
   LanguageText,
 } from '../services/languageService';
 import { useAuth } from './AuthContext'; // เพิ่ม import AuthContext
+import { userService } from '../services/userService'; // เพิ่ม import userService
 
 // Type สำหรับ Context
 interface LanguageContextType {
@@ -67,7 +68,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // เพิ่ม useAuth เพื่อดึงข้อมูล user
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, updateUser } = useAuth();
 
   // ฟังก์ชันโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
@@ -181,8 +182,30 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       return;
     }
 
+    // 5. fallback สุดท้าย
     setCurrentLanguage('th');
     localStorage.setItem('selectedLanguage', 'th');
+  };
+
+  // ฟังก์ชันสำหรับอัพเดทภาษาใน backend
+  const updateUserLanguageInBackend = async (languageCode: string) => {
+    if (!isAuthenticated || !user?.user_id) {
+      return;
+    }
+
+    try {
+      const response = await userService.updateUserLanguage(
+        user.user_id,
+        languageCode
+      );
+
+      if (response.success) {
+        // อัพเดท user context ด้วย
+        updateUser({ language_code: languageCode });
+      }
+    } catch (error) {
+      console.error('❌ Error updating user language in backend:', error);
+    }
   };
 
   // useEffect สำหรับการโหลดข้อมูลครั้งแรก
@@ -225,10 +248,18 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   };
 
   // ฟังก์ชันเปลี่ยนภาษา (เมื่อผู้ใช้เลือกเอง)
-  const changeLanguage = (languageCode: string) => {
+  const changeLanguage = async (languageCode: string) => {
+    // อัพเดทภาษาใน UI ทันที
     setCurrentLanguage(languageCode);
+
+    // บันทึกลง localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('selectedLanguage', languageCode);
+    }
+
+    // ถ้า user login แล้ว ให้อัพเดทใน backend ด้วย
+    if (isAuthenticated && user?.user_id) {
+      await updateUserLanguageInBackend(languageCode);
     }
   };
 

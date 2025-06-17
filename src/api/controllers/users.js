@@ -8,6 +8,7 @@ const {
   deleteUser,
   getUsersByType,
   getUsersByStatus,
+  updateUserLanguage,
 } = require('../helper/usersHelper');
 
 // Routes for Users
@@ -247,6 +248,60 @@ router.delete('/:userId', async (req, res) => {
     }
   } catch (error) {
     console.error('Error in deleteUser:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// PATCH /api/users/:userId/language - อัปเดตภาษาของผู้ใช้งาน
+router.patch('/:userId/language', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { language_code } = req.body;
+
+    // Validation
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุ ID ผู้ใช้งาน',
+      });
+    }
+
+    if (!language_code) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณาระบุรหัสภาษา',
+      });
+    }
+
+    // ตรวจสอบรูปแบบของ language_code (ควรเป็น 2-3 ตัวอักษร)
+    if (!/^[a-z]{2,3}$/.test(language_code)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          'รูปแบบรหัสภาษาไม่ถูกต้อง (ควรเป็น 2-3 ตัวอักษรเล็ก เช่น th, en)',
+      });
+    }
+
+    const result = await updateUserLanguage(parseInt(userId), language_code);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: result.message,
+        data: result.data,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    console.error('Error in updateUserLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

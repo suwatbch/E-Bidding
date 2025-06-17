@@ -385,6 +385,54 @@ async function checkEmailExists(email, excludeUserId = null) {
   return await executeQuery(query, params);
 }
 
+// อัปเดตภาษาของผู้ใช้งาน (เฉพาะ language_code)
+async function updateUserLanguage(userId, languageCode) {
+  try {
+    // ตรวจสอบว่าผู้ใช้งานมีอยู่หรือไม่
+    const checkQuery = `SELECT user_id FROM users WHERE user_id = ?`;
+    const checkResult = await executeQuery(checkQuery, [userId]);
+
+    if (!checkResult.success || checkResult.data.length === 0) {
+      return {
+        success: false,
+        error: 'ไม่พบผู้ใช้งานที่ระบุ',
+      };
+    }
+
+    // อัปเดตเฉพาะ language_code
+    const query = `
+      UPDATE users 
+      SET language_code = ?, updated_dt = NOW()
+      WHERE user_id = ?
+    `;
+
+    const result = await executeQuery(query, [languageCode, userId]);
+
+    if (result.success) {
+      return {
+        success: true,
+        message: 'อัปเดตภาษาผู้ใช้งานสำเร็จ',
+        data: {
+          user_id: userId,
+          language_code: languageCode,
+          updated_dt: new Date(),
+        },
+      };
+    } else {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการอัปเดตภาษาผู้ใช้งาน',
+      };
+    }
+  } catch (error) {
+    console.error('Error in updateUserLanguage:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัปเดตภาษาผู้ใช้งาน',
+    };
+  }
+}
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -395,4 +443,5 @@ module.exports = {
   deleteUser,
   checkUsernameExists,
   checkEmailExists,
+  updateUserLanguage,
 };

@@ -365,6 +365,31 @@ export const userService = {
       };
     }
   },
+
+  /**
+   * อัปเดตภาษาของผู้ใช้งาน (เฉพาะ language_code)
+   */
+  updateUserLanguage: async (
+    userId: number,
+    languageCode: string
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await userApi.patch(
+        `/${userId}/language`,
+        { language_code: languageCode }
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error updating user language:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการอัปเดตภาษาผู้ใช้งาน',
+      };
+    }
+  },
 };
 
 export default userService;
