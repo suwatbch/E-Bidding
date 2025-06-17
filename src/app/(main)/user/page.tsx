@@ -492,14 +492,23 @@ export default function UserPage() {
       // ตรวจสอบข้อมูลบริษัท
       const validCompanies = userCompanies.filter((uc) => uc.company_id > 0);
       if (validCompanies.length === 0) {
-        setError('กรุณาเลือกบริษัทอย่างน้อย 1 บริษัท');
+        alert('กรุณาเลือกบริษัทอย่างน้อย 1 บริษัท');
         return;
       }
 
       // ตรวจสอบว่ามี primary company หรือไม่
       const hasPrimary = validCompanies.some((uc) => uc.is_primary);
       if (!hasPrimary && validCompanies.length > 0) {
-        setError('กรุณาระบุบริษัทหลัก');
+        alert('กรุณาระบุบริษัทหลัก');
+        return;
+      }
+
+      // เพิ่มตรวจสอบข้อมูลบริษัทที่เพิ่มเข้ามาใหม่ แล้วไม่เลือกบริษัท
+      const hasUnselectedCompany = userCompanies.some(
+        (uc) => uc.company_id === 0
+      );
+      if (hasUnselectedCompany) {
+        alert('กรุณาระบุบริษัท');
         return;
       }
 
