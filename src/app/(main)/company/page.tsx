@@ -379,8 +379,7 @@ export default function CompanyPage() {
         await loadCompanies();
         alert('ลบข้อมูลบริษัทเรียบร้อยแล้ว');
       } else {
-        console.error('Failed to delete company:', result.message);
-        setError(result.message);
+        alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
       }
     } catch (error: any) {
       console.error('Error deleting company:', error);

@@ -223,11 +223,21 @@ router.delete('/:id', async (req, res) => {
       });
     } else {
       console.error('❌ Failed to delete company:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการลบบริษัท',
-        error: result.error,
-      });
+
+      // ตรวจสอบว่าเป็น error เพราะมีผู้ใช้งานหรือไม่
+      if (result.error.includes('มีผู้ใช้งานที่เชื่อมโยงอยู่')) {
+        res.status(400).json({
+          success: false,
+          message: result.error,
+          userCount: result.userCount,
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          message: 'เกิดข้อผิดพลาดในการลบบริษัท',
+          error: result.error,
+        });
+      }
     }
   } catch (error) {
     console.error('❌ Error in deleteCompany:', error);

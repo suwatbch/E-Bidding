@@ -101,15 +101,54 @@ async function updateCompany(companyId, companyData) {
   ]);
 }
 
-// ลบบริษัท (soft delete)
-async function deleteCompany(companyId) {
+// ตรวจสอบว่าบริษัทมีผู้ใช้งานหรือไม่
+async function checkCompanyHasUsers(companyId) {
   const query = `
-    UPDATE company 
-    SET status = 0, updated_dt = NOW()
-    WHERE company_id = ?
+    SELECT COUNT(*) as user_count
+    FROM users_company 
+    WHERE company_id = ? AND status = 1
   `;
 
   return await executeQuery(query, [companyId]);
+}
+
+// ลบบริษัท (soft delete)
+async function deleteCompany(companyId) {
+  try {
+    // เช็คก่อนว่าบริษัทมีผู้ใช้งานหรือไม่
+    const checkResult = await checkCompanyHasUsers(companyId);
+
+    if (!checkResult.success) {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้งาน',
+      };
+    }
+
+    const userCount = checkResult.data[0].user_count;
+
+    if (userCount > 0) {
+      return {
+        success: false,
+        error: 'ไม่สามารถลบบริษัทได้ เนื่องจากมีผู้ใช้งานที่เชื่อมโยงอยู่',
+        userCount: userCount,
+      };
+    }
+
+    // ถ้าไม่มีผู้ใช้งาน ให้ทำการลบ (soft delete)
+    const query = `
+      UPDATE company 
+      SET status = 0, updated_dt = NOW()
+      WHERE company_id = ?
+    `;
+
+    return await executeQuery(query, [companyId]);
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
 }
 
 // ค้นหาบริษัท
@@ -147,4 +186,5 @@ module.exports = {
   updateCompany,
   deleteCompany,
   searchCompanies,
+  checkCompanyHasUsers,
 };
