@@ -225,9 +225,7 @@ export default function LanguagePage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                จัดการภาษา
-              </h1>
+              <h1 className="text-2xl font-bold text-gray-900">จัดการภาษา</h1>
               <p className="mt-1 text-sm text-gray-500">
                 จัดการข้อมูลภาษาในระบบ
               </p>
