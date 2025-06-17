@@ -6,9 +6,6 @@ const {
   resetPassword,
 } = require('../helper/authHelper');
 
-// Constants
-const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000; // 1 วัน (24 ชั่วโมง)
-
 // POST /api/auth/login - เข้าสู่ระบบ (Public Route)
 router.post('/login', async (req, res) => {
   try {

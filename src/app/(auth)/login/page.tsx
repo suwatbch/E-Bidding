@@ -71,6 +71,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [returnUrl, setReturnUrl] = useState('/auctions');
+  const [tokenExpiredMessage, setTokenExpiredMessage] = useState('');
 
   // Load saved credentials on component mount
   useEffect(() => {
@@ -81,12 +82,20 @@ export default function LoginPage() {
     // document.cookie =
     //   'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
 
-    // ดึง returnUrl จาก URL parameters
+    // ดึง returnUrl และ reason จาก URL parameters
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const returnUrlParam = urlParams.get('returnUrl');
+      const reason = urlParams.get('reason');
+
       if (returnUrlParam) {
         setReturnUrl(returnUrlParam);
+        console.log('🔄 Return URL set to:', returnUrlParam);
+      }
+
+      // แสดงข้อความเมื่อ token หมดอายุ
+      if (reason === 'token_expired') {
+        setTokenExpiredMessage('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
       }
 
       // Load saved credentials if "Remember Me" was previously checked
@@ -153,7 +162,7 @@ export default function LoginPage() {
         login(userData, response.data.token, formData.rememberMe);
 
         setTimeout(() => {
-          router.push('/auctions');
+          router.push(returnUrl);
         }, 100);
       } else {
         alert(response.message || t('login_error'));
@@ -214,6 +223,32 @@ export default function LoginPage() {
               <p className="mt-2 text-sm text-gray-600">
                 {t('login_subtitle')}
               </p>
+
+              {/* Token Expired Message */}
+              {tokenExpiredMessage && (
+                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-orange-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-orange-700 font-medium">
+                        {tokenExpiredMessage}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Login Form */}

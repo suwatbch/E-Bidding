@@ -156,14 +156,22 @@ async function loginUser(username, password) {
     const payload = {
       user_id: user.user_id,
       username: user.username,
-      fullname: user.fullname, // แปลง fullname เป็น fullname
-      type: user.type, // แปลง type เป็น role
+      fullname: user.fullname,
+      type: user.type,
       email: user.email,
       phone: user.phone,
       language_code: user.language_code,
-      image: user.image, // เพิ่ม image field
+      image: user.image,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 ชั่วโมง
+      exp:
+        Math.floor(Date.now() / 1000) +
+        (JWT_EXPIRES_IN === '24h'
+          ? 24 * 60 * 60
+          : JWT_EXPIRES_IN === '5m'
+          ? 5 * 60
+          : JWT_EXPIRES_IN === '1m'
+          ? 1 * 60
+          : parseInt(JWT_EXPIRES_IN)),
     };
 
     // สร้าง JWT Token

@@ -270,6 +270,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const checkTokenExpiration = () => {
     if (isAuthenticated && isTokenExpired()) {
       logout();
+
+      // Auto redirect to login page
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        window.location.href = `/login?returnUrl=${encodeURIComponent(
+          currentPath
+        )}&reason=token_expired`;
+      }
+
       return true;
     }
     return false;
@@ -454,10 +463,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (reason === 'token_expired') {
         logout();
-        // แสดงข้อความแจ้งเตือน
-        setTimeout(() => {
-          alert('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
-        }, 100);
       }
     };
 
@@ -496,6 +501,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } else if (tokenExpiresAt && isAuthenticated) {
         logout();
+
+        // Auto redirect to login page
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          window.location.href = `/login?returnUrl=${encodeURIComponent(
+            currentPath
+          )}&reason=token_expired`;
+        }
       }
     };
 
@@ -543,6 +556,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } else if (isAuthenticated) {
       // ไม่มี cookie แต่ยังมี session - logout
       logout();
+
+      // Auto redirect to login page
+      if (typeof window !== 'undefined') {
+        const currentPath = window.location.pathname;
+        window.location.href = `/login?returnUrl=${encodeURIComponent(
+          currentPath
+        )}&reason=token_expired`;
+      }
     }
 
     return false; // sync ไม่สำเร็จ
