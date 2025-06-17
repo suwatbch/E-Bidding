@@ -78,10 +78,6 @@ export default function LoginPage() {
     // ลบ session และ token ที่มีอยู่
     clearSession();
 
-    // ลบ token จาก cookies (อาจจะขัดแย้งกับ login process)
-    // document.cookie =
-    //   'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Strict';
-
     // ดึง returnUrl และ reason จาก URL parameters
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);

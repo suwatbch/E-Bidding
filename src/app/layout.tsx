@@ -36,11 +36,11 @@ export default function RootLayout({
         <link rel="icon" href="/eicon.svg" type="image/svg+xml" />
       </head>
       <body className={`${inter.className} antialiased`}>
-        <LanguageProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <LanguageProvider>
             <UserProvider>{children}</UserProvider>
-          </AuthProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -12,6 +12,7 @@ import {
   Language,
   LanguageText,
 } from '../services/languageService';
+import { useAuth } from './AuthContext'; // เพิ่ม import AuthContext
 
 // Type สำหรับ Context
 interface LanguageContextType {
@@ -64,6 +65,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // เพิ่ม useAuth เพื่อดึงข้อมูล user
+  const { user, isAuthenticated } = useAuth();
 
   // ฟังก์ชันโหลดข้อมูลภาษา
   const loadLanguageData = async () => {
@@ -125,41 +129,80 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     }
   };
 
+  // ฟังก์ชันสำหรับตั้งค่าภาษาตามลำดับความสำคัญ
+  const determineLanguage = (loadedLanguages: Language[]) => {
+    // 1. ถ้า user login แล้วและมี language_code ให้ใช้ภาษาจาก user profile
+    if (isAuthenticated && user?.language_code) {
+      // ตรวจสอบว่าภาษาของ user มีอยู่ในรายการภาษาที่เปิดใช้งานหรือไม่
+      const userLanguage = loadedLanguages.find(
+        (lang) => lang.language_code === user.language_code && lang.status === 1
+      );
+      if (userLanguage) {
+        setCurrentLanguage(user.language_code);
+        // บันทึกลง localStorage เพื่อให้คงค่าไว้
+        localStorage.setItem('selectedLanguage', user.language_code);
+        return;
+      }
+    }
+
+    // 2. ถ้าไม่มี user หรือภาษาของ user ไม่ valid ให้ใช้ localStorage
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    if (savedLanguage) {
+      // ตรวจสอบว่าภาษาที่บันทึกไว้ยังใช้งานได้หรือไม่
+      const savedLanguageValid = loadedLanguages.find(
+        (lang) => lang.language_code === savedLanguage && lang.status === 1
+      );
+      if (savedLanguageValid) {
+        setCurrentLanguage(savedLanguage);
+        return;
+      }
+    }
+
+    // 3. ถ้าไม่มี localStorage หรือไม่ valid ให้หาภาษาเริ่มต้นจากฐานข้อมูล
+    const defaultLanguage = loadedLanguages.find(
+      (lang) => lang.is_default && lang.status === 1
+    );
+    if (defaultLanguage) {
+      setCurrentLanguage(defaultLanguage.language_code);
+      localStorage.setItem('selectedLanguage', defaultLanguage.language_code);
+      return;
+    }
+
+    // 4. ถ้าไม่มีภาษาเริ่มต้น ให้ใช้ภาษาแรกที่เปิดใช้งาน
+    const firstActiveLanguage = loadedLanguages.find(
+      (lang) => lang.status === 1
+    );
+    if (firstActiveLanguage) {
+      setCurrentLanguage(firstActiveLanguage.language_code);
+      localStorage.setItem(
+        'selectedLanguage',
+        firstActiveLanguage.language_code
+      );
+      return;
+    }
+
+    setCurrentLanguage('th');
+    localStorage.setItem('selectedLanguage', 'th');
+  };
+
+  // useEffect สำหรับการโหลดข้อมูลครั้งแรก
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setIsHydrated(true);
 
       // โหลดข้อมูลภาษาก่อน
       loadLanguageData().then((loadedLanguages) => {
-        // หลังจากโหลดข้อมูลแล้ว จึงตรวจสอบภาษาที่จะใช้
-        const savedLanguage = localStorage.getItem('selectedLanguage');
-
-        if (savedLanguage) {
-          // ถ้ามี localStorage ใช้ภาษาที่บันทึกไว้
-          setCurrentLanguage(savedLanguage);
-        } else {
-          // ถ้าไม่มี localStorage ให้หาภาษาเริ่มต้นจากฐานข้อมูล
-          const defaultLanguage = loadedLanguages.find(
-            (lang) => lang.is_default && lang.status === 1
-          );
-          if (defaultLanguage) {
-            setCurrentLanguage(defaultLanguage.language_code);
-          } else {
-            // ถ้าไม่มีภาษาเริ่มต้น ให้ใช้ภาษาแรกที่เปิดใช้งาน
-            const firstActiveLanguage = loadedLanguages.find(
-              (lang) => lang.status === 1
-            );
-            if (firstActiveLanguage) {
-              setCurrentLanguage(firstActiveLanguage.language_code);
-            } else {
-              // fallback สุดท้าย
-              setCurrentLanguage('th');
-            }
-          }
-        }
+        determineLanguage(loadedLanguages);
       });
     }
   }, []);
+
+  // useEffect สำหรับการอัพเดทภาษาเมื่อ user login/logout
+  useEffect(() => {
+    if (isHydrated && languages.length > 0) {
+      determineLanguage(languages);
+    }
+  }, [isAuthenticated, user?.language_code, isHydrated]);
 
   // ฟังก์ชันแปลข้อความ
   const t = (key: string): string => {
@@ -181,7 +224,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     }
   };
 
-  // ฟังก์ชันเปลี่ยนภาษา
+  // ฟังก์ชันเปลี่ยนภาษา (เมื่อผู้ใช้เลือกเอง)
   const changeLanguage = (languageCode: string) => {
     setCurrentLanguage(languageCode);
     if (typeof window !== 'undefined') {
