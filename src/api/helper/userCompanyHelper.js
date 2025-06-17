@@ -15,7 +15,7 @@ async function getUserCompanies(userId) {
     FROM users_company uc
     LEFT JOIN company c ON uc.company_id = c.company_id
     WHERE uc.user_id = ?
-    ORDER BY uc.is_primary DESC, c.name ASC
+    ORDER BY uc.is_primary DESC, uc.id ASC
   `;
 
   return await executeQuery(query, [userId]);
@@ -60,7 +60,7 @@ async function getAllUserCompanies() {
     FROM users_company uc
     LEFT JOIN company c ON uc.company_id = c.company_id
     LEFT JOIN users u ON uc.user_id = u.user_id
-    ORDER BY uc.user_id ASC, uc.is_primary DESC
+    ORDER BY uc.is_primary DESC, uc.id ASC
   `;
 
   return await executeQuery(query, []);

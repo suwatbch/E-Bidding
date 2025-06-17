@@ -615,10 +615,10 @@ export default function UserPage() {
     setCurrentPage(1);
   };
 
-  // ฟังก์ชันดึงบริษัทของผู้ใช้
+  // ฟังก์ชันดึงบริษัทของผู้ใช้ (แสดงเฉพาะบริษัทหลัก)
   const getUserCompaniesForDisplay = (userId: number) => {
     return allUserCompanies.filter(
-      (uc) => uc.user_id === userId && uc.status === 1
+      (uc) => uc.user_id === userId && uc.status === 1 && uc.is_primary === true
     );
   };
 
@@ -1751,7 +1751,7 @@ export default function UserPage() {
                           </div>
                         </div>
 
-                        {userCompany.is_primary && (
+                        {/* {userCompany.is_primary && (
                           <div className="mt-2 text-xs text-blue-600 flex items-center">
                             <svg
                               className="w-3 h-3 mr-1"
@@ -1766,7 +1766,7 @@ export default function UserPage() {
                             </svg>
                             บริษัทหลักของผู้ใช้งาน
                           </div>
-                        )}
+                        )} */}
                       </div>
                     ))}
                   </div>
