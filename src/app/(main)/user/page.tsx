@@ -2,6 +2,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { User, userService } from '@/app/services/userService';
+import { Company, companyService } from '@/app/services/companyService';
+import {
+  UserCompany,
+  userCompanyService,
+} from '@/app/services/userCompanyService';
 import Container from '@/app/components/ui/Container';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import { LockTableIcon } from '@/app/components/ui/Icons';
@@ -64,6 +69,13 @@ interface FormData {
   image?: string;
 }
 
+interface UserCompanyForm {
+  company_id: number;
+  role_in_company: string;
+  is_primary: boolean;
+  status: number;
+}
+
 const initialForm: FormData = {
   username: '',
   password: '',
@@ -103,6 +115,14 @@ export default function UserPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Company related states
+  const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
+  const [userCompanies, setUserCompanies] = useState<UserCompanyForm[]>([]);
+  const [currentUserCompanies, setCurrentUserCompanies] = useState<
+    UserCompany[]
+  >([]);
+  const [allUserCompanies, setAllUserCompanies] = useState<UserCompany[]>([]);
+
   // ฟังก์ชันตรวจสอบความยาวรหัสผ่าน
   const getPasswordBorderClass = () => {
     const passwordLength = form.password.length;
@@ -137,6 +157,21 @@ export default function UserPage() {
     }
   }, [searchTerm]);
 
+  const loadAllUserCompanies = useCallback(async () => {
+    try {
+      const result = await userCompanyService.getAllUserCompanies();
+      if (result.success && result.data) {
+        setAllUserCompanies(result.data);
+      } else {
+        console.error('Error loading all user companies:', result.message);
+        setAllUserCompanies([]);
+      }
+    } catch (error: any) {
+      console.error('Error loading all user companies:', error);
+      setAllUserCompanies([]);
+    }
+  }, []);
+
   const loadLanguages = useCallback(async () => {
     try {
       const languages = await languageService.loadLanguagesFromAPI();
@@ -158,6 +193,46 @@ export default function UserPage() {
     }
   }, []);
 
+  const loadCompanies = useCallback(async () => {
+    try {
+      const result = await companyService.getActiveCompanies();
+      if (result.success && result.data) {
+        setAvailableCompanies(result.data);
+      } else {
+        console.error('Error loading companies:', result.message);
+        setAvailableCompanies([]);
+      }
+    } catch (error: any) {
+      console.error('Error loading companies:', error);
+      setAvailableCompanies([]);
+    }
+  }, []);
+
+  const loadUserCompanies = useCallback(async (userId: number) => {
+    try {
+      const result = await userCompanyService.getUserCompanies(userId);
+      if (result.success && result.data) {
+        setCurrentUserCompanies(result.data);
+        // แปลงเป็น form format
+        const userCompanyForms = result.data.map((uc) => ({
+          company_id: uc.company_id,
+          role_in_company: uc.role_in_company || '',
+          is_primary: uc.is_primary,
+          status: uc.status,
+        }));
+        setUserCompanies(userCompanyForms);
+      } else {
+        console.error('Error loading user companies:', result.message);
+        setCurrentUserCompanies([]);
+        setUserCompanies([]);
+      }
+    } catch (error: any) {
+      console.error('Error loading user companies:', error);
+      setCurrentUserCompanies([]);
+      setUserCompanies([]);
+    }
+  }, []);
+
   const handleRetry = useCallback(async () => {
     setRetryCount((prev) => prev + 1);
     await loadUsers();
@@ -165,12 +240,17 @@ export default function UserPage() {
 
   useEffect(() => {
     const initializeData = async () => {
-      await Promise.all([loadUsers(), loadLanguages()]);
+      await Promise.all([
+        loadUsers(),
+        loadLanguages(),
+        loadCompanies(),
+        loadAllUserCompanies(),
+      ]);
     };
 
     initializeData();
     setMounted(true);
-  }, [loadUsers, loadLanguages]);
+  }, [loadUsers, loadLanguages, loadCompanies, loadAllUserCompanies]);
 
   // If there's an error, show error page
   if (error) {
@@ -320,10 +400,12 @@ export default function UserPage() {
   const openAddModal = () => {
     setEditUser(null);
     setForm(initialForm);
+    setUserCompanies([]);
+    setCurrentUserCompanies([]);
     setIsModalOpen(true);
   };
 
-  const openEditModal = (user: User) => {
+  const openEditModal = async (user: User) => {
     setEditUser(user);
     setForm({
       username: user.username,
@@ -339,6 +421,9 @@ export default function UserPage() {
       is_locked: user.is_locked,
       image: user.image || '',
     });
+
+    // โหลดข้อมูลบริษัทของผู้ใช้
+    await loadUserCompanies(user.user_id);
     setIsModalOpen(true);
   };
 
@@ -346,6 +431,8 @@ export default function UserPage() {
     setIsModalOpen(false);
     setEditUser(null);
     setForm(initialForm);
+    setUserCompanies([]);
+    setCurrentUserCompanies([]);
     setError(null);
     setShowPassword(false);
   };
@@ -356,6 +443,45 @@ export default function UserPage() {
     handleFormChange(e, setForm, formChangeConfig);
   };
 
+  // Company management functions
+  const addCompanyToUser = () => {
+    const newCompany: UserCompanyForm = {
+      company_id: 0,
+      role_in_company: '',
+      is_primary: userCompanies.length === 0, // ถ้าเป็นบริษัทแรก ให้เป็น primary
+      status: 1,
+    };
+    setUserCompanies([...userCompanies, newCompany]);
+  };
+
+  const removeCompanyFromUser = (index: number) => {
+    const updatedCompanies = userCompanies.filter((_, i) => i !== index);
+    // ถ้าลบบริษัท primary ให้ตั้งบริษัทแรกเป็น primary
+    if (userCompanies[index].is_primary && updatedCompanies.length > 0) {
+      updatedCompanies[0].is_primary = true;
+    }
+    setUserCompanies(updatedCompanies);
+  };
+
+  const updateUserCompany = (
+    index: number,
+    field: keyof UserCompanyForm,
+    value: any
+  ) => {
+    const updatedCompanies = [...userCompanies];
+
+    if (field === 'is_primary' && value) {
+      // ถ้าตั้งเป็น primary ให้ยกเลิก primary ของบริษัทอื่น
+      updatedCompanies.forEach((company, i) => {
+        company.is_primary = i === index;
+      });
+    } else {
+      updatedCompanies[index] = { ...updatedCompanies[index], [field]: value };
+    }
+
+    setUserCompanies(updatedCompanies);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -363,7 +489,22 @@ export default function UserPage() {
       setIsSubmitting(true);
       setError(null);
 
+      // ตรวจสอบข้อมูลบริษัท
+      const validCompanies = userCompanies.filter((uc) => uc.company_id > 0);
+      if (validCompanies.length === 0) {
+        setError('กรุณาเลือกบริษัทอย่างน้อย 1 บริษัท');
+        return;
+      }
+
+      // ตรวจสอบว่ามี primary company หรือไม่
+      const hasPrimary = validCompanies.some((uc) => uc.is_primary);
+      if (!hasPrimary && validCompanies.length > 0) {
+        setError('กรุณาระบุบริษัทหลัก');
+        return;
+      }
+
       if (editUser) {
+        // แก้ไขผู้ใช้
         const result = await userService.updateUser(editUser.user_id, {
           username: form.username,
           password: form.password || undefined,
@@ -380,7 +521,9 @@ export default function UserPage() {
         });
 
         if (result.success) {
-          await loadUsers();
+          // จัดการบริษัทของผู้ใช้
+          await updateUserCompanies(editUser.user_id, validCompanies);
+          await Promise.all([loadUsers(), loadAllUserCompanies()]);
           closeModal();
           alert('อัปเดทข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
@@ -388,6 +531,7 @@ export default function UserPage() {
           setError(result.message || 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
         }
       } else {
+        // เพิ่มผู้ใช้ใหม่
         const result = await userService.createUser({
           username: form.username,
           password: form.password,
@@ -402,8 +546,11 @@ export default function UserPage() {
           image: form.image,
         });
 
-        if (result.success) {
-          await loadUsers();
+        if (result.success && result.data) {
+          // เพิ่มบริษัทให้ผู้ใช้ใหม่
+          const newUserId = result.data.user_id;
+          await updateUserCompanies(newUserId, validCompanies);
+          await Promise.all([loadUsers(), loadAllUserCompanies()]);
           closeModal();
           alert('เพิ่มข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
@@ -416,6 +563,32 @@ export default function UserPage() {
       setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const updateUserCompanies = async (
+    userId: number,
+    companies: UserCompanyForm[]
+  ) => {
+    try {
+      // ลบบริษัทเดิมทั้งหมดของผู้ใช้
+      for (const currentUC of currentUserCompanies) {
+        await userCompanyService.removeUserFromCompany(currentUC.id);
+      }
+
+      // เพิ่มบริษัทใหม่
+      for (const company of companies) {
+        await userCompanyService.addUserToCompany({
+          user_id: userId,
+          company_id: company.company_id,
+          role_in_company: company.role_in_company,
+          is_primary: company.is_primary,
+          status: company.status,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error updating user companies:', error);
+      throw new Error('เกิดข้อผิดพลาดในการจัดการข้อมูลบริษัท');
     }
   };
 
@@ -440,6 +613,19 @@ export default function UserPage() {
   const handlePerPageChange = (newPerPage: number) => {
     setPerPage(newPerPage);
     setCurrentPage(1);
+  };
+
+  // ฟังก์ชันดึงบริษัทของผู้ใช้
+  const getUserCompaniesForDisplay = (userId: number) => {
+    return allUserCompanies.filter(
+      (uc) => uc.user_id === userId && uc.status === 1
+    );
+  };
+
+  // ฟังก์ชันหาชื่อบริษัทจาก company_id
+  const getCompanyName = (companyId: number) => {
+    const company = availableCompanies.find((c) => c.id === companyId);
+    return company ? company.name : 'ไม่พบข้อมูลบริษัท';
   };
 
   return (
@@ -1369,6 +1555,220 @@ export default function UserPage() {
                         </label>
                       </div>
                     </div>
+                  </div>
+                </div>
+
+                {/* Company Management Section */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-blue-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
+                        </svg>
+                        บริษัทที่เชื่อมโยง
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        กำหนดบริษัทและตำแหน่งของผู้ใช้งาน
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addCompanyToUser}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      เพิ่มบริษัท
+                    </button>
+                  </div>
+
+                  {userCompanies.length === 0 && (
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <svg
+                        className="w-12 h-12 mx-auto text-gray-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
+                      </svg>
+                      <p className="text-sm">ยังไม่มีบริษัทที่เชื่อมโยง</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        คลิกปุ่ม "เพิ่มบริษัท" เพื่อเริ่มต้น
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {userCompanies.map((userCompany, index) => (
+                      <div
+                        key={index}
+                        className={`p-4 border rounded-lg ${
+                          userCompany.is_primary
+                            ? 'border-blue-300 bg-blue-50'
+                            : 'border-gray-200 bg-white'
+                        }`}
+                      >
+                        <div className="grid grid-cols-12 gap-3 items-center">
+                          {/* Company Selection */}
+                          <div className="col-span-4">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              บริษัท
+                            </label>
+                            <select
+                              value={userCompany.company_id}
+                              onChange={(e) =>
+                                updateUserCompany(
+                                  index,
+                                  'company_id',
+                                  parseInt(e.target.value)
+                                )
+                              }
+                              className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              required
+                            >
+                              <option value={0}>เลือกบริษัท</option>
+                              {availableCompanies.map((company) => (
+                                <option key={company.id} value={company.id}>
+                                  {company.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Role Input */}
+                          <div className="col-span-4">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              ตำแหน่ง/บทบาท
+                            </label>
+                            <input
+                              type="text"
+                              value={userCompany.role_in_company}
+                              onChange={(e) =>
+                                updateUserCompany(
+                                  index,
+                                  'role_in_company',
+                                  e.target.value
+                                )
+                              }
+                              placeholder="เช่น Manager, Director"
+                              className="w-full text-sm border border-gray-300 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {/* Primary & Status */}
+                          <div className="col-span-3">
+                            <label className="block text-xs font-medium text-gray-700 mb-1">
+                              สถานะ
+                            </label>
+                            <div className="space-y-1">
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={userCompany.is_primary}
+                                  onChange={(e) =>
+                                    updateUserCompany(
+                                      index,
+                                      'is_primary',
+                                      e.target.checked
+                                    )
+                                  }
+                                  className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <label className="ml-1 text-xs text-gray-700">
+                                  บริษัทหลัก
+                                </label>
+                              </div>
+                              <div className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={userCompany.status === 1}
+                                  onChange={(e) =>
+                                    updateUserCompany(
+                                      index,
+                                      'status',
+                                      e.target.checked ? 1 : 0
+                                    )
+                                  }
+                                  className="h-3 w-3 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                                />
+                                <label className="ml-1 text-xs text-gray-700">
+                                  เปิดใช้งาน
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Remove Button */}
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => removeCompanyFromUser(index)}
+                              className="text-red-600 hover:text-red-800 focus:outline-none"
+                              title="ลบบริษัท"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {userCompany.is_primary && (
+                          <div className="mt-2 text-xs text-blue-600 flex items-center">
+                            <svg
+                              className="w-3 h-3 mr-1"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            บริษัทหลักของผู้ใช้งาน
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </form>
