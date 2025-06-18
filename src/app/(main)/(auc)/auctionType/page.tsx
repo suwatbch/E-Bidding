@@ -10,7 +10,6 @@ import Pagination from '@/app/components/ui/Pagination';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 interface FormData {
-  code: string;
   name: string;
   description: string;
   status: boolean;
@@ -33,7 +32,6 @@ export default function AuctionTypePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [form, setForm] = useState<FormData>({
-    code: '',
     name: '',
     description: '',
     status: true,
@@ -78,22 +76,12 @@ export default function AuctionTypePage() {
       setMounted(true);
     };
     initializeData();
-  }, [loadAuctionTypes]);
+  }, []); // ลบ dependency loadAuctionTypes ออก
 
-  // โหลดข้อมูลใหม่เมื่อ searchTerm เปลี่ยน (debounced)
+  // โหลดข้อมูลใหม่เมื่อ searchTerm เปลี่ยน (debounced) - แต่ไม่จำเป็นต้องโหลดใหม่จริงๆ เพราะเราใช้ filter แล้ว
   useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (mounted) {
-        loadAuctionTypes();
-      }
-    }, 500);
-
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm, mounted, loadAuctionTypes]);
-
-  // Reset to first page when search term changes
-  useEffect(() => {
-    setCurrentPage(1);
+    // ไม่ต้องโหลดข้อมูลใหม่ เพราะเราใช้ filter ใน client side
+    setCurrentPage(1); // reset page เมื่อค้นหา
   }, [searchTerm]);
 
   // === COMPONENT LOGIC CONTINUES ===
@@ -102,7 +90,6 @@ export default function AuctionTypePage() {
     if (!searchTerm.trim()) return true;
     const searchTermLower = searchTerm.toLowerCase().replace(/\s/g, '');
     return (
-      auctionType.code.toLowerCase().includes(searchTermLower) ||
       auctionType.name.toLowerCase().includes(searchTermLower) ||
       auctionType.description.toLowerCase().includes(searchTermLower)
     );
@@ -155,9 +142,61 @@ export default function AuctionTypePage() {
     setSortConfig({ key: direction ? key : null, direction });
   };
 
+  const getSortIcon = (columnKey: keyof AuctionType) => {
+    if (sortConfig.key === columnKey) {
+      if (sortConfig.direction === 'asc') {
+        return (
+          <svg
+            className="w-4 h-4 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 15l7-7 7 7"
+            />
+          </svg>
+        );
+      } else if (sortConfig.direction === 'desc') {
+        return (
+          <svg
+            className="w-4 h-4 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        );
+      }
+    }
+    return (
+      <svg
+        className="w-4 h-4 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M8 9l4-4 4 4m0 6l-4 4-4-4"
+        />
+      </svg>
+    );
+  };
+
   const openAddModal = () => {
     setForm({
-      code: '',
       name: '',
       description: '',
       status: true,
@@ -168,7 +207,6 @@ export default function AuctionTypePage() {
 
   const openEditModal = (auctionType: AuctionType) => {
     setForm({
-      code: auctionType.code,
       name: auctionType.name,
       description: auctionType.description,
       status: auctionType.status === 1,
@@ -181,7 +219,6 @@ export default function AuctionTypePage() {
     setIsModalOpen(false);
     setEditAuctionType(null);
     setForm({
-      code: '',
       name: '',
       description: '',
       status: true,
@@ -210,8 +247,8 @@ export default function AuctionTypePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.code.trim() || !form.name.trim()) {
-      alert('กรุณากรอกรหัสและชื่อประเภทการประมูล');
+    if (!form.name.trim()) {
+      alert('กรุณากรอกชื่อประเภทการประมูล');
       return;
     }
 
@@ -219,7 +256,6 @@ export default function AuctionTypePage() {
 
     try {
       const auctionTypeData = {
-        code: form.code.trim(),
         name: form.name.trim(),
         description: form.description.trim(),
         status: form.status ? 1 : 0,
@@ -347,76 +383,14 @@ export default function AuctionTypePage() {
 
   return (
     <Container className="py-8">
-      <div className="bg-white rounded-2xl shadow-lg">
-        {/* Header */}
-        <div className="border-b border-gray-200 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                จัดการประเภทการประมูล
-              </h1>
-              <p className="text-gray-600 mt-1">
-                เพิ่ม แก้ไข และจัดการประเภทการประมูลในระบบ
-              </p>
-            </div>
-            <button
-              onClick={openAddModal}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              เพิ่มประเภทการประมูล
-            </button>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="ค้นหารหัส ชื่อ หรือคำอธิบาย..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium text-gray-700">แสดง:</label>
-              <select
-                value={perPage}
-                onChange={(e) => handlePerPageChange(Number(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-600">รายการ</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          {currentAuctionTypes.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="bg-gray-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+      <div className="flex-1 py-8 flex flex-col">
+        {/* Header Section */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 p-3 rounded-xl">
                 <svg
-                  className="w-8 h-8 text-gray-400"
+                  className="w-8 h-8 text-blue-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -425,261 +399,587 @@ export default function AuctionTypePage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                ไม่พบข้อมูลประเภทการประมูล
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {searchTerm
-                  ? `ไม่พบประเภทการประมูลที่ตรงกับ "${searchTerm}"`
-                  : 'ยังไม่มีประเภทการประมูลในระบบ'}
-              </p>
-              {!searchTerm && (
-                <button
-                  onClick={openAddModal}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  เพิ่มประเภทการประมูลแรก
-                </button>
-              )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  ประเภทการประมูล
+                </h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  จัดการประเภทการประมูลในระบบ
+                </p>
+              </div>
             </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    <button
-                      onClick={() => requestSort('code')}
-                      className="flex items-center gap-1 hover:text-blue-600"
-                    >
-                      รหัส
-                      {sortConfig.key === 'code' && (
-                        <span className="text-blue-600">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    <button
-                      onClick={() => requestSort('name')}
-                      className="flex items-center gap-1 hover:text-blue-600"
-                    >
-                      ชื่อประเภทการประมูล
-                      {sortConfig.key === 'name' && (
-                        <span className="text-blue-600">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    คำอธิบาย
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    <button
-                      onClick={() => requestSort('status')}
-                      className="flex items-center gap-1 hover:text-blue-600"
-                    >
-                      สถานะ
-                      {sortConfig.key === 'status' && (
-                        <span className="text-blue-600">
-                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                        </span>
-                      )}
-                    </button>
-                  </th>
-                  <th className="text-center p-4 font-medium text-gray-700">
-                    การจัดการ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentAuctionTypes.map((auctionType) => (
-                  <tr
-                    key={auctionType.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none sm:w-[500px]">
+                <input
+                  type="text"
+                  placeholder="ค้นหาหมวดหมู่..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-11 pl-12 pr-4 text-base border border-gray-200 rounded-lg focus:outline-none focus:ring-2 
+                    focus:ring-blue-500 focus:border-transparent bg-gray-50/50"
+                />
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    <td className="p-4">
-                      <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                        {auctionType.code}
-                      </span>
-                    </td>
-                    <td className="p-4 font-medium text-gray-900">
-                      {auctionType.name}
-                    </td>
-                    <td className="p-4 text-gray-600 max-w-xs truncate">
-                      {auctionType.description || '-'}
-                    </td>
-                    <td className="p-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          auctionType.status === 1
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {auctionType.status === 1 ? 'เปิดใช้งาน' : 'ปิดใช้งาน'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => openEditModal(auctionType)}
-                          className="text-blue-600 hover:text-blue-800 p-1"
-                          title="แก้ไข"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => handleDelete(auctionType.id)}
-                          className="text-red-600 hover:text-red-800 p-1"
-                          title="ลบ"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                    <path
+                      fillRule="evenodd"
+                      d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <button
+                onClick={openAddModal}
+                className="inline-flex items-center h-11 px-6 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg 
+                  hover:from-blue-700 hover:to-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                  focus:ring-offset-2 transform transition-all duration-200 shadow-md hover:scale-[1.02] 
+                  active:scale-[0.98] whitespace-nowrap gap-2"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                เพิ่มหมวดหมู่
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-6 border-t border-gray-200">
-            <Pagination
-              currentPage={currentPage}
-              totalItems={sortedAuctionTypes.length}
-              perPage={perPage}
-              onPageChange={setCurrentPage}
-              onPerPageChange={handlePerPageChange}
-              mounted={mounted}
-            />
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAuctionTypes.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
+
+        {/* Table Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            {currentAuctionTypes.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mb-4 text-gray-300 mx-auto">
+                  <svg
+                    className="w-full h-full"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-1">
+                  ไม่พบข้อมูลประเภทการประมูล
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {searchTerm
+                    ? `ไม่พบประเภทการประมูลที่ตรงกับ "${searchTerm}"`
+                    : 'ยังไม่มีประเภทการประมูลในระบบ'}
+                </p>
+                {!searchTerm && (
+                  <button
+                    onClick={openAddModal}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    เพิ่มประเภทการประมูลแรก
+                  </button>
+                )}
+              </div>
+            ) : (
+              <table className="w-full table-fixed">
+                <colgroup>
+                  <col className="w-[5%]" />
+                  <col className="w-[25%]" />
+                  <col className="w-[40%]" />
+                  <col className="w-[15%]" />
+                  <col className="w-[15%]" />
+                </colgroup>
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      ลำดับ
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <button
+                        className="flex items-center gap-2 hover:text-gray-700 transition-colors"
+                        onClick={() => requestSort('name')}
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                          />
+                        </svg>
+                        ชื่อหมวดหมู่
+                        {getSortIcon('name')}
+                      </button>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M4 6h16M4 12h16M4 18h7"
+                          />
+                        </svg>
+                        คำอธิบาย
+                      </div>
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <button
+                        className="flex items-center gap-2 hover:text-gray-700 transition-colors"
+                        onClick={() => requestSort('status')}
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        สถานะ
+                        {getSortIcon('status')}
+                      </button>
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <div className="flex items-center justify-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                          />
+                        </svg>
+                        จัดการ
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentAuctionTypes.map((auctionType, index) => (
+                    <tr
+                      key={auctionType.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {(startIndex + index + 1).toLocaleString('th-TH')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900 truncate">
+                          {auctionType.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 line-clamp-2">
+                          {auctionType.description || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            auctionType.status === 1
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {auctionType.status === 1
+                            ? 'เปิดใช้งาน'
+                            : 'ปิดใช้งาน'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => openEditModal(auctionType)}
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50 transition-colors"
+                            title="แก้ไข"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(auctionType.id)}
+                            className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
+                            title="ลบ"
+                          >
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">
-                {editAuctionType
-                  ? 'แก้ไขประเภทการประมูล'
-                  : 'เพิ่มประเภทการประมูลใหม่'}
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+            {/* Modal Header - Fixed */}
+            <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
+                  hover:bg-gray-100/80 rounded-lg p-1"
+                onClick={closeModal}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <h2 className="text-lg font-bold text-gray-900">
+                {editAuctionType ? (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-1.5 rounded-lg">
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">
+                        แก้ไขหมวดหมู่
+                      </div>
+                      <div className="text-xs text-gray-500 font-normal">
+                        กรุณากรอกข้อมูลที่ต้องการแก้ไข
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="bg-blue-100 p-1.5 rounded-lg">
+                      <svg
+                        className="w-5 h-5 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="text-lg font-bold text-gray-900">
+                        เพิ่มหมวดหมู่
+                      </div>
+                      <div className="text-xs text-gray-500 font-normal">
+                        กรุณากรอกข้อมูลหมวดหมู่ใหม่
+                      </div>
+                    </div>
+                  </div>
+                )}
               </h2>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  รหัสประเภทการประมูล *
-                </label>
-                <input
-                  type="text"
-                  name="code"
-                  value={form.code}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="เช่น AUCTION_01"
-                  required
-                />
-              </div>
+            {/* Modal Content - Scrollable */}
+            <div
+              className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
+              [&::-webkit-scrollbar]:w-2
+              [&::-webkit-scrollbar-track]:bg-gray-100
+              [&::-webkit-scrollbar-track]:rounded-lg
+              [&::-webkit-scrollbar-thumb]:bg-gray-300
+              [&::-webkit-scrollbar-thumb]:rounded-lg
+              [&::-webkit-scrollbar-thumb]:border-2
+              [&::-webkit-scrollbar-thumb]:border-gray-100
+              hover:[&::-webkit-scrollbar-thumb]:bg-gray-400"
+            >
+              <form
+                id="auctionTypeForm"
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                      ชื่อหมวดหมู่
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ชื่อประเภทการประมูล *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="เช่น การประมูลทั่วไป"
-                  required
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 6h16M4 12h16M4 18h7"
+                        />
+                      </svg>
+                      คำอธิบาย
+                    </div>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-blue-500 focus:border-transparent"
+                    placeholder="คำอธิบายเพิ่มเติม..."
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  คำอธิบาย
-                </label>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="อธิบายรายละเอียดเพิ่มเติม..."
-                />
-              </div>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="status"
+                    checked={form.status}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    เปิดใช้งาน
+                  </label>
+                </div>
+              </form>
+            </div>
 
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="status"
-                  checked={form.status}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label className="ml-2 block text-sm text-gray-900">
-                  เปิดใช้งาน
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting
-                    ? 'กำลังบันทึก...'
-                    : editAuctionType
-                    ? 'อัพเดท'
-                    : 'สร้าง'}
-                </button>
+            {/* Modal Footer - Fixed */}
+            <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
+                  disabled={isSubmitting}
+                  className={`group px-3 py-1.5 text-sm font-medium border border-gray-200 
+                    rounded-lg focus:outline-none focus:ring-2 
+                    focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 ${
+                      isSubmitting
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                    }`}
                 >
-                  ยกเลิก
+                  <div className="flex items-center gap-1.5">
+                    <svg
+                      className={`w-4 h-4 ${
+                        isSubmitting
+                          ? 'text-gray-400'
+                          : 'text-gray-500 group-hover:text-gray-600'
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    ยกเลิก
+                  </div>
+                </button>
+                <button
+                  type="submit"
+                  form="auctionTypeForm"
+                  disabled={isSubmitting}
+                  className={`group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                    transition-all duration-200 shadow-md hover:shadow-md ${
+                      isSubmitting
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                    }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        {editAuctionType ? 'กำลังบันทึก...' : 'กำลังเพิ่ม...'}
+                      </>
+                    ) : editAuctionType ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        บันทึกการแก้ไข
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        เพิ่มหมวดหมู่
+                      </>
+                    )}
+                  </div>
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}

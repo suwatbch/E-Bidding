@@ -62,7 +62,7 @@ async function updateLanguage(languageCode, languageData) {
     if (userCount > 0) {
       return {
         success: false,
-        error: `ไม่สามารถปิดใช้งานภาษานี้ได้ เนื่องจากมีผู้ใช้ ${userCount} คนที่ใช้ภาษานี้อยู่`,
+        error: `ไม่สามารถปิดใช้งานภาษานี้ได้ เนื่องจากมีผู้ใช้งานที่ใช้ภาษานี้อยู่`,
       };
     }
   }

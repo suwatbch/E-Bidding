@@ -62,6 +62,26 @@ async function createAuctionType(auctionTypeData) {
 async function updateAuctionType(auctionTypeId, auctionTypeData) {
   const { name, description, status } = auctionTypeData;
 
+  // ถ้ามีการปิดใช้งานประเภทการประมูล (status = 0) ให้ตรวจสอบการใช้งานก่อน
+  if (status === 0) {
+    const checkResult = await checkAuctionTypeInUse(auctionTypeId);
+
+    if (!checkResult.success) {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบการใช้งาน',
+      };
+    }
+
+    const usageCount = checkResult.data[0].usage_count;
+    if (usageCount > 0) {
+      return {
+        success: false,
+        error: `ไม่สามารถปิดใช้งานหมวดหมู่นี้ได้ เนื่องจากมีการใช้งานอยู่`,
+      };
+    }
+  }
+
   const query = `
     UPDATE auction_type 
     SET name = ?, description = ?, status = ?
@@ -100,7 +120,7 @@ async function deleteAuctionType(auctionTypeId) {
     if (usageCount > 0) {
       return {
         success: false,
-        error: 'ไม่สามารถลบประเภทการประมูลได้ เนื่องจากมีการใช้งานอยู่',
+        error: 'ไม่สามารถลบหมวดหมู่ได้ เนื่องจากมีการใช้งานอยู่',
       };
     }
 
@@ -137,24 +157,6 @@ async function searchAuctionTypes(searchTerm) {
   return await executeQuery(query, [searchPattern, searchPattern]);
 }
 
-// ตรวจสอบว่า code ซ้ำหรือไม่
-async function checkCodeExists(code, excludeId = null) {
-  let query = `
-    SELECT COUNT(*) as count
-    FROM auction_type 
-    WHERE code = ?
-  `;
-
-  const params = [code];
-
-  if (excludeId) {
-    query += ' AND auction_type_id != ?';
-    params.push(excludeId);
-  }
-
-  return await executeQuery(query, params);
-}
-
 module.exports = {
   getAllAuctionTypes,
   getAuctionTypeById,
@@ -164,5 +166,4 @@ module.exports = {
   deleteAuctionType,
   searchAuctionTypes,
   checkAuctionTypeInUse,
-  checkCodeExists,
 };

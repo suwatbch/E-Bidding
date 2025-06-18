@@ -72,24 +72,13 @@ export default function CompanyPage() {
     const initializeData = async () => {
       // โหลดข้อมูลบริษัท
       await loadCompanies();
+      setMounted(true);
     };
 
     initializeData();
-    setMounted(true);
-  }, []);
+  }, []); // ลบ dependency loadCompanies ออก
 
-  // โหลดข้อมูลใหม่เมื่อ searchTerm เปลี่ยน (debounced)
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      if (mounted) {
-        loadCompanies();
-      }
-    }, 500);
-
-    return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
-
-  // Reset to first page when search term changes
+  // Reset to first page when search term changes - ไม่ต้องโหลดข้อมูลใหม่เพราะใช้ client-side filtering
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -336,8 +325,7 @@ export default function CompanyPage() {
           closeModal();
           alert('อัปเดทข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          console.error('Failed to update company:', result.message);
-          setError(result.message);
+          alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดทข้อมูล');
         }
       } else {
         // สร้างบริษัทใหม่
@@ -357,13 +345,12 @@ export default function CompanyPage() {
           closeModal();
           alert('เพิ่มข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          console.error('Failed to create company:', result.message);
-          setError(result.message);
+          alert(result.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
         }
       }
     } catch (error: any) {
       console.error('Error saving company:', error);
-      setError('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSubmitting(false);
     }
@@ -383,7 +370,7 @@ export default function CompanyPage() {
       }
     } catch (error: any) {
       console.error('Error deleting company:', error);
-      setError('เกิดข้อผิดพลาดในการลบบริษัท');
+      alert('เกิดข้อผิดพลาดในการลบบริษัท');
     }
   };
 

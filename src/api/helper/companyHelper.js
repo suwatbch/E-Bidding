@@ -84,6 +84,26 @@ async function createCompany(companyData) {
 async function updateCompany(companyId, companyData) {
   const { name, tax_id, address, email, phone, status } = companyData;
 
+  // ถ้ามีการปิดใช้งานบริษัท (status = 0) ให้ตรวจสอบ users_company ก่อน
+  if (status === 0) {
+    const checkResult = await checkCompanyHasUsers(companyId);
+
+    if (!checkResult.success) {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้งาน',
+      };
+    }
+
+    const userCount = checkResult.data[0].user_count;
+    if (userCount > 0) {
+      return {
+        success: false,
+        error: `ไม่สามารถปิดใช้งานบริษัทนี้ได้ เนื่องจากมีผู้ใช้งานที่เชื่อมโยงอยู่`,
+      };
+    }
+  }
+
   const query = `
     UPDATE company 
     SET name = ?, tax_id = ?, address = ?, email = ?, phone = ?, status = ?, updated_dt = NOW()
