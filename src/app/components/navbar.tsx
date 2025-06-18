@@ -19,6 +19,7 @@ import {
   NavUserIcon,
   NavHomeIcon,
   NavLanguageManageIcon,
+  NavAuctionTypeIcon,
 } from '@/app/components/ui/Icons';
 import {
   connectSocket,
@@ -599,6 +600,32 @@ export default function Navbar() {
                   <button
                     onClick={() => {
                       setIsDataOpen(false);
+                      router.push('/auctionType');
+                    }}
+                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                      <NavAuctionTypeIcon
+                        className={
+                          isActivePage('/auctionType')
+                            ? 'text-blue-700'
+                            : 'text-gray-700 group-hover:text-blue-600'
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`transform group-hover:scale-105 ${
+                        isActivePage('/auctionType')
+                          ? 'text-blue-700 font-medium'
+                          : 'text-gray-700 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {t('auction_type_info')}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsDataOpen(false);
                       router.push('/language');
                     }}
                     className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
@@ -835,6 +862,34 @@ export default function Navbar() {
                   >
                     <NavUserIcon className="w-5 h-5 mr-2" />
                     {t('user_info')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push('/auctionType');
+                    }}
+                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                      isActivePage('/auctionType')
+                        ? 'text-blue-700 bg-blue-50/80 font-medium'
+                        : 'text-gray-700 hover:bg-blue-50/50'
+                    }`}
+                  >
+                    <NavAuctionTypeIcon className="w-5 h-5 mr-2" />
+                    {t('auction_type_info')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push('/language');
+                    }}
+                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                      isActivePage('/language')
+                        ? 'text-blue-700 bg-blue-50/80 font-medium'
+                        : 'text-gray-700 hover:bg-blue-50/50'
+                    }`}
+                  >
+                    <NavLanguageManageIcon className="w-5 h-5 mr-2" />
+                    {t('language_info')}
                   </button>
                 </div>
 

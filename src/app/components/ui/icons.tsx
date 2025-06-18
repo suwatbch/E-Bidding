@@ -290,6 +290,13 @@ export const NavLanguageManageIcon = ({ className = '' }: IconProps) => (
   />
 );
 
+export const NavAuctionTypeIcon = ({ className = '' }: IconProps) => (
+  <CategoryIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
 // Additional icons can be added here as needed
 
 export function NavSaveIcon({ className = 'w-5 h-5' }: IconProps) {
