@@ -8,7 +8,6 @@ const {
   updateAuctionType,
   createAuctionType,
   deleteAuctionType,
-  checkCodeExists,
 } = require('../helper/auctionTypeHelper');
 
 // GET /api/auction-type - ดึงข้อมูลประเภทการประมูลทั้งหมด
@@ -113,27 +112,17 @@ router.put('/:id', async (req, res) => {
       });
     }
 
-    const { code, name, description, status } = req.body;
+    const { name, description, status } = req.body;
 
     // ตรวจสอบข้อมูลที่จำเป็น
-    if (!code || !name) {
+    if (!name) {
       return res.status(400).json({
         success: false,
-        message: 'รหัสและชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
-      });
-    }
-
-    // ตรวจสอบว่า code ซ้ำหรือไม่
-    const codeCheckResult = await checkCodeExists(code, auctionTypeId);
-    if (codeCheckResult.success && codeCheckResult.data[0].count > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'รหัสประเภทการประมูลนี้มีอยู่แล้ว',
+        message: 'ชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
       });
     }
 
     const result = await updateAuctionType(auctionTypeId, {
-      code,
       name,
       description,
       status: status !== undefined ? status : 1,
@@ -163,27 +152,17 @@ router.put('/:id', async (req, res) => {
 // POST /api/auction-type - สร้างประเภทการประมูลใหม่
 router.post('/', async (req, res) => {
   try {
-    const { code, name, description, status } = req.body;
+    const { name, description, status } = req.body;
 
     // ตรวจสอบข้อมูลที่จำเป็น
-    if (!code || !name) {
+    if (!name) {
       return res.status(400).json({
         success: false,
-        message: 'รหัสและชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
-      });
-    }
-
-    // ตรวจสอบว่า code ซ้ำหรือไม่
-    const codeCheckResult = await checkCodeExists(code);
-    if (codeCheckResult.success && codeCheckResult.data[0].count > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'รหัสประเภทการประมูลนี้มีอยู่แล้ว',
+        message: 'ชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
       });
     }
 
     const result = await createAuctionType({
-      code,
       name,
       description,
       status: status !== undefined ? status : 1,
@@ -239,7 +218,7 @@ router.delete('/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in deleteAuctionType:', error);
+    console.error('❌ Error in deleteAuctionType:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

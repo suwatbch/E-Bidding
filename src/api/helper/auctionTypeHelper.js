@@ -5,7 +5,6 @@ async function getAllAuctionTypes() {
   const query = `
     SELECT 
       auction_type_id as id,
-      code,
       name,
       description,
       status
@@ -21,7 +20,6 @@ async function getAuctionTypeById(auctionTypeId) {
   const query = `
     SELECT 
       auction_type_id as id,
-      code,
       name,
       description,
       status
@@ -37,7 +35,6 @@ async function getActiveAuctionTypes() {
   const query = `
     SELECT 
       auction_type_id as id,
-      code,
       name,
       description,
       status
@@ -51,33 +48,27 @@ async function getActiveAuctionTypes() {
 
 // สร้างประเภทการประมูลใหม่
 async function createAuctionType(auctionTypeData) {
-  const { code, name, description, status = 1 } = auctionTypeData;
+  const { name, description, status = 1 } = auctionTypeData;
 
   const query = `
-    INSERT INTO auction_type (code, name, description, status)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO auction_type (name, description, status)
+    VALUES (?, ?, ?)
   `;
 
-  return await executeQuery(query, [code, name, description, status]);
+  return await executeQuery(query, [name, description, status]);
 }
 
 // อัพเดทข้อมูลประเภทการประมูล
 async function updateAuctionType(auctionTypeId, auctionTypeData) {
-  const { code, name, description, status } = auctionTypeData;
+  const { name, description, status } = auctionTypeData;
 
   const query = `
     UPDATE auction_type 
-    SET code = ?, name = ?, description = ?, status = ?
+    SET name = ?, description = ?, status = ?
     WHERE auction_type_id = ?
   `;
 
-  return await executeQuery(query, [
-    code,
-    name,
-    description,
-    status,
-    auctionTypeId,
-  ]);
+  return await executeQuery(query, [name, description, status, auctionTypeId]);
 }
 
 // ตรวจสอบว่าประเภทการประมูลมีการใช้งานหรือไม่
@@ -134,21 +125,16 @@ async function searchAuctionTypes(searchTerm) {
   const query = `
     SELECT 
       auction_type_id as id,
-      code,
       name,
       description,
       status
     FROM auction_type 
-    WHERE (code LIKE ? OR name LIKE ? OR description LIKE ?)
+    WHERE (name LIKE ? OR description LIKE ?)
     ORDER BY auction_type_id ASC
   `;
 
   const searchPattern = `%${searchTerm}%`;
-  return await executeQuery(query, [
-    searchPattern,
-    searchPattern,
-    searchPattern,
-  ]);
+  return await executeQuery(query, [searchPattern, searchPattern]);
 }
 
 // ตรวจสอบว่า code ซ้ำหรือไม่

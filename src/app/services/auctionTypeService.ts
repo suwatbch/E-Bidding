@@ -77,7 +77,6 @@ auctionTypeApi.interceptors.response.use(
 // Types for AuctionType API
 export interface AuctionType {
   id: number;
-  code: string;
   name: string;
   description: string;
   status: number;
@@ -97,14 +96,12 @@ export interface SingleAuctionTypeResponse {
 }
 
 export interface CreateAuctionTypeRequest {
-  code: string;
   name: string;
   description?: string;
   status?: number;
 }
 
 export interface UpdateAuctionTypeRequest {
-  code: string;
   name: string;
   description?: string;
   status?: number;
