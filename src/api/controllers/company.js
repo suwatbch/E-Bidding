@@ -132,21 +132,18 @@ router.put('/:id', async (req, res) => {
     });
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         message: 'อัพเดทข้อมูลบริษัทสำเร็จ',
         data: { id: companyId },
       });
     } else {
-      console.error('❌ Failed to update company:', result.error);
-      res.status(500).json({
+      res.status(400).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการอัพเดทบริษัท',
-        error: result.error,
+        message: result.error || 'เกิดข้อผิดพลาดในการอัพเดทบริษัท',
       });
     }
   } catch (error) {
-    console.error('❌ Error in updateCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -216,31 +213,18 @@ router.delete('/:id', async (req, res) => {
     const result = await deleteCompany(companyId);
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         message: 'ลบบริษัทสำเร็จ',
-        data: { id: companyId },
       });
     } else {
-      console.error('❌ Failed to delete company:', result.error);
-
-      // ตรวจสอบว่าเป็น error เพราะมีผู้ใช้งานหรือไม่
-      if (result.error.includes('มีผู้ใช้งานที่เชื่อมโยงอยู่')) {
-        res.status(400).json({
-          success: false,
-          message: result.error,
-          userCount: result.userCount,
-        });
-      } else {
-        res.status(500).json({
-          success: false,
-          message: 'เกิดข้อผิดพลาดในการลบบริษัท',
-          error: result.error,
-        });
-      }
+      res.status(400).json({
+        success: false,
+        message: result.error || 'เกิดข้อผิดพลาดในการลบบริษัท',
+      });
     }
   } catch (error) {
-    console.error('❌ Error in deleteCompany:', error);
+    console.error('Error in deleteCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

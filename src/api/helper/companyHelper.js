@@ -131,7 +131,6 @@ async function deleteCompany(companyId) {
       return {
         success: false,
         error: 'ไม่สามารถลบบริษัทได้ เนื่องจากมีผู้ใช้งานที่เชื่อมโยงอยู่',
-        userCount: userCount,
       };
     }
 

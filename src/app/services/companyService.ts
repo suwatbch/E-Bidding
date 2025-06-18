@@ -254,7 +254,6 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating company:', error);
       return {
         success: false,
         message:
@@ -273,7 +272,6 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error deleting company:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบบริษัท',
