@@ -260,7 +260,7 @@ export const companyService = {
     companyData: UpdateCompanyRequest
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await companyApi.put(
+      const response: AxiosResponse<ApiResponse> = await companyApi.post(
         `/${id}`,
         companyData
       );
@@ -279,8 +279,8 @@ export const companyService = {
    */
   deleteCompany: async (id: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await companyApi.delete(
-        `/${id}`
+      const response: AxiosResponse<ApiResponse> = await companyApi.post(
+        `/delete/${id}`
       );
       return response.data;
     } catch (error: any) {

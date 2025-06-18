@@ -100,8 +100,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/company/:id - อัพเดทข้อมูลบริษัท
-router.put('/:id', async (req, res) => {
+// POST /api/company/:id - อัพเดทข้อมูลบริษัท
+router.post('/:id', async (req, res) => {
   try {
     const companyId = parseInt(req.params.id);
 
@@ -198,8 +198,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE /api/company/:id - ลบบริษัท (soft delete)
-router.delete('/:id', async (req, res) => {
+// POST /api/company/delete/:id - ลบบริษัท (soft delete)
+router.post('/delete/:id', async (req, res) => {
   try {
     const companyId = parseInt(req.params.id);
 
