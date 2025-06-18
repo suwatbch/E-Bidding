@@ -8,6 +8,7 @@ const languageRouter = require('./controllers/language');
 const companyRouter = require('./controllers/company');
 const userRouter = require('./controllers/users');
 const userCompanyRouter = require('./controllers/userCompany');
+const auctionsRouter = require('./controllers/auctions');
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/languages', languageRouter);
 app.use('/api/company', companyRouter);
 app.use('/api/users', userRouter);
 app.use('/api/user-company', userCompanyRouter);
+app.use('/api/auctions', auctionsRouter);
 
 // Make io accessible to routes
 app.set('io', io);

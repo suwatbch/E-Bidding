@@ -321,13 +321,17 @@ export const formatPrice = (price: number): string => {
 
 /**
  * จัดรูปแบบ Auction ID
- * @param id - ID ของประมูล
- * @returns string ในรูปแบบ [ปี + ID]
+ * @param auction - ข้อมูลประมูล (ต้องมี auction_id และ created_dt)
+ * @returns string ในรูปแบบ AUC + auction_id (เช่น AUC0001)
  */
-export const formatAuctionId = (id: number): string => {
-  const currentYear = new Date().getFullYear();
-  const paddedId = id.toString().padStart(4, '0');
-  return `[${currentYear}${paddedId}]`;
+export const formatAuctionId = (auction: {
+  auction_id: number;
+  created_dt: string;
+}): string => {
+  // เติม 0 ข้างหน้าให้ครบอย่างน้อย 4 หลัก หากเกินก็ยาวตามจำนวนหลักจริง
+  const paddedId = auction.auction_id.toString().padStart(4, '0');
+
+  return `AUC${paddedId}`;
 };
 
 /**

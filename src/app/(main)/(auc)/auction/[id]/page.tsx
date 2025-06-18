@@ -175,8 +175,11 @@ export default function AuctionDetailPage() {
     return price.toLocaleString('th-TH');
   };
 
-  const formatAuctionId = (id: number) => {
-    return `[2024${id.toString().padStart(4, '0')}]`;
+  const formatAuctionId = (auctionData: any) => {
+    // เติม 0 ข้างหน้าให้ครบอย่างน้อย 4 หลัก หากเกินก็ยาวตามจำนวนหลักจริง
+    const paddedId = auctionData.auction_id.toString().padStart(4, '0');
+
+    return `AUC${paddedId}`;
   };
 
   // ดึงข้อมูลเพิ่มเติม
@@ -356,7 +359,7 @@ export default function AuctionDetailPage() {
                     {auction.name}
                   </h1>
                   <p className="text-gray-600 mt-1">
-                    รหัสตลาด: {formatAuctionId(auction.auction_id)}
+                    รหัสตลาด: [{formatAuctionId(auction)}]
                   </p>
                 </div>
               </div>

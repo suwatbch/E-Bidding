@@ -28,14 +28,16 @@ import {
   AucOfferIcon,
 } from '@/app/components/ui/Icons';
 import Container from '@/app/components/ui/Container';
-import { dataAuction, Auction } from '@/app/model/dataAuction';
-import { dataAuction_Type } from '@/app/model/dataAuction_Type';
-import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
 import { statusConfig, getStatusById } from '@/app/model/config';
+import {
+  auctionsService,
+  Auction,
+  AuctionType,
+  AuctionParticipant,
+} from '@/app/services/auctionsService';
 import ThaiDatePicker from '@/app/components/ui/DatePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
-import LoadingState from '@/app/components/ui/LoadingState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import {
   formatDateForDisplay,
@@ -56,6 +58,10 @@ interface AuctionItem {
 
 export default function AuctionsPage() {
   const [auctions, setAuctions] = useState<Auction[]>([]);
+  const [auctionTypes, setAuctionTypes] = useState<AuctionType[]>([]);
+  const [auctionParticipants, setAuctionParticipants] = useState<
+    AuctionParticipant[]
+  >([]);
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [startDate, setStartDate] = useState(() => {
@@ -70,6 +76,7 @@ export default function AuctionsPage() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -123,22 +130,19 @@ export default function AuctionsPage() {
     return formatDateForDisplay(safeParseDate(dateTimeStr), true);
   };
 
-  const formatAuctionId = (id: number) => {
-    const currentYear = new Date().getFullYear();
-    // แปลงเลขไอดีให้เป็นสตริงและเติม 0 ข้างหน้าให้ครบ 4 หลัก
-    const paddedId = id.toString().padStart(4, '0');
-    return `[${currentYear}${paddedId}]`;
+  const formatAuctionId = (auction: any) => {
+    // เติม 0 ข้างหน้าให้ครบอย่างน้อย 4 หลัก หากเกินก็ยาวตามจำนวนหลักจริง
+    const paddedId = auction.auction_id.toString().padStart(4, '0');
+
+    return `AUC${paddedId}`;
   };
 
-  // ดึงข้อมูลตลาดประมูลที่ไม่ถูกลบ
-  const filteredAuctions = dataAuction.filter((a) => a.is_deleted === 0);
-
   // สร้างข้อมูลสำหรับแสดงผล
-  const auctionTable = filteredAuctions.map((auction, idx) => {
-    const auctionType = dataAuction_Type.find(
+  const auctionTable = auctions.map((auction, idx) => {
+    const auctionType = auctionTypes.find(
       (t) => t.auction_type_id === auction.auction_type_id
     );
-    const participantCount = dataAuction_Participant.filter(
+    const participantCount = auctionParticipants.filter(
       (p) => p.auction_id === auction.auction_id
     ).length;
 
@@ -171,19 +175,20 @@ export default function AuctionsPage() {
 
     return {
       no: idx,
-      title: `${auction.name} ${formatAuctionId(auction.auction_id)}`,
+      auction_id: auction.auction_id, // เพิ่มฟิลด์นี้เพื่อให้ง่ายต่อการเข้าถึง
+      title: `${auction.name} [${formatAuctionId(auction)}]`,
       category: auctionType?.name || '-',
       startTime: auction.start_dt,
       endTime: auction.end_dt,
       bidCount: participantCount,
       status: uiStatus,
-    } as AuctionItem;
+    } as AuctionItem & { auction_id: number };
   });
 
-  // ดึงรายการหมวดหมู่จาก dataAuction_Type
+  // ดึงรายการหมวดหมู่จาก auctionTypes
   const categories = [
     'ทั้งหมด',
-    ...dataAuction_Type
+    ...auctionTypes
       .filter((type) => type.status === 1) // เลือกเฉพาะที่ status เป็น 1 (active)
       .map((type) => type.name),
   ];
@@ -234,21 +239,47 @@ export default function AuctionsPage() {
   };
 
   // Mount and Loading effect - รวมเป็นอันเดียวเหมือนหน้า Company
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        // จำลองการโหลดข้อมูลจริง
-        setAuctions(dataAuction.filter((a) => a.is_deleted === 0));
-      } catch (error) {
-        console.error('Error loading auctions:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // โหลดข้อมูลจากฐานข้อมูล
+  const loadAuctions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    loadData();
-    setMounted(true);
+      const [auctionsResult, typesResult, participantsResult] =
+        await Promise.all([
+          auctionsService.getAllAuctions(),
+          auctionsService.getAuctionTypes(),
+          auctionsService.getAuctionParticipants(),
+        ]);
+
+      if (auctionsResult.success) {
+        setAuctions(auctionsResult.data);
+      } else {
+        setError(auctionsResult.message);
+      }
+
+      if (typesResult.success) {
+        setAuctionTypes(typesResult.data);
+      } else {
+        setError(typesResult.message);
+      }
+
+      if (participantsResult.success) {
+        setAuctionParticipants(participantsResult.data);
+      } else {
+        setError(participantsResult.message);
+      }
+    } catch (error: any) {
+      console.error('Error loading auctions:', error);
+      setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+    } finally {
+      setIsLoading(false);
+      setMounted(true);
+    }
+  };
+
+  useEffect(() => {
+    loadAuctions();
   }, []);
 
   // Calculate pagination
@@ -318,6 +349,34 @@ export default function AuctionsPage() {
   return (
     <Container>
       <div className="py-8">
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  เกิดข้อผิดพลาด
+                </h3>
+                <div className="mt-2 text-sm text-red-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -499,6 +558,7 @@ export default function AuctionsPage() {
           <div className="flex"></div>
           <Link
             href="/auctionform?id=0"
+            prefetch={false}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
             <svg
@@ -529,10 +589,36 @@ export default function AuctionsPage() {
           mounted={mounted}
         />
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-red-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-2xl font-semibold">รายการตลาดประมูล</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold">รายการตลาดประมูล</h2>
+              </div>
               <div className="flex items-center gap-2 flex-nowrap overflow-x-auto pb-2 sm:pb-0 -mx-6 sm:mx-0 px-6 sm:px-0">
                 <button
                   onClick={() => setSelectedStatus('all')}
@@ -674,9 +760,7 @@ export default function AuctionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <LoadingState colSpan={8} />
-              ) : currentItems.length === 0 ? (
+              {currentItems.length === 0 ? (
                 <EmptyState
                   title="ไม่พบข้อมูล"
                   description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
@@ -696,10 +780,9 @@ export default function AuctionsPage() {
                       <TableCell>
                         <div className="relative">
                           <Link
-                            href={`/auction/${
-                              filteredAuctions[item.no]?.auction_id || ''
-                            }`}
-                            className="text-sm font-medium truncate cursor-pointer hover:text-blue-700 transition-colors block"
+                            href={`/auction/${(item as any).auction_id || ''}`}
+                            prefetch={false}
+                            className="text-sm font-medium truncate cursor-pointer text-blue-700 transition-colors block"
                             title={item.title}
                           >
                             {item.title}
@@ -758,8 +841,9 @@ export default function AuctionsPage() {
                         <div className="flex items-center justify-center gap-1">
                           <Link
                             href={`/auctionform?id=${
-                              filteredAuctions[item.no]?.auction_id || ''
+                              (item as any).auction_id || ''
                             }`}
+                            prefetch={false}
                             className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                             title="แก้ไข"
                           >
@@ -778,42 +862,48 @@ export default function AuctionsPage() {
                               />
                             </svg>
                           </Link>
-                          <button
-                            onClick={() => {
-                              const auctionName =
-                                filteredAuctions[item.no]?.name || 'ตลาดนี้';
-                              if (
-                                confirm(
-                                  `คุณต้องการลบ "${auctionName}" หรือไม่?`
-                                )
-                              ) {
-                                // จำลองการลบข้อมูล
-                                console.log(
-                                  'Delete auction:',
-                                  filteredAuctions[item.no]?.auction_id
+                          {/* แสดงปุ่มลบเฉพาะสถานะ 1, 2, และ 6 เท่านั้น */}
+                          {[1, 2, 6].includes(item.status) && (
+                            <button
+                              onClick={() => {
+                                const auction = auctions.find(
+                                  (a) =>
+                                    a.auction_id === (item as any).auction_id
                                 );
-                                alert('ลบข้อมูลเรียบร้อยแล้ว');
-                                // ในการใช้งานจริงจะเรียก API เพื่อลบข้อมูล
-                              }
-                            }}
-                            className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                            title="ลบ"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4"
+                                const auctionName = auction?.name || 'ตลาดนี้';
+                                if (
+                                  confirm(
+                                    `คุณต้องการลบ "${auctionName}" หรือไม่?`
+                                  )
+                                ) {
+                                  // จำลองการลบข้อมูล
+                                  console.log(
+                                    'Delete auction:',
+                                    (item as any).auction_id
+                                  );
+                                  alert('ลบข้อมูลเรียบร้อยแล้ว');
+                                  // ในการใช้งานจริงจะเรียก API เพื่อลบข้อมูล
+                                }
+                              }}
+                              className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                              title="ลบ"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-                              />
-                            </svg>
-                          </button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
