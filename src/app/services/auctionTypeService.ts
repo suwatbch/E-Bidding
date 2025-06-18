@@ -4,8 +4,8 @@ import axios, { AxiosResponse } from 'axios';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // Create axios instance with base configuration
-const userCompanyApi = axios.create({
-  baseURL: `${API_URL}/api/user-company`,
+const auctionTypeApi = axios.create({
+  baseURL: `${API_URL}/api/auction-type`,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ const getAuthTokenFromStorage = (): string | null => {
 };
 
 // Add request interceptor to include auth token
-userCompanyApi.interceptors.request.use(
+auctionTypeApi.interceptors.request.use(
   (config) => {
     const token = getAuthTokenFromStorage();
     if (token) {
@@ -55,7 +55,7 @@ userCompanyApi.interceptors.request.use(
 );
 
 // Add response interceptor to handle auth errors
-userCompanyApi.interceptors.response.use(
+auctionTypeApi.interceptors.response.use(
   (response) => {
     return response;
   },
@@ -74,45 +74,39 @@ userCompanyApi.interceptors.response.use(
   }
 );
 
-// Types for UserCompany API
-export interface UserCompany {
+// Types for AuctionType API
+export interface AuctionType {
   id: number;
-  user_id: number;
-  company_id: number;
-  role_in_company: string | null;
-  is_primary: boolean;
+  code: string;
+  name: string;
+  description: string;
   status: number;
-  created_dt?: string;
-  updated_dt?: string;
-  // Joined data
-  company_name?: string;
-  company_tax_id?: string;
 }
 
-export interface UserCompanyResponse {
+export interface AuctionTypeResponse {
   success: boolean;
   message: string;
-  data: UserCompany[];
+  data: AuctionType[];
   total: number;
 }
 
-export interface SingleUserCompanyResponse {
+export interface SingleAuctionTypeResponse {
   success: boolean;
   message: string;
-  data: UserCompany;
+  data: AuctionType;
 }
 
-export interface CreateUserCompanyRequest {
-  user_id: number;
-  company_id: number;
-  role_in_company?: string;
-  is_primary?: boolean;
+export interface CreateAuctionTypeRequest {
+  code: string;
+  name: string;
+  description?: string;
   status?: number;
 }
 
-export interface UpdateUserCompanyRequest {
-  role_in_company?: string;
-  is_primary?: boolean;
+export interface UpdateAuctionTypeRequest {
+  code: string;
+  name: string;
+  description?: string;
   status?: number;
 }
 
@@ -124,7 +118,7 @@ export interface ApiResponse<T = any> {
 }
 
 // Helper function to handle API errors consistently
-const handleApiError = (error: any, action: string): UserCompanyResponse => {
+const handleApiError = (error: any, action: string): AuctionTypeResponse => {
   console.error(`❌ Error ${action}:`, error);
 
   const status = error.response?.status;
@@ -155,121 +149,143 @@ const handleApiError = (error: any, action: string): UserCompanyResponse => {
   };
 };
 
-// UserCompany Service
-export const userCompanyService = {
+// AuctionType Service
+export const auctionTypeService = {
   /**
-   * ดึงข้อมูลบริษัทของผู้ใช้ตาม user_id
+   * ดึงข้อมูลประเภทการประมูลทั้งหมด
    */
-  getUserCompanies: async (userId: number): Promise<UserCompanyResponse> => {
+  getAllAuctionTypes: async (): Promise<AuctionTypeResponse> => {
     try {
-      const response: AxiosResponse<UserCompanyResponse> =
-        await userCompanyApi.get(`/user/${userId}`);
+      const response: AxiosResponse<AuctionTypeResponse> =
+        await auctionTypeApi.get('/');
       return response.data;
     } catch (error: any) {
-      return handleApiError(error, 'ดึงข้อมูลบริษัทของผู้ใช้');
+      return handleApiError(error, 'ดึงข้อมูลประเภทการประมูล');
     }
   },
 
   /**
-   * ดึงข้อมูลผู้ใช้ในบริษัทตาม company_id
+   * ดึงข้อมูลประเภทการประมูลที่เปิดใช้งานเท่านั้น
    */
-  getCompanyUsers: async (companyId: number): Promise<UserCompanyResponse> => {
+  getActiveAuctionTypes: async (): Promise<AuctionTypeResponse> => {
     try {
-      const response: AxiosResponse<UserCompanyResponse> =
-        await userCompanyApi.get(`/company/${companyId}`);
+      const response: AxiosResponse<AuctionTypeResponse> =
+        await auctionTypeApi.get('/', {
+          params: { active_only: 'true' },
+        });
       return response.data;
     } catch (error: any) {
-      return handleApiError(error, 'ดึงข้อมูลผู้ใช้ในบริษัท');
+      return handleApiError(error, 'ดึงข้อมูลประเภทการประมูลที่เปิดใช้งาน');
     }
   },
 
   /**
-   * เพิ่มผู้ใช้เข้าบริษัท
+   * ค้นหาประเภทการประมูล
    */
-  addUserToCompany: async (
-    data: CreateUserCompanyRequest
-  ): Promise<SingleUserCompanyResponse> => {
+  searchAuctionTypes: async (
+    searchTerm: string
+  ): Promise<AuctionTypeResponse> => {
     try {
-      const response: AxiosResponse<SingleUserCompanyResponse> =
-        await userCompanyApi.post('/', data);
+      if (!searchTerm.trim()) {
+        return auctionTypeService.getAllAuctionTypes();
+      }
+
+      const response: AxiosResponse<AuctionTypeResponse> =
+        await auctionTypeApi.get('/', {
+          params: { search: searchTerm.trim() },
+        });
       return response.data;
     } catch (error: any) {
+      return handleApiError(error, 'ค้นหาประเภทการประมูล');
+    }
+  },
+
+  /**
+   * ดึงข้อมูลประเภทการประมูลตาม ID
+   */
+  getAuctionTypeById: async (
+    id: number
+  ): Promise<SingleAuctionTypeResponse> => {
+    try {
+      const response: AxiosResponse<SingleAuctionTypeResponse> =
+        await auctionTypeApi.get(`/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error fetching auction type by ID:', error);
       return {
         success: false,
-        message: handleApiError(error, 'เพิ่มผู้ใช้เข้าบริษัท').message,
-        data: {} as UserCompany,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทการประมูล',
+        data: {} as AuctionType,
       };
     }
   },
 
   /**
-   * อัปเดตข้อมูลผู้ใช้ในบริษัท
+   * สร้างประเภทการประมูลใหม่
    */
-  updateUserCompany: async (
+  createAuctionType: async (
+    auctionTypeData: CreateAuctionTypeRequest
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.post(
+        '/',
+        auctionTypeData
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error creating auction type:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการสร้างประเภทการประมูล',
+      };
+    }
+  },
+
+  /**
+   * อัพเดทข้อมูลประเภทการประมูล
+   */
+  updateAuctionType: async (
     id: number,
-    data: UpdateUserCompanyRequest
-  ): Promise<SingleUserCompanyResponse> => {
+    auctionTypeData: UpdateAuctionTypeRequest
+  ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<SingleUserCompanyResponse> =
-        await userCompanyApi.put(`/${id}`, data);
+      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.put(
+        `/${id}`,
+        auctionTypeData
+      );
       return response.data;
     } catch (error: any) {
       return {
         success: false,
-        message: handleApiError(error, 'อัปเดตข้อมูลผู้ใช้ในบริษัท').message,
-        data: {} as UserCompany,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการอัพเดทประเภทการประมูล',
       };
     }
   },
 
   /**
-   * ลบผู้ใช้ออกจากบริษัท
+   * ลบประเภทการประมูล (soft delete)
    */
-  removeUserFromCompany: async (id: number): Promise<ApiResponse> => {
+  deleteAuctionType: async (id: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userCompanyApi.delete(
+      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.delete(
         `/${id}`
       );
       return response.data;
     } catch (error: any) {
       return {
         success: false,
-        message: handleApiError(error, 'ลบผู้ใช้ออกจากบริษัท').message,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการลบประเภทการประมูล',
       };
-    }
-  },
-
-  /**
-   * ตั้งบริษัทหลักของผู้ใช้
-   */
-  setPrimaryCompany: async (
-    userId: number,
-    companyId: number
-  ): Promise<ApiResponse> => {
-    try {
-      const response: AxiosResponse<ApiResponse> = await userCompanyApi.patch(
-        `/set-primary`,
-        { user_id: userId, company_id: companyId }
-      );
-      return response.data;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: handleApiError(error, 'ตั้งบริษัทหลัก').message,
-      };
-    }
-  },
-
-  /**
-   * ดึงข้อมูลทั้งหมด
-   */
-  getAllUserCompanies: async (): Promise<UserCompanyResponse> => {
-    try {
-      const response: AxiosResponse<UserCompanyResponse> =
-        await userCompanyApi.get('/');
-      return response.data;
-    } catch (error: any) {
-      return handleApiError(error, 'ดึงข้อมูลความสัมพันธ์ผู้ใช้-บริษัท');
     }
   },
 };
+
+export default auctionTypeService;

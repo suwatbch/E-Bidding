@@ -22,41 +22,45 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const getAuthTokenFromStorage = (): string | null => {
   if (typeof window === 'undefined') return null;
 
-  // 1. ลองอ่านจาก cookie ก่อน (สำหรับ middleware compatibility)
-  const getCookieToken = (): string | null => {
+  try {
+    // 1. ลองดึงจาก cookie ก่อน (เพื่อความเร็วและความแม่นยำ)
     const allCookies = document.cookie.split('; ');
     const authTokenCookie = allCookies.find((row) =>
       row.startsWith('auth_token=')
     );
-    return authTokenCookie?.split('=')[1] || null;
-  };
+    const cookieToken = authTokenCookie?.split('=')[1];
 
-  let token = getCookieToken();
-  if (token) return token;
-
-  // 2. ถ้าไม่มี cookie ลองหาใน localStorage (สำหรับ remember me)
-  token = localStorage.getItem('auth_token');
-  if (token) return token;
-
-  // 3. ถ้ายังไม่มี ลองหาใน sessionStorage
-  token = sessionStorage.getItem('auth_token');
-  if (token) return token;
-
-  // 4. ถ้ายังไม่มี ลองหาใน session object
-  const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
-  const storage = rememberMe ? localStorage : sessionStorage;
-  const sessionData = storage.getItem('auth_session');
-
-  if (sessionData) {
-    try {
-      const session = JSON.parse(sessionData);
-      token = session.token;
-    } catch (error) {
-      console.error('Error parsing session data:', error);
+    if (cookieToken) {
+      return cookieToken;
     }
-  }
 
-  return token || null;
+    // 2. Fallback: ดึงจาก localStorage
+    const localToken = localStorage.getItem('auth_token');
+    if (localToken) return localToken;
+
+    // 3. Fallback: ดึงจาก sessionStorage
+    const sessionToken = sessionStorage.getItem('auth_token');
+    if (sessionToken) return sessionToken;
+
+    // 4. Fallback: ดึงจาก session object
+    const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
+    const storage = rememberMe ? localStorage : sessionStorage;
+    const sessionData = storage.getItem('auth_session');
+
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        return session.token || null;
+      } catch (error) {
+        console.error('Error parsing session data:', error);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error getting auth token:', error);
+    return null;
+  }
 };
 
 // ฟังก์ชันสำหรับสร้าง headers

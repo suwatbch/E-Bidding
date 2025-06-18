@@ -9,6 +9,7 @@ const companyRouter = require('./controllers/company');
 const userRouter = require('./controllers/users');
 const userCompanyRouter = require('./controllers/userCompany');
 const auctionsRouter = require('./controllers/auctions');
+const auctionTypeRouter = require('./controllers/auctionType');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/company', companyRouter);
 app.use('/api/users', userRouter);
 app.use('/api/user-company', userCompanyRouter);
 app.use('/api/auctions', auctionsRouter);
+app.use('/api/auction-type', auctionTypeRouter);
 
 // Make io accessible to routes
 app.set('io', io);

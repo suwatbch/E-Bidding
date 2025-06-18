@@ -12,17 +12,29 @@ const companyApi = axios.create({
   },
 });
 
-// Helper function to get auth token from localStorage
+// Helper function to get auth token from cookie first, then localStorage
 const getAuthTokenFromStorage = (): string | null => {
   if (typeof window === 'undefined') {
     return null;
   }
 
   try {
-    const token = localStorage.getItem('auth_token');
-    return token;
+    // 1. ลองดึงจาก cookie ก่อน (เพื่อความเร็วและความแม่นยำ)
+    const allCookies = document.cookie.split('; ');
+    const authTokenCookie = allCookies.find((row) =>
+      row.startsWith('auth_token=')
+    );
+    const cookieToken = authTokenCookie?.split('=')[1];
+
+    if (cookieToken) {
+      return cookieToken;
+    }
+
+    // 2. Fallback: ดึงจาก localStorage
+    const localToken = localStorage.getItem('auth_token');
+    return localToken;
   } catch (error) {
-    console.error('Error getting auth token from localStorage:', error);
+    console.error('Error getting auth token:', error);
     return null;
   }
 };
