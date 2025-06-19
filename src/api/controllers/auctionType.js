@@ -61,8 +61,8 @@ router.get('/:id', async (req, res) => {
     const auctionTypeId = parseInt(req.params.id);
 
     if (isNaN(auctionTypeId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประเภทการประมูลไม่ถูกต้อง',
       });
     }
@@ -71,19 +71,18 @@ router.get('/:id', async (req, res) => {
 
     if (result.success) {
       if (result.data.length > 0) {
-        res.json({
+        res.status(200).json({
           success: true,
           data: result.data[0],
-          message: 'ดึงข้อมูลประเภทการประมูลสำเร็จ',
+          message: null,
         });
       } else {
-        res.status(404).json({
-          success: false,
+        res.status(200).json({
+          success: true,
           message: 'ไม่พบข้อมูลประเภทการประมูลที่ระบุ',
         });
       }
     } else {
-      console.error('❌ Failed to get auction type:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทการประมูล',
@@ -91,7 +90,6 @@ router.get('/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAuctionTypeById:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -106,8 +104,8 @@ router.post('/update/:id', async (req, res) => {
     const auctionTypeId = parseInt(req.params.id);
 
     if (isNaN(auctionTypeId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประเภทการประมูลไม่ถูกต้อง',
       });
     }
@@ -116,8 +114,8 @@ router.post('/update/:id', async (req, res) => {
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!name) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
       });
     }
@@ -131,13 +129,12 @@ router.post('/update/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัพเดทข้อมูลประเภทการประมูลสำเร็จ',
-        data: { id: auctionTypeId },
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการอัพเดทประเภทการประมูล',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -156,8 +153,8 @@ router.post('/', async (req, res) => {
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!name) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ชื่อประเภทการประมูลเป็นข้อมูลที่จำเป็น',
       });
     }
@@ -169,21 +166,17 @@ router.post('/', async (req, res) => {
     });
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
-        message: 'สร้างประเภทการประมูลใหม่สำเร็จ',
-        data: { id: result.insertId },
+        message: null,
       });
     } else {
-      console.error('❌ Failed to create auction type:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการสร้างประเภทการประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in createAuctionType:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -198,8 +191,8 @@ router.post('/delete/:id', async (req, res) => {
     const auctionTypeId = parseInt(req.params.id);
 
     if (isNaN(auctionTypeId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประเภทการประมูลไม่ถูกต้อง',
       });
     }
@@ -209,16 +202,15 @@ router.post('/delete/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบประเภทการประมูลสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการลบประเภทการประมูล',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in deleteAuctionType:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
