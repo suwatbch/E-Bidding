@@ -30,14 +30,12 @@ export default function LanguagePage() {
 
   const loadLanguages = useCallback(async () => {
     try {
-      setError(null);
-
       // โหลดข้อมูลจาก API ผ่าน languageService
       const data = await languageService.loadLanguagesFromAPI();
       setLanguages(data);
     } catch (error: any) {
-      console.error('❌ Error loading languages:', error);
-      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลภาษา');
+      console.error('Error loading languages:', error);
+      alert(error);
     }
   }, []);
 
@@ -70,7 +68,6 @@ export default function LanguagePage() {
       is_default: false,
       status: 1,
     });
-    setError(null);
   };
 
   const handleChange = (
@@ -98,7 +95,6 @@ export default function LanguagePage() {
 
     try {
       setIsSubmitting(true);
-      setError(null);
 
       // ใช้ languageService แทน direct API call
       const result = await languageService.updateLanguage(
@@ -120,7 +116,7 @@ export default function LanguagePage() {
         alert(result.message);
       }
     } catch (error: any) {
-      setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
+      alert(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -138,8 +134,6 @@ export default function LanguagePage() {
     if (!confirm('คุณแน่ใจว่าต้องการลบภาษานี้?')) return;
 
     try {
-      setError(null);
-
       const result = await languageService.deleteLanguage(code);
 
       if (result.success && result.message === null) {
