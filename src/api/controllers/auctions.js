@@ -26,10 +26,9 @@ router.get('/types', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

@@ -24,10 +24,9 @@ router.get('/', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลความสัมพันธ์ผู้ใช้-บริษัท',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -61,10 +60,9 @@ router.get('/user/:userId', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลบริษัทของผู้ใช้',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -98,10 +96,9 @@ router.get('/company/:companyId', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้ในบริษัท',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -134,10 +131,9 @@ router.get('/primary/:userId', async (req, res) => {
         data: result.data.length > 0 ? result.data[0] : null,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลบริษัทหลักของผู้ใช้',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

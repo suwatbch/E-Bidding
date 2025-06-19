@@ -33,7 +33,6 @@ router.post('/login', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in login:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -56,7 +55,6 @@ router.post('/logout', async (req, res) => {
       message: null,
     });
   } catch (error) {
-    console.error('Error in logout:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดในการออกจากระบบ',
@@ -92,7 +90,6 @@ router.post('/otp', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getOtp:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -121,7 +118,6 @@ router.post('/reset-password', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in resetPassword:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

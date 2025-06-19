@@ -24,10 +24,9 @@ router.get('/', async (req, res) => {
         data: result.data,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลภาษา',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -67,10 +66,9 @@ router.get('/:languageCode', async (req, res) => {
         });
       }
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลภาษา',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -178,10 +176,9 @@ router.get('/texts/all', async (req, res) => {
         data: result.data,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข้อความแปล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

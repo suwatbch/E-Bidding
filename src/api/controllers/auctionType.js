@@ -29,24 +29,19 @@ router.get('/', async (req, res) => {
     }
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         data: result.data,
-        message: search
-          ? `พบประเภทการประมูล ${result.data.length} รายการที่ตรงกับการค้นหา "${search}"`
-          : `ดึงข้อมูลประเภทการประมูลสำเร็จ ${result.data.length} รายการ`,
+        message: null,
         total: result.data.length,
       });
     } else {
-      console.error('❌ Failed to get auction types:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทการประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAllAuctionTypes:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -83,10 +78,9 @@ router.get('/:id', async (req, res) => {
         });
       }
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทการประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
