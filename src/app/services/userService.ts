@@ -49,7 +49,7 @@ userApi.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('🔥 Request interceptor error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -159,7 +159,7 @@ export interface ApiResponse<T = any> {
 
 // Helper function to handle API errors consistently
 const handleApiError = (error: any, action: string): UserResponse => {
-  console.error(`❌ Error ${action}:`, error);
+  console.error(`Error ${action}:`, error);
 
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
@@ -224,7 +224,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error getting user by ID:', error);
+      console.error('Error getting user by ID:', error);
       return {
         success: false,
         message:
@@ -274,7 +274,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error creating user:', error);
+      console.error('Error creating user:', error);
       return {
         success: false,
         message:
@@ -297,7 +297,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating user:', error);
+      console.error('Error updating user:', error);
       return {
         success: false,
         message:
@@ -317,7 +317,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error deleting user:', error);
+      console.error('Error deleting user:', error);
       return {
         success: false,
         message:
@@ -343,7 +343,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error checking username:', error);
+      console.error('Error checking username:', error);
       return {
         success: false,
         message:
@@ -370,7 +370,7 @@ export const userService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error checking email:', error);
+      console.error('Error checking email:', error);
       return {
         success: false,
         message:
@@ -394,7 +394,7 @@ export const userService = {
 
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating user language:', error);
+      console.error('Error updating user language:', error);
       return {
         success: false,
         message:
