@@ -137,7 +137,7 @@ export default function LoginPage() {
         remember_me: formData.rememberMe,
       } as LoginRequest);
 
-      if (response.success && response.data) {
+      if (response.success && response.message === null && response.data) {
         const userData = (response.data as any).user || response.data;
 
         // Save credentials if "Remember Me" is checked

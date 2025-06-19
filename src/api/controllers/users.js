@@ -111,8 +111,8 @@ router.post('/', async (req, res) => {
 
     // Validation
     if (!username || !password || !fullname || !email || !phone) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน',
       });
     }
@@ -135,13 +135,13 @@ router.post('/', async (req, res) => {
     if (result.success) {
       res.status(201).json({
         success: true,
-        message: 'เพิ่มผู้ใช้งานใหม่สำเร็จ',
+        message: null,
         data: { user_id: result.insertId },
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการเพิ่มผู้ใช้งาน',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -154,8 +154,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/users/:userId - อัปเดตข้อมูลผู้ใช้งาน
-router.put('/:userId', async (req, res) => {
+// POST /api/users/update/:userId - อัปเดตข้อมูลผู้ใช้งาน
+router.post('/update/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const {
@@ -173,8 +173,8 @@ router.put('/:userId', async (req, res) => {
     } = req.body;
 
     if (!userId) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ผู้ใช้งาน',
       });
     }
@@ -203,12 +203,12 @@ router.put('/:userId', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัปเดตข้อมูลผู้ใช้งานสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลผู้ใช้งาน',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -221,14 +221,14 @@ router.put('/:userId', async (req, res) => {
   }
 });
 
-// DELETE /api/users/:userId - ลบผู้ใช้งาน (soft delete)
-router.delete('/:userId', async (req, res) => {
+// POST /api/users/delete/:userId - ลบผู้ใช้งาน (soft delete)
+router.post('/delete/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
     if (!userId) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ผู้ใช้งาน',
       });
     }
@@ -238,12 +238,12 @@ router.delete('/:userId', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบผู้ใช้งานสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -256,31 +256,31 @@ router.delete('/:userId', async (req, res) => {
   }
 });
 
-// PATCH /api/users/:userId/language - อัปเดตภาษาของผู้ใช้งาน
-router.patch('/:userId/language', async (req, res) => {
+// POST /api/users/language/:userId - อัปเดตภาษาของผู้ใช้งาน
+router.post('/language/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { language_code } = req.body;
 
     // Validation
     if (!userId) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ผู้ใช้งาน',
       });
     }
 
     if (!language_code) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุรหัสภาษา',
       });
     }
 
     // ตรวจสอบรูปแบบของ language_code (ควรเป็น 2-3 ตัวอักษร)
     if (!/^[a-z]{2,3}$/.test(language_code)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message:
           'รูปแบบรหัสภาษาไม่ถูกต้อง (ควรเป็น 2-3 ตัวอักษรเล็ก เช่น th, en)',
       });
@@ -291,12 +291,12 @@ router.patch('/:userId/language', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: null,
         data: result.data,
       });
     } else {
-      res.status(400).json({
-        success: false,
+      res.status(200).json({
+        success: true,
         message: result.error,
       });
     }

@@ -95,8 +95,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/company/:id - อัพเดทข้อมูลบริษัท
-router.post('/:id', async (req, res) => {
+// POST /api/company/update/:id - อัพเดทข้อมูลบริษัท
+router.post('/update/:id', async (req, res) => {
   try {
     const companyId = parseInt(req.params.id);
 
@@ -133,7 +133,7 @@ router.post('/:id', async (req, res) => {
       });
     } else {
       res.status(200).json({
-        success: false,
+        success: true,
         message: result.error,
       });
     }
@@ -194,8 +194,8 @@ router.post('/delete/:id', async (req, res) => {
     const companyId = parseInt(req.params.id);
 
     if (isNaN(companyId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสบริษัทไม่ถูกต้อง',
       });
     }

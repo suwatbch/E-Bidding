@@ -161,15 +161,15 @@ router.post('/', async (req, res) => {
 
     // Validation
     if (!user_id || !company_id) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ User ID และ Company ID',
       });
     }
 
     if (isNaN(user_id) || isNaN(company_id)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'User ID และ Company ID ต้องเป็นตัวเลข',
       });
     }
@@ -185,15 +185,15 @@ router.post('/', async (req, res) => {
     const result = await addUserToCompany(userCompanyData);
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
-        message: 'เพิ่มผู้ใช้เข้าบริษัทสำเร็จ',
+        message: null,
         data: { id: result.insertId },
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการเพิ่มผู้ใช้เข้าบริษัท',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -206,15 +206,15 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/user-company/:id - อัปเดตข้อมูลผู้ใช้ในบริษัท
-router.put('/:id', async (req, res) => {
+// POST /api/user-company/update/:id - อัปเดตข้อมูลผู้ใช้ในบริษัท
+router.post('/update/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { role_in_company, is_primary, status } = req.body;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ที่ถูกต้อง',
       });
     }
@@ -235,13 +235,13 @@ router.put('/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัปเดตข้อมูลผู้ใช้ในบริษัทสำเร็จ',
+        message: null,
         data: { id: parseInt(id) },
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -254,14 +254,14 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/user-company/:id - ลบผู้ใช้ออกจากบริษัท
-router.delete('/:id', async (req, res) => {
+// POST /api/user-company/delete/:id - ลบผู้ใช้ออกจากบริษัท
+router.post('/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id || isNaN(id)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ที่ถูกต้อง',
       });
     }
@@ -271,12 +271,12 @@ router.delete('/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบผู้ใช้ออกจากบริษัทสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการลบข้อมูล',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -289,21 +289,21 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/user-company/set-primary - ตั้งบริษัทหลักของผู้ใช้
-router.patch('/set-primary', async (req, res) => {
+// POST /api/user-company/set-primary - ตั้งบริษัทหลักของผู้ใช้
+router.post('/set-primary', async (req, res) => {
   try {
     const { user_id, company_id } = req.body;
 
     if (!user_id || !company_id) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ User ID และ Company ID',
       });
     }
 
     if (isNaN(user_id) || isNaN(company_id)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'User ID และ Company ID ต้องเป็นตัวเลข',
       });
     }
@@ -316,12 +316,12 @@ router.patch('/set-primary', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ตั้งบริษัทหลักสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการตั้งบริษัทหลัก',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

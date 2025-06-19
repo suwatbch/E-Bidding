@@ -179,14 +179,14 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/auctions/:id - อัพเดทข้อมูลประมูล
-router.put('/:id', async (req, res) => {
+// POST /api/auctions/update/:id - อัพเดทข้อมูลประมูล
+router.post('/update/:id', async (req, res) => {
   try {
     const auctionId = parseInt(req.params.id);
 
     if (isNaN(auctionId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประมูลไม่ถูกต้อง',
       });
     }
@@ -211,8 +211,8 @@ router.put('/:id', async (req, res) => {
       !reserve_price ||
       !currency
     ) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ข้อมูลไม่ครบถ้วน กรุณากรอกข้อมูลที่จำเป็นให้ครบ',
       });
     }
@@ -231,15 +231,13 @@ router.put('/:id', async (req, res) => {
     if (result.success) {
       res.json({
         success: true,
-        message: 'อัพเดทข้อมูลประมูลสำเร็จ',
+        message: null,
         data: { auction_id: auctionId },
       });
     } else {
-      console.error('❌ Failed to update auction:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการอัพเดทประมูล',
-        error: result.error,
+      res.json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -275,8 +273,8 @@ router.post('/', async (req, res) => {
       !reserve_price ||
       !currency
     ) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ข้อมูลไม่ครบถ้วน กรุณากรอกข้อมูลที่จำเป็นให้ครบ',
       });
     }
@@ -295,15 +293,13 @@ router.post('/', async (req, res) => {
     if (result.success) {
       res.status(201).json({
         success: true,
-        message: 'สร้างประมูลใหม่สำเร็จ',
+        message: null,
         data: { auction_id: result.insertId },
       });
     } else {
-      console.error('❌ Failed to create auction:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการสร้างประมูล',
-        error: result.error,
+      res.json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -316,14 +312,14 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE /api/auctions/:id - ลบประมูล (soft delete)
-router.delete('/:id', async (req, res) => {
+// POST /api/auctions/delete/:id - ลบประมูล (soft delete)
+router.post('/delete/:id', async (req, res) => {
   try {
     const auctionId = parseInt(req.params.id);
 
     if (isNaN(auctionId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประมูลไม่ถูกต้อง',
       });
     }
@@ -333,15 +329,13 @@ router.delete('/:id', async (req, res) => {
     if (result.success) {
       res.json({
         success: true,
-        message: 'ลบประมูลสำเร็จ',
+        message: null,
         data: { auction_id: auctionId },
       });
     } else {
-      console.error('❌ Failed to delete auction:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการลบประมูล',
-        error: result.error,
+      res.json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

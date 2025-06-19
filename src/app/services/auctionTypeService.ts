@@ -250,8 +250,8 @@ export const auctionTypeService = {
     auctionTypeData: UpdateAuctionTypeRequest
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.put(
-        `/${id}`,
+      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.post(
+        `/update/${id}`,
         auctionTypeData
       );
       return response.data;
@@ -270,8 +270,9 @@ export const auctionTypeService = {
    */
   deleteAuctionType: async (id: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.delete(
-        `/${id}`
+      const response: AxiosResponse<ApiResponse> = await auctionTypeApi.post(
+        `/delete/${id}`,
+        {}
       );
       return response.data;
     } catch (error: any) {

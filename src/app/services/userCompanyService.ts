@@ -211,7 +211,7 @@ export const userCompanyService = {
   ): Promise<SingleUserCompanyResponse> => {
     try {
       const response: AxiosResponse<SingleUserCompanyResponse> =
-        await userCompanyApi.put(`/${id}`, data);
+        await userCompanyApi.post(`/update/${id}`, data);
       return response.data;
     } catch (error: any) {
       return {
@@ -227,8 +227,9 @@ export const userCompanyService = {
    */
   removeUserFromCompany: async (id: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userCompanyApi.delete(
-        `/${id}`
+      const response: AxiosResponse<ApiResponse> = await userCompanyApi.post(
+        `/delete/${id}`,
+        {}
       );
       return response.data;
     } catch (error: any) {
@@ -247,7 +248,7 @@ export const userCompanyService = {
     companyId: number
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userCompanyApi.patch(
+      const response: AxiosResponse<ApiResponse> = await userCompanyApi.post(
         `/set-primary`,
         { user_id: userId, company_id: companyId }
       );

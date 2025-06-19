@@ -84,22 +84,22 @@ router.get('/:languageCode', async (req, res) => {
   }
 });
 
-// POST /api/languages/:languageCode - อัปเดตข้อมูลภาษา
-router.post('/:languageCode', async (req, res) => {
+// POST /api/languages/update/:languageCode - อัปเดตข้อมูลภาษา
+router.post('/update/:languageCode', async (req, res) => {
   try {
     const { languageCode } = req.params;
     const { language_name, flag, is_default, status } = req.body;
 
     if (!languageCode) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุรหัสภาษา',
       });
     }
 
     if (!language_name) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุชื่อภาษา',
       });
     }
@@ -116,12 +116,12 @@ router.post('/:languageCode', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัปเดตข้อมูลภาษาสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลภาษา',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -134,14 +134,14 @@ router.post('/:languageCode', async (req, res) => {
   }
 });
 
-// DELETE /api/languages/:languageCode - ลบภาษา
-router.delete('/:languageCode', async (req, res) => {
+// POST /api/languages/delete/:languageCode - ลบภาษา
+router.post('/delete/:languageCode', async (req, res) => {
   try {
     const { languageCode } = req.params;
 
     if (!languageCode) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุรหัสภาษา',
       });
     }
@@ -151,16 +151,15 @@ router.delete('/:languageCode', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบภาษาสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการลบภาษา',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('Error in removeLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -204,8 +203,8 @@ router.post('/texts', async (req, res) => {
     const { keyname, language_code, text } = req.body;
 
     if (!keyname || !language_code || !text) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ keyname, language_code และ text',
       });
     }
@@ -219,14 +218,13 @@ router.post('/texts', async (req, res) => {
     if (result.success) {
       res.status(201).json({
         success: true,
-        message: 'เพิ่มข้อความแปลใหม่สำเร็จ',
+        message: null,
         data: { id: result.insertId },
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการเพิ่มข้อความแปล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -239,22 +237,22 @@ router.post('/texts', async (req, res) => {
   }
 });
 
-// POST /api/languages/texts/:id - อัปเดตข้อความแปล
-router.post('/texts/:id', async (req, res) => {
+// POST /api/languages/texts/update/:id - อัปเดตข้อความแปล
+router.post('/texts/update/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const { keyname, language_code, text } = req.body;
 
     if (!id) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID',
       });
     }
 
     if (!keyname || !language_code || !text) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ keyname, language_code และ text',
       });
     }
@@ -268,13 +266,12 @@ router.post('/texts/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัปเดตข้อความแปลสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการอัปเดตข้อความแปล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -287,14 +284,14 @@ router.post('/texts/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/languages/texts/:id - ลบข้อความแปล
-router.delete('/texts/:id', async (req, res) => {
+// POST /api/languages/texts/delete/:id - ลบข้อความแปล
+router.post('/texts/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID',
       });
     }
@@ -304,13 +301,12 @@ router.delete('/texts/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบข้อความแปลสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการลบข้อความแปล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

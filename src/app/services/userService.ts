@@ -291,8 +291,8 @@ export const userService = {
     userData: UpdateUserRequest
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userApi.put(
-        `/${userId}`,
+      const response: AxiosResponse<ApiResponse> = await userApi.post(
+        `/update/${userId}`,
         userData
       );
       return response.data;
@@ -311,8 +311,9 @@ export const userService = {
    */
   deleteUser: async (userId: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userApi.delete(
-        `/${userId}`
+      const response: AxiosResponse<ApiResponse> = await userApi.post(
+        `/delete/${userId}`,
+        {}
       );
       return response.data;
     } catch (error: any) {
@@ -386,8 +387,8 @@ export const userService = {
     languageCode: string
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await userApi.patch(
-        `/${userId}/language`,
+      const response: AxiosResponse<ApiResponse> = await userApi.post(
+        `/language/${userId}`,
         { language_code: languageCode }
       );
 

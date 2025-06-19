@@ -349,8 +349,8 @@ export const auctionsService = {
     auctionData: UpdateAuctionRequest
   ): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await auctionsApi.put(
-        `/${id}`,
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/update/${id}`,
         auctionData
       );
       return response.data;
@@ -369,8 +369,9 @@ export const auctionsService = {
    */
   deleteAuction: async (id: number): Promise<ApiResponse> => {
     try {
-      const response: AxiosResponse<ApiResponse> = await auctionsApi.delete(
-        `/${id}`
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/delete/${id}`,
+        {}
       );
       return response.data;
     } catch (error: any) {

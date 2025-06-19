@@ -274,7 +274,7 @@ export default function AuctionTypePage() {
         result = await auctionTypeService.createAuctionType(auctionTypeData);
       }
 
-      if (result.success) {
+      if (result.success && result.message === null) {
         alert(
           editAuctionType
             ? 'อัพเดทข้อมูลประเภทการประมูลสำเร็จ'
@@ -283,7 +283,7 @@ export default function AuctionTypePage() {
         closeModal();
         await loadAuctionTypes();
       } else {
-        alert(result.message || 'เกิดข้อผิดพลาด');
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error submitting form:', error);
@@ -300,11 +300,11 @@ export default function AuctionTypePage() {
 
     try {
       const result = await auctionTypeService.deleteAuctionType(id);
-      if (result.success) {
+      if (result.success && result.message === null) {
         alert('ลบประเภทการประมูลสำเร็จ');
         await loadAuctionTypes();
       } else {
-        alert(result.message || 'เกิดข้อผิดพลาดในการลบ');
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error deleting auction type:', error);

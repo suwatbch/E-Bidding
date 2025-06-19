@@ -529,15 +529,14 @@ export default function UserPage() {
           image: form.image,
         });
 
-        if (result.success) {
+        if (result.success && result.message === null) {
           // จัดการบริษัทของผู้ใช้
           await updateUserCompanies(editUser.user_id, validCompanies);
           await Promise.all([loadUsers(), loadAllUserCompanies()]);
           closeModal();
           alert('อัปเดทข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
-          console.error('Failed to update user:', result.message);
-          setError(result.message || 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล');
+          setError(result.message);
         }
       } else {
         // เพิ่มผู้ใช้ใหม่
@@ -555,7 +554,7 @@ export default function UserPage() {
           image: form.image,
         });
 
-        if (result.success && result.data) {
+        if (result.success && result.message === null && result.data) {
           // เพิ่มบริษัทให้ผู้ใช้ใหม่
           const newUserId = result.data.user_id;
           await updateUserCompanies(newUserId, validCompanies);
@@ -563,8 +562,7 @@ export default function UserPage() {
           closeModal();
           alert('เพิ่มข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
         } else {
-          console.error('Failed to create user:', result.message);
-          setError(result.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
+          setError(result.message);
         }
       }
     } catch (error: any) {
@@ -606,12 +604,11 @@ export default function UserPage() {
 
     try {
       const result = await userService.deleteUser(userId);
-      if (result.success) {
+      if (result.success && result.message === null) {
         await loadUsers();
         alert('ลบข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
       } else {
-        console.error('Failed to delete user:', result.message);
-        setError(result.message || 'เกิดข้อผิดพลาดในการลบข้อมูล');
+        setError(result.message);
       }
     } catch (error: any) {
       console.error('Error deleting user:', error);

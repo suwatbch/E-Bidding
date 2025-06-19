@@ -100,8 +100,8 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PUT /api/auction-type/:id - อัพเดทข้อมูลประเภทการประมูล
-router.put('/:id', async (req, res) => {
+// POST /api/auction-type/update/:id - อัพเดทข้อมูลประเภทการประมูล
+router.post('/update/:id', async (req, res) => {
   try {
     const auctionTypeId = parseInt(req.params.id);
 
@@ -192,8 +192,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// DELETE /api/auction-type/:id - ลบประเภทการประมูล (soft delete)
-router.delete('/:id', async (req, res) => {
+// POST /api/auction-type/delete/:id - ลบประเภทการประมูล (soft delete)
+router.post('/delete/:id', async (req, res) => {
   try {
     const auctionTypeId = parseInt(req.params.id);
 

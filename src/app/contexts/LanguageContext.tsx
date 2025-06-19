@@ -224,7 +224,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         languageCode
       );
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         // อัพเดท user context ด้วย
         updateUser({ language_code: languageCode });
 

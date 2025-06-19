@@ -222,11 +222,13 @@ export default function TransectionLanguage({
       });
 
       const results = await Promise.all(updatePromises);
-      const hasError = results.some((result) => !result.success);
+      const hasError = results.some(
+        (result) => !result.success || result.message !== null
+      );
 
       if (hasError) {
         const errorMessages = results
-          .filter((result) => !result.success)
+          .filter((result) => !result.success || result.message !== null)
           .map((result) => result.message)
           .join(', ');
         setError(errorMessages);
@@ -264,11 +266,13 @@ export default function TransectionLanguage({
       );
 
       const results = await Promise.all(deletePromises);
-      const hasError = results.some((result) => !result.success);
+      const hasError = results.some(
+        (result) => !result.success || result.message !== null
+      );
 
       if (hasError) {
         const errorMessages = results
-          .filter((result) => !result.success)
+          .filter((result) => !result.success || result.message !== null)
           .map((result) => result.message)
           .join(', ');
         setError(errorMessages);

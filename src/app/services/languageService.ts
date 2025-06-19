@@ -1,5 +1,11 @@
 // Language Service สำหรับจัดการข้อมูลภาษาจาก API
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
+
+export interface ApiResponse {
+  success: boolean;
+  message?: string;
+  data?: any;
+}
 
 export interface Language {
   language_code: string;
@@ -292,39 +298,38 @@ export class LanguageService {
     await this.refreshLanguageData();
   }
 
-  // อัปเดตข้อมูลภาษา (ต้อง token)
+  /**
+   * อัปเดตข้อมูลภาษา
+   */
   async updateLanguage(
     languageCode: string,
     data: Partial<Language>
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<ApiResponse> {
     try {
-      const response = await axios.post(
-        `${API_URL}/api/languages/${languageCode}`,
+      const response: AxiosResponse<ApiResponse> = await axios.post(
+        `${API_URL}/api/languages/update/${languageCode}`,
         data,
         {
           headers: getHeaders(true), // ต้อง token
         }
       );
-
-      if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากอัปเดต
-        await this.refreshLanguageData();
-      }
-
       return response.data;
     } catch (error: any) {
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in updateLanguage:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล',
+        message: error.response?.data?.message,
       };
     }
   }
 
-  // เปลี่ยนสถานะภาษา (เปิด/ปิดใช้งาน) (ต้อง token)
-  async toggleLanguageStatus(
-    languageCode: string
-  ): Promise<{ success: boolean; message: string }> {
+  /**
+   * เปลี่ยนสถานะภาษา (เปิด/ปิดใช้งาน)
+   */
+  async toggleLanguageStatus(languageCode: string): Promise<ApiResponse> {
     try {
       // หาข้อมูลภาษาปัจจุบัน
       const currentLanguage = this.languages.find(
@@ -347,55 +352,51 @@ export class LanguageService {
         status: newStatus,
       });
     } catch (error: any) {
-      console.error('Error toggling language status:', error);
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in toggleLanguageStatus:', error);
+      }
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเปลี่ยนสถานะ',
+        message: error.response?.data?.message,
       };
     }
   }
 
-  // ลบภาษา (soft delete) (ต้อง token)
-  async deleteLanguage(
-    languageCode: string
-  ): Promise<{ success: boolean; message: string }> {
+  /**
+   * ลบภาษา (soft delete)
+   */
+  async deleteLanguage(languageCode: string): Promise<ApiResponse> {
     try {
-      const response = await axios.delete(
-        `${API_URL}/api/languages/${languageCode}`,
+      const response: AxiosResponse<ApiResponse> = await axios.post(
+        `${API_URL}/api/languages/delete/${languageCode}`,
+        {},
         {
-          headers: getHeaders(true), // ต้อง token
+          headers: getHeaders(true),
         }
       );
-
-      if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
-        await this.refreshLanguageData();
-        return {
-          success: true,
-          message: 'ลบภาษาเรียบร้อยแล้ว',
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'เกิดข้อผิดพลาดในการลบภาษา',
-        };
-      }
+      return response.data;
     } catch (error: any) {
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in deleteLanguage:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message: error.response?.data?.message,
       };
     }
   }
 
   // ===== Language Text Functions =====
 
-  // อัปเดตข้อความภาษา (ต้อง token)
+  /**
+   * อัปเดตข้อความภาษา
+   */
   async updateLanguageText(
     textId: number,
     data: Partial<LanguageText>
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<ApiResponse> {
     try {
       const apiData = {
         keyname: data.text_key,
@@ -403,67 +404,55 @@ export class LanguageService {
         text: data.text_value,
       };
 
-      const response = await axios.post(
-        `${API_URL}/api/languages/texts/${textId}`,
+      const response: AxiosResponse<ApiResponse> = await axios.post(
+        `${API_URL}/api/languages/texts/update/${textId}`,
         apiData,
         { headers: getHeaders(true) }
       );
-
-      if (response.data.success) {
-        return { success: true, message: 'อัปเดตข้อความเรียบร้อยแล้ว' };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'เกิดข้อผิดพลาด',
-        };
-      }
+      return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating language text:', error);
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in updateLanguageText:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message: error.response?.data?.message,
       };
     }
   }
 
-  // ลบข้อความภาษา (ต้อง token)
-  async deleteLanguageText(
-    textId: number
-  ): Promise<{ success: boolean; message: string }> {
+  /**
+   * ลบข้อความภาษา
+   */
+  async deleteLanguageText(textId: number): Promise<ApiResponse> {
     try {
-      const response = await axios.delete(
-        `${API_URL}/api/languages/texts/${textId}`,
+      const response: AxiosResponse<ApiResponse> = await axios.post(
+        `${API_URL}/api/languages/texts/delete/${textId}`,
+        {},
         {
           headers: getHeaders(true), // ต้อง token
         }
       );
-
-      if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากลบสำเร็จ
-        await this.refreshLanguageData();
-        return {
-          success: true,
-          message: 'ลบข้อความเรียบร้อยแล้ว',
-        };
-      } else {
-        return {
-          success: false,
-          message: response.data.message || 'เกิดข้อผิดพลาดในการลบข้อความ',
-        };
-      }
+      return response.data;
     } catch (error: any) {
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in deleteLanguageText:', error);
+      }
       return {
         success: false,
-        message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ API',
+        message: error.response?.data?.message,
       };
     }
   }
 
-  // สร้างข้อความภาษาใหม่ (ต้อง token)
+  /**
+   * สร้างข้อความภาษาใหม่
+   */
   async createLanguageText(
     data: Omit<LanguageText, 'text_id'>
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<ApiResponse> {
     try {
       // แปลงข้อมูลเป็นรูปแบบที่ API ต้องการ
       const apiData = {
@@ -472,30 +461,22 @@ export class LanguageService {
         text: data.text_value,
       };
 
-      const headers = getHeaders(true); // ต้อง token
-
-      const response = await axios.post(
+      const response: AxiosResponse<ApiResponse> = await axios.post(
         `${API_URL}/api/languages/texts`,
         apiData,
         {
-          headers: headers,
+          headers: getHeaders(true),
         }
       );
-
-      if (response.data.success) {
-        // รีเฟรชข้อมูลหลังจากสร้างสำเร็จ
-        await this.refreshLanguageData();
-      }
-
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error creating language text:', error);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in createLanguageText:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการสร้างข้อความ',
+        message: error.response?.data?.message,
       };
     }
   }

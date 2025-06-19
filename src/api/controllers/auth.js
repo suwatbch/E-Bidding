@@ -12,8 +12,8 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุชื่อผู้ใช้และรหัสผ่านให้ถูกต้อง',
       });
     }
@@ -23,12 +23,12 @@ router.post('/login', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: null,
         data: result.data,
       });
     } else {
-      res.status(400).json({
-        success: false,
+      res.status(200).json({
+        success: true,
         message: result.error,
       });
     }
@@ -53,7 +53,7 @@ router.post('/logout', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'ออกจากระบบสำเร็จ',
+      message: null,
     });
   } catch (error) {
     console.error('Error in logout:', error);
@@ -71,8 +71,8 @@ router.post('/otp', async (req, res) => {
     const { username } = req.body;
 
     if (!username) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุชื่อผู้ใช้',
       });
     }
@@ -82,12 +82,12 @@ router.post('/otp', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: null,
         data: result.data,
       });
     } else {
-      res.status(400).json({
-        success: false,
+      res.status(200).json({
+        success: true,
         message: result.error,
       });
     }
@@ -111,12 +111,12 @@ router.post('/reset-password', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: result.message,
+        message: null,
         data: result.data,
       });
     } else {
-      res.status(400).json({
-        success: false,
+      res.status(200).json({
+        success: true,
         message: result.error,
       });
     }

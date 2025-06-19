@@ -144,7 +144,7 @@ export default function ForgetPasswordPage() {
         newPassword,
       });
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         alert(t('forget_success_message'));
         router.push('/login');
       } else {
@@ -199,7 +199,7 @@ export default function ForgetPasswordPage() {
         username,
       });
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         setOtpRequested(true);
         setOtpCountdown(300); // 5 minutes = 300 seconds
       } else {
