@@ -50,7 +50,7 @@ auctionsApi.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('🔥 Request interceptor error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -151,7 +151,7 @@ const handleAuctionsApiError = (
   error: any,
   operation: string
 ): AuctionsResponse => {
-  console.error(`❌ Error ${operation}:`, error);
+  console.error(`Error ${operation}:`, error);
 
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
@@ -184,7 +184,7 @@ const handleAuctionTypesApiError = (
   error: any,
   operation: string
 ): AuctionTypesResponse => {
-  console.error(`❌ Error ${operation}:`, error);
+  console.error(`Error ${operation}:`, error);
 
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
@@ -217,7 +217,7 @@ const handleParticipantsApiError = (
   error: any,
   operation: string
 ): AuctionParticipantsResponse => {
-  console.error(`❌ Error ${operation}:`, error);
+  console.error(`Error ${operation}:`, error);
 
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
@@ -309,7 +309,7 @@ export const auctionsService = {
         await auctionsApi.get(`/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error fetching auction by ID:', error);
+      console.error('Error fetching auction by ID:', error);
       return {
         success: false,
         message:
@@ -332,7 +332,7 @@ export const auctionsService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error creating auction:', error);
+      console.error('Error creating auction:', error);
       return {
         success: false,
         message:
@@ -355,7 +355,7 @@ export const auctionsService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error updating auction:', error);
+      console.error('Error updating auction:', error);
       return {
         success: false,
         message:
@@ -375,7 +375,7 @@ export const auctionsService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error deleting auction:', error);
+      console.error('Error deleting auction:', error);
       return {
         success: false,
         message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบประมูล',

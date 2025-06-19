@@ -82,7 +82,6 @@ export default function AuctionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 5);
   const [mounted, setMounted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -242,7 +241,6 @@ export default function AuctionsPage() {
   // โหลดข้อมูลจากฐานข้อมูล
   const loadAuctions = async () => {
     try {
-      setIsLoading(true);
       setError(null);
 
       const [auctionsResult, typesResult, participantsResult] =
@@ -273,7 +271,6 @@ export default function AuctionsPage() {
       console.error('Error loading auctions:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
     } finally {
-      setIsLoading(false);
       setMounted(true);
     }
   };
