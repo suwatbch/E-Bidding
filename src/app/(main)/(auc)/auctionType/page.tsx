@@ -7,6 +7,7 @@ import {
 } from '@/app/services/auctionTypeService';
 import Container from '@/app/components/ui/Container';
 import Pagination from '@/app/components/ui/Pagination';
+import EmptyState from '@/app/components/ui/EmptyState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 
 interface FormData {
@@ -29,7 +30,6 @@ export default function AuctionTypePage() {
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [form, setForm] = useState<FormData>({
     name: '',
@@ -48,7 +48,6 @@ export default function AuctionTypePage() {
   // === FUNCTIONS ===
   const loadAuctionTypes = useCallback(async () => {
     try {
-      setIsLoading(true);
       setError(null);
       const result = await auctionTypeService.getAllAuctionTypes();
       if (result.success) {
@@ -59,8 +58,6 @@ export default function AuctionTypePage() {
     } catch (error: any) {
       console.error('Error loading auction types:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลประเภทการประมูล');
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -377,10 +374,6 @@ export default function AuctionTypePage() {
     return <ErrorState />;
   }
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
   return (
     <Container className="py-8">
       <div className="flex-1 py-8 flex flex-col">
@@ -475,138 +468,121 @@ export default function AuctionTypePage() {
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
-            {currentAuctionTypes.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 mb-4 text-gray-300 mx-auto">
-                  <svg
-                    className="w-full h-full"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+            <table className="w-full table-fixed">
+              <colgroup>
+                <col className="w-[5%]" />
+                <col className="w-[25%]" />
+                <col className="w-[40%]" />
+                <col className="w-[15%]" />
+                <col className="w-[15%]" />
+              </colgroup>
+              <thead className="bg-gray-50">
+                <tr>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                    />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  ไม่พบข้อมูลประเภทการประมูล
-                </h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  {searchTerm
-                    ? `ไม่พบประเภทการประมูลที่ตรงกับ "${searchTerm}"`
-                    : 'ยังไม่มีประเภทการประมูลในระบบ'}
-                </p>
-                {!searchTerm && (
-                  <button
-                    onClick={openAddModal}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    ลำดับ
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => requestSort('name')}
                   >
-                    เพิ่มประเภทการประมูลแรก
-                  </button>
-                )}
-              </div>
-            ) : (
-              <table className="w-full table-fixed">
-                <colgroup>
-                  <col className="w-[5%]" />
-                  <col className="w-[25%]" />
-                  <col className="w-[40%]" />
-                  <col className="w-[15%]" />
-                  <col className="w-[15%]" />
-                </colgroup>
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ลำดับ
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        className="flex items-center gap-2 hover:text-gray-700 transition-colors"
-                        onClick={() => requestSort('name')}
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                          />
-                        </svg>
-                        ชื่อหมวดหมู่
-                        {getSortIcon('name')}
-                      </button>
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <div className="flex items-center gap-2">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M4 6h16M4 12h16M4 18h7"
-                          />
-                        </svg>
-                        คำอธิบาย
-                      </div>
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <button
-                        className="flex items-center gap-2 hover:text-gray-700 transition-colors"
-                        onClick={() => requestSort('status')}
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                      ชื่อหมวดหมู่
+                      {getSortIcon('name')}
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        สถานะ
-                        {getSortIcon('status')}
-                      </button>
-                    </th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      <div className="flex items-center justify-center gap-2">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                          />
-                        </svg>
-                        จัดการ
-                      </div>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {currentAuctionTypes.map((auctionType, index) => (
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 6h16M4 12h16M4 18h7"
+                        />
+                      </svg>
+                      คำอธิบาย
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                    onClick={() => requestSort('status')}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      สถานะ
+                      {getSortIcon('status')}
+                    </div>
+                  </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                        />
+                      </svg>
+                      จัดการ
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentAuctionTypes.length === 0 ? (
+                  <EmptyState
+                    title="ไม่พบข้อมูล"
+                    description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
+                    colSpan={5}
+                  />
+                ) : (
+                  currentAuctionTypes.map((auctionType, index) => (
                     <tr
                       key={auctionType.id}
                       className="hover:bg-gray-50 transition-colors"
@@ -680,10 +656,10 @@ export default function AuctionTypePage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
