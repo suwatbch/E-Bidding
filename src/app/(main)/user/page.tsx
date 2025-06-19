@@ -93,7 +93,6 @@ const initialForm: FormData = {
 
 export default function UserPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -139,7 +138,6 @@ export default function UserPage() {
 
   const loadUsers = useCallback(async () => {
     try {
-      setIsLoading(true);
       setError(null);
       const result = await userService.getAllUsers(searchTerm);
       if (result.success && result.data) {
@@ -152,8 +150,6 @@ export default function UserPage() {
       console.error('Error loading users:', error);
       setError('เกิดข้อผิดพลาดในการโหลดข้อมูลผู้ใช้งาน');
       setUsers([]);
-    } finally {
-      setIsLoading(false);
     }
   }, [searchTerm]);
 
