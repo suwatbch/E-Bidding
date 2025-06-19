@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลความสัมพันธ์ผู้ใช้-บริษัทสำเร็จ',
+        message: null,
         data: result.data,
         total: result.data.length,
       });
@@ -31,7 +31,6 @@ router.get('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getAllUserCompanies:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -46,8 +45,8 @@ router.get('/user/:userId', async (req, res) => {
     const { userId } = req.params;
 
     if (!userId || isNaN(userId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ User ID ที่ถูกต้อง',
       });
     }
@@ -57,7 +56,7 @@ router.get('/user/:userId', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลบริษัทของผู้ใช้สำเร็จ',
+        message: null,
         data: result.data,
         total: result.data.length,
       });
@@ -69,7 +68,6 @@ router.get('/user/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getUserCompanies:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -84,8 +82,8 @@ router.get('/company/:companyId', async (req, res) => {
     const { companyId } = req.params;
 
     if (!companyId || isNaN(companyId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ Company ID ที่ถูกต้อง',
       });
     }
@@ -95,7 +93,7 @@ router.get('/company/:companyId', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลผู้ใช้ในบริษัทสำเร็จ',
+        message: null,
         data: result.data,
         total: result.data.length,
       });
@@ -107,7 +105,6 @@ router.get('/company/:companyId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getCompanyUsers:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -122,8 +119,8 @@ router.get('/primary/:userId', async (req, res) => {
     const { userId } = req.params;
 
     if (!userId || isNaN(userId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ User ID ที่ถูกต้อง',
       });
     }
@@ -133,7 +130,7 @@ router.get('/primary/:userId', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลบริษัทหลักของผู้ใช้สำเร็จ',
+        message: null,
         data: result.data.length > 0 ? result.data[0] : null,
       });
     } else {
@@ -144,7 +141,6 @@ router.get('/primary/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getPrimaryCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -188,7 +184,6 @@ router.post('/', async (req, res) => {
       res.status(200).json({
         success: true,
         message: null,
-        data: { id: result.insertId },
       });
     } else {
       res.status(200).json({
@@ -197,7 +192,6 @@ router.post('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in addUserToCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -236,7 +230,6 @@ router.post('/update/:id', async (req, res) => {
       res.status(200).json({
         success: true,
         message: null,
-        data: { id: parseInt(id) },
       });
     } else {
       res.status(200).json({
@@ -245,7 +238,6 @@ router.post('/update/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in updateUserCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -280,7 +272,6 @@ router.post('/delete/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in removeUserFromCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -325,7 +316,6 @@ router.post('/set-primary', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in setPrimaryCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
