@@ -125,38 +125,6 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
-// Helper function to handle API errors consistently
-const handleApiError = (error: any, action: string): CompanyResponse => {
-  console.error(`❌ Error ${action}:`, error);
-
-  const status = error.response?.status;
-  const serverMessage = error.response?.data?.message;
-  let userMessage = `เกิดข้อผิดพลาดในการ${action}`;
-
-  if (status === 400) {
-    userMessage = serverMessage || 'ข้อมูลไม่ถูกต้อง';
-  } else if (status === 401) {
-    userMessage = 'กรุณาเข้าสู่ระบบใหม่';
-  } else if (status === 403) {
-    userMessage = 'คุณไม่มีสิทธิ์ในการดำเนินการนี้';
-  } else if (status === 404) {
-    userMessage = 'ไม่พบข้อมูลที่ต้องการ';
-  } else if (status >= 500) {
-    userMessage = 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์';
-  } else if (error.code === 'ECONNABORTED') {
-    userMessage = 'การเชื่อมต่อใช้เวลาเกินกำหนด';
-  } else if (error.code === 'NETWORK_ERROR') {
-    userMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
-  }
-
-  return {
-    success: false,
-    message: userMessage,
-    data: [],
-    total: 0,
-  };
-};
-
 // Company Service
 export const companyService = {
   /**
@@ -169,7 +137,16 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      return handleApiError(error, 'ดึงข้อมูลบริษัท');
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in getAllCompanies:', error);
+      }
+      return {
+        success: false,
+        message: error.response?.data?.message,
+        data: [],
+        total: 0,
+      };
     }
   },
 
@@ -186,7 +163,16 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      return handleApiError(error, 'ดึงข้อมูลบริษัทที่เปิดใช้งาน');
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in getActiveCompanies:', error);
+      }
+      return {
+        success: false,
+        message: error.response?.data?.message,
+        data: [],
+        total: 0,
+      };
     }
   },
 
@@ -207,7 +193,16 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      return handleApiError(error, 'ค้นหาบริษัท');
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in searchCompanies:', error);
+      }
+      return {
+        success: false,
+        message: error.response?.data?.message,
+        data: [],
+        total: 0,
+      };
     }
   },
 
@@ -220,11 +215,13 @@ export const companyService = {
         await companyApi.get(`/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error fetching company by ID:', error);
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in getCompanyById:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท',
+        message: error.response?.data?.message,
         data: {} as Company,
       };
     }
@@ -243,11 +240,13 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error creating company:', error);
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in createCompany:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการสร้างบริษัท',
+        message: error.response?.data?.message,
       };
     }
   },
@@ -266,10 +265,13 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in updateCompany:', error);
+      }
       return {
         success: false,
-        message:
-          error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัพเดทบริษัท',
+        message: error.response?.data?.message,
       };
     }
   },
@@ -284,9 +286,13 @@ export const companyService = {
       );
       return response.data;
     } catch (error: any) {
+      const status = error.response?.status;
+      if (status >= 500) {
+        console.error('Server Error in deleteCompany:', error);
+      }
       return {
         success: false,
-        message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการลบบริษัท',
+        message: error.response?.data?.message,
       };
     }
   },

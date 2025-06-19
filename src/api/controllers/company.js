@@ -38,15 +38,12 @@ router.get('/', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      console.error('❌ Failed to get companies:', result.error);
       res.status(500).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท',
-        error: result.error,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAllCompanies:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -61,8 +58,8 @@ router.get('/:id', async (req, res) => {
     const companyId = parseInt(req.params.id);
 
     if (isNaN(companyId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสบริษัทไม่ถูกต้อง',
       });
     }
@@ -71,19 +68,18 @@ router.get('/:id', async (req, res) => {
 
     if (result.success) {
       if (result.data.length > 0) {
-        res.json({
+        res.status(200).json({
           success: true,
           data: result.data[0],
-          message: 'ดึงข้อมูลบริษัทสำเร็จ',
+          message: null,
         });
       } else {
-        res.status(404).json({
-          success: false,
+        res.status(200).json({
+          success: true,
           message: 'ไม่พบข้อมูลบริษัทที่ระบุ',
         });
       }
     } else {
-      console.error('❌ Failed to get company:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลบริษัท',
@@ -91,7 +87,6 @@ router.get('/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getCompanyById:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -106,8 +101,8 @@ router.post('/:id', async (req, res) => {
     const companyId = parseInt(req.params.id);
 
     if (isNaN(companyId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสบริษัทไม่ถูกต้อง',
       });
     }
@@ -116,8 +111,8 @@ router.post('/:id', async (req, res) => {
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!name) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ชื่อบริษัทเป็นข้อมูลที่จำเป็น',
       });
     }
@@ -134,13 +129,12 @@ router.post('/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'อัพเดทข้อมูลบริษัทสำเร็จ',
-        data: { id: companyId },
+        message: null,
       });
     } else {
-      res.status(400).json({
+      res.status(200).json({
         success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการอัพเดทบริษัท',
+        message: result.error,
       });
     }
   } catch (error) {
@@ -159,8 +153,8 @@ router.post('/', async (req, res) => {
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!name) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'ชื่อบริษัทเป็นข้อมูลที่จำเป็น',
       });
     }
@@ -175,21 +169,17 @@ router.post('/', async (req, res) => {
     });
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
-        message: 'สร้างบริษัทใหม่สำเร็จ',
-        data: { id: result.insertId },
+        message: null,
       });
     } else {
-      console.error('❌ Failed to create company:', result.error);
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการสร้างบริษัท',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in createCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -198,7 +188,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// POST /api/company/delete/:id - ลบบริษัท (soft delete)
+// POST /api/company/delete/:id - ลบบริษัท
 router.post('/delete/:id', async (req, res) => {
   try {
     const companyId = parseInt(req.params.id);
@@ -215,16 +205,15 @@ router.post('/delete/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ลบบริษัทสำเร็จ',
+        message: null,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        message: result.error || 'เกิดข้อผิดพลาดในการลบบริษัท',
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
-    console.error('Error in deleteCompany:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

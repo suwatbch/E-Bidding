@@ -58,7 +58,6 @@ export default function CompanyPage() {
       }
     } catch (error: any) {
       console.error('Error loading companies:', error);
-      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลบริษัท');
     }
   }, []);
 
@@ -320,12 +319,12 @@ export default function CompanyPage() {
 
         result = await companyService.updateCompany(editCompany.id, updateData);
 
-        if (result.success) {
+        if (result.success && result.message === null) {
           await loadCompanies();
           closeModal();
           alert('อัปเดทข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดทข้อมูล');
+          alert(result.message);
         }
       } else {
         // สร้างบริษัทใหม่
@@ -340,17 +339,17 @@ export default function CompanyPage() {
 
         result = await companyService.createCompany(createData);
 
-        if (result.success) {
+        if (result.success && result.message === null) {
           await loadCompanies();
           closeModal();
           alert('เพิ่มข้อมูลบริษัทเรียบร้อยแล้ว');
         } else {
-          alert(result.message || 'เกิดข้อผิดพลาดในการเพิ่มข้อมูล');
+          alert(result.message);
         }
       }
     } catch (error: any) {
       console.error('Error saving company:', error);
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      alert(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -362,15 +361,15 @@ export default function CompanyPage() {
     try {
       const result = await companyService.deleteCompany(id);
 
-      if (result.success) {
+      if (result.success && result.message === null) {
         await loadCompanies();
         alert('ลบข้อมูลบริษัทเรียบร้อยแล้ว');
       } else {
-        alert(result.message || 'เกิดข้อผิดพลาดในการอัปเดตข้อมูล');
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error deleting company:', error);
-      alert('เกิดข้อผิดพลาดในการลบบริษัท');
+      alert(error);
     }
   };
 
