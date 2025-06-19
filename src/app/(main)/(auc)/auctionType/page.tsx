@@ -314,18 +314,6 @@ export default function AuctionTypePage() {
     setCurrentPage(1);
   };
 
-  // Loading State Component
-  const LoadingState = () => (
-    <Container className="py-8">
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-200 rounded mb-4"></div>
-        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-        <div className="h-4 bg-gray-200 rounded mb-2"></div>
-      </div>
-    </Container>
-  );
-
   // Main Render
   return (
     <Container className="py-8">

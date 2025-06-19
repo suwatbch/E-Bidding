@@ -14,6 +14,7 @@ import {
 } from '../services/languageService';
 import { useAuth } from './AuthContext'; // เพิ่ม import AuthContext
 import { userService } from '../services/userService'; // เพิ่ม import userService
+import LoadingState from '@/app/components/ui/LoadingState';
 
 // Type สำหรับ Context
 interface LanguageContextType {
@@ -346,15 +347,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   // 1. ยังไม่ hydrated หรือ
   // 2. กำลังโหลดและไม่มีข้อมูลเลย (ไม่มี cache)
   if (!isHydrated || (isLoading && languageTexts.length === 0)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 font-medium">Loading...</p>
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-        </div>
-      </div>
-    );
+    return <LoadingState message="Loading..." error={error} />;
   }
 
   const value: LanguageContextType = {

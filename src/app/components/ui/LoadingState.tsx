@@ -3,24 +3,31 @@
 import React from 'react';
 
 interface LoadingStateProps {
-  colSpan?: number;
-  height?: string;
   message?: string;
+  error?: string | null;
 }
 
 export default function LoadingState({
-  colSpan = 7,
-  height = 'py-8',
-  message = 'กำลังโหลดข้อมูล...',
+  message = 'Loading...',
+  error,
 }: LoadingStateProps) {
-  return (
-    <tr>
-      <td colSpan={colSpan}>
-        <div className={`flex flex-col justify-center items-center ${height}`}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-3"></div>
-          <p className="text-sm text-gray-500">{message}</p>
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-2">Error</div>
+          <p className="text-sm text-gray-500">{error}</p>
         </div>
-      </td>
-    </tr>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-sm text-gray-500">{message}</p>
+      </div>
+    </div>
   );
 }
