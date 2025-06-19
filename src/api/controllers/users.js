@@ -33,10 +33,9 @@ router.get('/', async (req, res) => {
         data: result.data,
       });
     } else {
-      res.status(500).json({
+      res.status(200).json({
         success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้ใช้งาน',
-        error: result.error,
+        message: result.error,
       });
     }
   } catch (error) {

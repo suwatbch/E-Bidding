@@ -26,7 +26,6 @@ export default function CompanyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,10 +50,10 @@ export default function CompanyPage() {
   const loadCompanies = useCallback(async () => {
     try {
       const result = await companyService.getAllCompanies();
-      if (result.success) {
+      if (result.success && result.message === null) {
         setCompanies(result.data);
       } else {
-        setError(result.message);
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error loading companies:', error);
@@ -83,50 +82,6 @@ export default function CompanyPage() {
   }, [searchTerm]);
 
   // === EARLY RETURN AFTER ALL HOOKS ===
-  // ถ้ามี error ให้แสดง Error State
-  if (error) {
-    return (
-      <Container className="py-8">
-        <div className="flex-1 py-8 flex flex-col items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-            <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                />
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              เกิดข้อผิดพลาด
-            </h2>
-            <p className="text-gray-600 mb-6">{error}</p>
-            <div className="space-y-3">
-              <button
-                onClick={handleRetry}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                ลองใหม่ (ครั้งที่ {retryCount + 1})
-              </button>
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                รีเฟรชหน้า
-              </button>
-            </div>
-          </div>
-        </div>
-      </Container>
-    );
-  }
 
   // === COMPONENT LOGIC CONTINUES ===
   // Filter companies based on search term (ใช้สำหรับ local filtering ถ้าต้องการ)
@@ -289,12 +244,11 @@ export default function CompanyPage() {
 
     try {
       setIsSubmitting(true);
-      setError(null);
 
       // ตรวจสอบรูปแบบอีเมล
       const emailRegex = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(form.email)) {
-        setError('กรุณากรอกอีเมลในรูปแบบที่ถูกต้อง เช่น user@example.com');
+        alert('กรุณากรอกอีเมลในรูปแบบที่ถูกต้อง เช่น user@example.com');
         return;
       }
 
@@ -769,70 +723,6 @@ export default function CompanyPage() {
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
-              {/* Error Toast */}
-              {error && (
-                <div className="fixed top-4 right-4 z-50 max-w-md bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0">
-                      <svg
-                        className="h-5 w-5 text-red-400"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div className="ml-3 flex-1">
-                      <h3 className="text-sm font-medium text-red-800">
-                        เกิดข้อผิดพลาด
-                      </h3>
-                      <p className="mt-1 text-sm text-red-700">{error}</p>
-                      {error.includes('API') && (
-                        <div className="mt-2 text-xs text-red-600">
-                          <p>💡 วิธีแก้ไข:</p>
-                          <ul className="list-disc list-inside mt-1 space-y-1">
-                            <li>
-                              ตรวจสอบว่า API Server ทำงานอยู่ที่ port 3001
-                            </li>
-                            <li>
-                              รัน{' '}
-                              <code className="bg-red-100 px-1 rounded">
-                                npm run dev:api
-                              </code>{' '}
-                              ใน terminal
-                            </li>
-                            <li>ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</li>
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-4 flex-shrink-0 flex">
-                      <button
-                        onClick={() => setError(null)}
-                        className="bg-red-50 rounded-md inline-flex text-red-400 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        <span className="sr-only">ปิด</span>
-                        <svg
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {/* Modal Header - Fixed */}
               <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 py-4 px-5 border-b border-blue-100/50">
                 <button

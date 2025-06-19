@@ -29,16 +29,14 @@ router.get('/', async (req, res) => {
     }
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         data: result.data,
-        message: search
-          ? `พบบริษัท ${result.data.length} รายการที่ตรงกับการค้นหา "${search}"`
-          : `ดึงข้อมูลบริษัทสำเร็จ ${result.data.length} รายการ`,
+        message: null,
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
+      res.status(200).json({
         success: false,
         message: result.error,
       });
