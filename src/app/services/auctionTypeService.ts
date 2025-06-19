@@ -49,7 +49,7 @@ auctionTypeApi.interceptors.request.use(
     return config;
   },
   (error) => {
-    console.error('🔥 Request interceptor error:', error);
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -116,7 +116,7 @@ export interface ApiResponse<T = any> {
 
 // Helper function to handle API errors consistently
 const handleApiError = (error: any, action: string): AuctionTypeResponse => {
-  console.error(`❌ Error ${action}:`, error);
+  console.error(`Error ${action}:`, error);
 
   const status = error.response?.status;
   const serverMessage = error.response?.data?.message;
@@ -208,7 +208,7 @@ export const auctionTypeService = {
         await auctionTypeApi.get(`/${id}`);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error fetching auction type by ID:', error);
+      console.error('Error fetching auction type by ID:', error);
       return {
         success: false,
         message:
@@ -232,7 +232,7 @@ export const auctionTypeService = {
       );
       return response.data;
     } catch (error: any) {
-      console.error('❌ Error creating auction type:', error);
+      console.error('Error creating auction type:', error);
       return {
         success: false,
         message:

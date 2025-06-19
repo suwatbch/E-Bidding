@@ -27,7 +27,6 @@ export default function AuctionTypePage() {
     null
   );
   const [mounted, setMounted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,16 +47,16 @@ export default function AuctionTypePage() {
   // === FUNCTIONS ===
   const loadAuctionTypes = useCallback(async () => {
     try {
-      setError(null);
       const result = await auctionTypeService.getAllAuctionTypes();
       if (result.success) {
         setAuctionTypes(result.data);
       } else {
-        setError(result.message);
+        console.error('Error loading auction types:', result.message);
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error loading auction types:', error);
-      setError('เกิดข้อผิดพลาดในการโหลดข้อมูลประเภทการประมูล');
+      alert('เกิดข้อผิดพลาดในการโหลดข้อมูลประเภทการประมูล');
     }
   }, []);
 
@@ -315,49 +314,6 @@ export default function AuctionTypePage() {
     setCurrentPage(1);
   };
 
-  // Error State Component
-  const ErrorState = () => (
-    <Container className="py-8">
-      <div className="flex-1 py-8 flex flex-col items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="bg-red-100 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            เกิดข้อผิดพลาด
-          </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <div className="space-y-3">
-            <button
-              onClick={handleRetry}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              ลองใหม่ (ครั้งที่ {retryCount + 1})
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              className="w-full bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              รีเฟรชหน้า
-            </button>
-          </div>
-        </div>
-      </div>
-    </Container>
-  );
-
   // Loading State Component
   const LoadingState = () => (
     <Container className="py-8">
@@ -371,10 +327,6 @@ export default function AuctionTypePage() {
   );
 
   // Main Render
-  if (error) {
-    return <ErrorState />;
-  }
-
   return (
     <Container className="py-8">
       <div className="flex-1 py-8 flex flex-col">
