@@ -195,7 +195,6 @@ async function getAllAuctionTypes() {
   const query = `
     SELECT 
       auction_type_id,
-      code,
       name,
       description,
       status

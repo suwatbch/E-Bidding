@@ -76,7 +76,6 @@ export default function AuctionsPage() {
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,13 +136,13 @@ export default function AuctionsPage() {
   };
 
   // สร้างข้อมูลสำหรับแสดงผล
-  const auctionTable = auctions.map((auction, idx) => {
-    const auctionType = auctionTypes.find(
+  const auctionTable = (auctions || []).map((auction, idx) => {
+    const auctionType = auctionTypes?.find(
       (t) => t.auction_type_id === auction.auction_type_id
     );
-    const participantCount = auctionParticipants.filter(
-      (p) => p.auction_id === auction.auction_id
-    ).length;
+    const participantCount =
+      auctionParticipants?.filter((p) => p.auction_id === auction.auction_id)
+        .length || 0;
 
     // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
     let uiStatus: AuctionItem['status'] = 2;
@@ -187,13 +186,13 @@ export default function AuctionsPage() {
   // ดึงรายการหมวดหมู่จาก auctionTypes
   const categories = [
     'ทั้งหมด',
-    ...auctionTypes
+    ...(auctionTypes || [])
       .filter((type) => type.status === 1) // เลือกเฉพาะที่ status เป็น 1 (active)
       .map((type) => type.name),
   ];
 
   // กรองข้อมูลตามเงื่อนไข
-  const filteredItems = auctionTable.filter((item) => {
+  const filteredItems = (auctionTable || []).filter((item) => {
     const matchesSearch =
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -241,8 +240,6 @@ export default function AuctionsPage() {
   // โหลดข้อมูลจากฐานข้อมูล
   const loadAuctions = async () => {
     try {
-      setError(null);
-
       const [auctionsResult, typesResult, participantsResult] =
         await Promise.all([
           auctionsService.getAllAuctions(),
@@ -251,25 +248,32 @@ export default function AuctionsPage() {
         ]);
 
       if (auctionsResult.success) {
-        setAuctions(auctionsResult.data);
+        setAuctions(auctionsResult.data || []);
       } else {
-        setError(auctionsResult.message);
+        alert(auctionsResult.message);
+        setAuctions([]);
       }
 
       if (typesResult.success) {
-        setAuctionTypes(typesResult.data);
+        setAuctionTypes(typesResult.data || []);
       } else {
-        setError(typesResult.message);
+        alert(typesResult.message);
+        setAuctionTypes([]);
       }
 
       if (participantsResult.success) {
-        setAuctionParticipants(participantsResult.data);
+        setAuctionParticipants(participantsResult.data || []);
       } else {
-        setError(participantsResult.message);
+        alert(participantsResult.message);
+        setAuctionParticipants([]);
       }
     } catch (error: any) {
       console.error('Error loading auctions:', error);
-      setError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      alert(error);
+      // ตั้งค่า default เป็น array เปล่าเมื่อเกิดข้อผิดพลาด
+      setAuctions([]);
+      setAuctionTypes([]);
+      setAuctionParticipants([]);
     } finally {
       setMounted(true);
     }
@@ -346,34 +350,6 @@ export default function AuctionsPage() {
   return (
     <Container>
       <div className="py-8">
-        {/* Error Alert */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  เกิดข้อผิดพลาด
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
         {/* Filter Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
@@ -585,30 +561,6 @@ export default function AuctionsPage() {
           onPerPageChange={handlePerPageChange}
           mounted={mounted}
         />
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
@@ -863,7 +815,7 @@ export default function AuctionsPage() {
                           {[1, 2, 6].includes(item.status) && (
                             <button
                               onClick={() => {
-                                const auction = auctions.find(
+                                const auction = (auctions || []).find(
                                   (a) =>
                                     a.auction_id === (item as any).auction_id
                                 );

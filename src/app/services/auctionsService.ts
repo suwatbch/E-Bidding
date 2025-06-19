@@ -93,7 +93,6 @@ export interface Auction {
 
 export interface AuctionType {
   auction_type_id: number;
-  code: string;
   name: string;
   description?: string;
   status: number;
