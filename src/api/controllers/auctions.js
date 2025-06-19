@@ -19,14 +19,13 @@ router.get('/types', async (req, res) => {
     const result = await getAllAuctionTypes();
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         data: result.data,
-        message: `ดึงข้อมูลประเภทประมูลสำเร็จ ${result.data.length} รายการ`,
+        message: null,
         total: result.data.length,
       });
     } else {
-      console.error('❌ Failed to get auction types:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประเภทประมูล',
@@ -34,7 +33,6 @@ router.get('/types', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAllAuctionTypes:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -52,8 +50,8 @@ router.get('/participants', async (req, res) => {
     if (auction_id) {
       const auctionIdNum = parseInt(auction_id);
       if (isNaN(auctionIdNum)) {
-        return res.status(400).json({
-          success: false,
+        return res.status(200).json({
+          success: true,
           message: 'รหัสประมูลไม่ถูกต้อง',
         });
       }
@@ -63,16 +61,13 @@ router.get('/participants', async (req, res) => {
     }
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         data: result.data,
-        message: auction_id
-          ? `ดึงข้อมูลผู้เข้าร่วมประมูล ${auction_id} สำเร็จ ${result.data.length} รายการ`
-          : `ดึงข้อมูลผู้เข้าร่วมประมูลสำเร็จ ${result.data.length} รายการ`,
+        message: null,
         total: result.data.length,
       });
     } else {
-      console.error('❌ Failed to get auction participants:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้เข้าร่วมประมูล',
@@ -80,7 +75,6 @@ router.get('/participants', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAuctionParticipants:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -108,16 +102,13 @@ router.get('/', async (req, res) => {
     }
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         data: result.data,
-        message: search
-          ? `พบประมูล ${result.data.length} รายการที่ตรงกับการค้นหา "${search}"`
-          : `ดึงข้อมูลประมูลสำเร็จ ${result.data.length} รายการ`,
+        message: null,
         total: result.data.length,
       });
     } else {
-      console.error('❌ Failed to get auctions:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประมูล',
@@ -125,7 +116,6 @@ router.get('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAllAuctions:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -140,8 +130,8 @@ router.get('/:id', async (req, res) => {
     const auctionId = parseInt(req.params.id);
 
     if (isNaN(auctionId)) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'รหัสประมูลไม่ถูกต้อง',
       });
     }
@@ -150,19 +140,18 @@ router.get('/:id', async (req, res) => {
 
     if (result.success) {
       if (result.data.length > 0) {
-        res.json({
+        res.status(200).json({
           success: true,
           data: result.data[0],
-          message: 'ดึงข้อมูลประมูลสำเร็จ',
+          message: null,
         });
       } else {
-        res.status(404).json({
-          success: false,
+        res.status(200).json({
+          success: true,
           message: 'ไม่พบข้อมูลประมูลที่ระบุ',
         });
       }
     } else {
-      console.error('❌ Failed to get auction:', result.error);
       res.status(500).json({
         success: false,
         message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประมูล',
@@ -170,7 +159,6 @@ router.get('/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('❌ Error in getAuctionById:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -229,19 +217,17 @@ router.post('/update/:id', async (req, res) => {
     });
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         message: null,
-        data: { auction_id: auctionId },
       });
     } else {
-      res.json({
+      res.status(200).json({
         success: true,
         message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in updateAuction:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -291,19 +277,17 @@ router.post('/', async (req, res) => {
     });
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: null,
-        data: { auction_id: result.insertId },
       });
     } else {
-      res.json({
+      res.status(200).json({
         success: true,
         message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in createAuction:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -327,19 +311,17 @@ router.post('/delete/:id', async (req, res) => {
     const result = await deleteAuction(auctionId);
 
     if (result.success) {
-      res.json({
+      res.status(200).json({
         success: true,
         message: null,
-        data: { auction_id: auctionId },
       });
     } else {
-      res.json({
+      res.status(200).json({
         success: true,
         message: result.error,
       });
     }
   } catch (error) {
-    console.error('❌ Error in deleteAuction:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
