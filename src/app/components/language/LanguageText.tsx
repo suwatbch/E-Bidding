@@ -63,7 +63,6 @@ export default function TransectionLanguage({
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [deletingKey, setDeletingKey] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>({
     text_key: '',
     th: '',
@@ -252,7 +251,6 @@ export default function TransectionLanguage({
     if (!confirm('คุณแน่ใจว่าต้องการลบข้อความนี้?')) return;
 
     try {
-      setDeletingKey(textKey);
       setError(null);
 
       // ค้นหาข้อความทั้งหมดที่มี key นี้
@@ -284,8 +282,6 @@ export default function TransectionLanguage({
     } catch (error: any) {
       console.error('❌ Error deleting language text:', error);
       setError('เกิดข้อผิดพลาดในการเชื่อมต่อ API');
-    } finally {
-      setDeletingKey(null);
     }
   };
 
