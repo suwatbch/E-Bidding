@@ -20,7 +20,7 @@ router.get('/', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลภาษาสำเร็จ',
+        message: null,
         data: result.data,
       });
     } else {
@@ -31,7 +31,6 @@ router.get('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getLanguages:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -46,8 +45,8 @@ router.get('/:languageCode', async (req, res) => {
     const { languageCode } = req.params;
 
     if (!languageCode) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุรหัสภาษา',
       });
     }
@@ -58,12 +57,12 @@ router.get('/:languageCode', async (req, res) => {
       if (result.data.length > 0) {
         res.status(200).json({
           success: true,
-          message: 'ดึงข้อมูลภาษาสำเร็จ',
+          message: null,
           data: result.data[0],
         });
       } else {
-        res.status(400).json({
-          success: false,
+        res.status(200).json({
+          success: true,
           message: 'ไม่พบข้อมูลภาษาที่ระบุ',
         });
       }
@@ -75,7 +74,6 @@ router.get('/:languageCode', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -125,7 +123,6 @@ router.post('/update/:languageCode', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in editLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -177,7 +174,7 @@ router.get('/texts/all', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลข้อความแปลสำเร็จ',
+        message: null,
         data: result.data,
       });
     } else {
@@ -188,7 +185,6 @@ router.get('/texts/all', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getLanguageTexts:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -216,10 +212,9 @@ router.post('/texts', async (req, res) => {
     });
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: null,
-        data: { id: result.insertId },
       });
     } else {
       res.status(200).json({
@@ -228,7 +223,6 @@ router.post('/texts', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in addLanguageText:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -275,7 +269,6 @@ router.post('/texts/update/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in editLanguageText:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -310,7 +303,6 @@ router.post('/texts/delete/:id', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in removeLanguageText:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
