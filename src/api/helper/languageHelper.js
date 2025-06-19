@@ -45,45 +45,75 @@ async function checkUsersUsingLanguage(languageCode) {
 
 // อัปเดตข้อมูลภาษา
 async function updateLanguage(languageCode, languageData) {
-  const { language_name, flag, is_default, status } = languageData;
+  let { language_name, flag, is_default, status } = languageData;
 
-  // ถ้ามีการปิดใช้งานภาษา (status = 0) ให้ตรวจสอบ user ก่อน
-  if (status === 0) {
-    const checkResult = await checkUsersUsingLanguage(languageCode);
+  try {
+    // ถ้ามีการปิดใช้งานภาษา (status = 0) ให้ตรวจสอบ user ก่อน
+    if (status === 0) {
+      const checkResult = await checkUsersUsingLanguage(languageCode);
 
-    if (!checkResult.success) {
-      return {
-        success: false,
-        error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้',
-      };
+      if (!checkResult.success) {
+        return {
+          success: false,
+          error: 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลผู้ใช้',
+        };
+      }
+
+      const userCount = checkResult.data[0].user_count;
+      if (userCount > 0) {
+        return {
+          success: false,
+          error: `ไม่สามารถปิดใช้งานภาษานี้ได้ เนื่องจากมีผู้ใช้งานที่ใช้ภาษานี้อยู่`,
+        };
+      }
     }
 
-    const userCount = checkResult.data[0].user_count;
-    if (userCount > 0) {
-      return {
-        success: false,
-        error: `ไม่สามารถปิดใช้งานภาษานี้ได้ เนื่องจากมีผู้ใช้งานที่ใช้ภาษานี้อยู่`,
-      };
+    // ถ้ามีการตั้งให้เป็นภาษาเริ่มต้น
+    if (is_default === true) {
+      // ภาษาเริ่มต้นต้องถูกเปิดใช้งานเสมอ
+      status = 1;
+
+      // เอาภาษาอื่นออกจากการเป็นภาษาเริ่มต้น
+      const clearDefaultQuery = `
+        UPDATE language 
+        SET is_default = 0 
+        WHERE language_code != ? AND is_default = 1
+      `;
+
+      const clearResult = await executeQuery(clearDefaultQuery, [languageCode]);
+      if (!clearResult.success) {
+        return {
+          success: false,
+          error: 'เกิดข้อผิดพลาดในการล้างภาษาเริ่มต้นเดิม',
+        };
+      }
     }
+
+    // อัปเดตข้อมูลภาษาที่ระบุ
+    const query = `
+      UPDATE language 
+      SET 
+        language_name = ?,
+        flag = ?,
+        is_default = ?,
+        status = ?
+      WHERE language_code = ?
+    `;
+
+    return await executeQuery(query, [
+      language_name,
+      flag,
+      is_default ? 1 : 0,
+      status !== undefined ? status : 1,
+      languageCode,
+    ]);
+  } catch (error) {
+    console.error('Error in updateLanguage:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลภาษา',
+    };
   }
-
-  const query = `
-    UPDATE language 
-    SET 
-      language_name = ?,
-      flag = ?,
-      is_default = ?,
-      status = ?
-    WHERE language_code = ?
-  `;
-
-  return await executeQuery(query, [
-    language_name,
-    flag,
-    is_default ? 1 : 0,
-    status !== undefined ? status : 1,
-    languageCode,
-  ]);
 }
 
 // ลบภาษา (soft delete)
