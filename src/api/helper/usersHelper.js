@@ -183,19 +183,30 @@ async function createUser(userData) {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, NOW(), NOW())
     `;
 
-    return await executeQuery(query, [
+    const result = await executeQuery(query, [
       username,
       hashedPassword,
       language_code || 'th',
       fullname,
-      tax_id,
-      address,
+      tax_id === undefined ? null : tax_id,
+      address === undefined ? null : address,
       email,
       phone,
       type || 'user',
-      image,
+      image === undefined ? null : image,
       status !== undefined ? (status ? 1 : 0) : 1,
     ]);
+
+    if (result.success && result.data.insertId) {
+      return {
+        success: true,
+        data: {
+          user_id: result.data.insertId,
+        },
+      };
+    }
+
+    return result;
   } catch (error) {
     console.error('Error in createUser:', error);
     return {
@@ -278,15 +289,15 @@ async function updateUser(userId, userData) {
     }
     if (tax_id !== undefined) {
       updateFields.push('tax_id = ?');
-      params.push(tax_id);
+      params.push(tax_id || null);
     }
     if (address !== undefined) {
       updateFields.push('address = ?');
-      params.push(address);
+      params.push(address || null);
     }
     if (image !== undefined) {
       updateFields.push('image = ?');
-      params.push(image);
+      params.push(image || null);
     }
     if (status !== undefined) {
       updateFields.push('status = ?');

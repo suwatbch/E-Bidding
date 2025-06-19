@@ -133,6 +133,7 @@ router.post('/', async (req, res) => {
       res.status(200).json({
         success: true,
         message: null,
+        data: result.data,
       });
     } else {
       res.status(200).json({
