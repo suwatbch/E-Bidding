@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
-        message: 'ดึงข้อมูลผู้ใช้งานสำเร็จ',
+        message: null,
         data: result.data,
       });
     } else {
@@ -40,7 +40,6 @@ router.get('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getUsers:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -55,8 +54,8 @@ router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
 
     if (!userId) {
-      return res.status(400).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
         message: 'กรุณาระบุ ID ผู้ใช้งาน',
       });
     }
@@ -67,12 +66,12 @@ router.get('/:userId', async (req, res) => {
       if (result.data.length > 0) {
         res.status(200).json({
           success: true,
-          message: 'ดึงข้อมูลผู้ใช้งานสำเร็จ',
+          message: null,
           data: result.data[0],
         });
       } else {
-        res.status(404).json({
-          success: false,
+        res.status(200).json({
+          success: true,
           message: 'ไม่พบข้อมูลผู้ใช้งานที่ระบุ',
         });
       }
@@ -84,7 +83,6 @@ router.get('/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in getUser:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -133,10 +131,9 @@ router.post('/', async (req, res) => {
     const result = await createUser(userData);
 
     if (result.success) {
-      res.status(201).json({
+      res.status(200).json({
         success: true,
         message: null,
-        data: { user_id: result.insertId },
       });
     } else {
       res.status(200).json({
@@ -145,7 +142,6 @@ router.post('/', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in createUser:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -212,7 +208,6 @@ router.post('/update/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in updateUser:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -247,7 +242,6 @@ router.post('/delete/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in deleteUser:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
@@ -292,7 +286,6 @@ router.post('/language/:userId', async (req, res) => {
       res.status(200).json({
         success: true,
         message: null,
-        data: result.data,
       });
     } else {
       res.status(200).json({
@@ -301,7 +294,6 @@ router.post('/language/:userId', async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Error in updateUserLanguage:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
