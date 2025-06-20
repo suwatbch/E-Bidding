@@ -1,8 +1,8 @@
 export const statusConfig = {
   1: {
     id: 1,
-    code: 'open',
-    description: 'เปิดประมูล',
+    code: 'draft',
+    description: 'ดราฟ',
   },
   2: {
     id: 2,

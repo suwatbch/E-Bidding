@@ -7,7 +7,7 @@ export interface Auction {
   end_dt: string;
   reserve_price: number;
   currency: number; // 1 = THB (default), 2 = USD, 3 = EUR, etc. (refer to currencyConfig)
-  status: number; // 1 เปิดการประมูล, 2 รอการประมูล, 3 กำลังประมูล, 4 ใกล้สิ้นสุด, 5 สิ้นสุดประมูล, 6 ยกเลิกประมูล
+  status: number; // 1 ดราฟ, 2 รอการประมูล, 3 กำลังประมูล, 4 ใกล้สิ้นสุด, 5 สิ้นสุดประมูล, 6 ยกเลิกประมูล
   is_deleted: number; // 1 = active, 0 = inactive
   remark?: string | null; // หมายเหตุเพิ่มเติม
   created_dt: string;
@@ -23,7 +23,7 @@ export const dataAuction: Auction[] = [
     end_dt: '2025-06-01 10:00:00',
     reserve_price: 500000,
     currency: 1, // THB
-    status: 1, // เปิดการประมูล
+    status: 1, // ดราฟ
     is_deleted: 0,
     remark:
       'วัตถุดิบคุณภาพสูง เหมาะสำหรับการแปรรูปอาหาร ดดหเ ดหเห เฆดเหดเดหเพไเดหเ ดด้หด้ดกเ้ หด หดห  เหดดเ หด เหพพเดหเฆดเหกเกหเฆเพหเด้กเ้่ผก้กพพ้ พะำำัำพ ',
@@ -94,7 +94,7 @@ export const dataAuction: Auction[] = [
     end_dt: '2025-06-05 14:00:00',
     reserve_price: 350000,
     currency: 9, // THB
-    status: 1, // เปิดการประมูล
+    status: 1, // ดราฟ
     is_deleted: 0,
     remark: 'อาหารสัตว์สำเร็จรูป สูตรพิเศษ',
     created_dt: '2025-05-27 09:00:00',
@@ -164,7 +164,7 @@ export const dataAuction: Auction[] = [
     end_dt: '2025-06-09 15:00:00',
     reserve_price: 280000,
     currency: 1, // THB
-    status: 1, // เปิดการประมูล
+    status: 1, // ดราฟ
     is_deleted: 0,
     remark: 'เฟอร์นิเจอร์สำนักงาน ใหม่ล่าสุด',
     created_dt: '2025-05-28 09:00:00',
@@ -234,7 +234,7 @@ export const dataAuction: Auction[] = [
     end_dt: '2025-06-05 16:00:00',
     reserve_price: 890000,
     currency: 1, // THB
-    status: 1, // เปิดการประมูล
+    status: 1, // ดราฟ
     is_deleted: 0,
     remark: 'วัตถุดิบสำหรับอุตสาหกรรมอาหาร มาตรฐาน ISO',
     created_dt: '2025-05-29 09:00:00',

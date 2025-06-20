@@ -197,7 +197,7 @@ export const dataAuction_Bid: AuctionBid[] = [
     is_winning: true, // ราคาต่ำสุดปัจจุบัน
   },
 
-  // ประมูล ID 6: อาหารสัตว์สำเร็จรูป (Reserve: 350,000) - เปิดการประมูล
+  // ประมูล ID 6: อาหารสัตว์สำเร็จรูป (Reserve: 350,000) - ดราฟ
   {
     bid_id: 19,
     auction_id: 6,
@@ -301,7 +301,7 @@ export const dataAuction_Bid: AuctionBid[] = [
     is_winning: true, // ราคาต่ำสุดปัจจุบัน
   },
 
-  // ประมูล ID 11: เฟอร์นิเจอร์สำนักงาน (Reserve: 280,000) - เปิดการประมูล
+  // ประมูล ID 11: เฟอร์นิเจอร์สำนักงาน (Reserve: 280,000) - ดราฟ
   {
     bid_id: 29,
     auction_id: 11,

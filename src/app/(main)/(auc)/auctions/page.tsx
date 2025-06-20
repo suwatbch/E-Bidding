@@ -145,27 +145,7 @@ export default function AuctionsPage() {
         .length || 0;
 
     // แปลงสถานะเป็นรูปแบบที่ใช้กับ UI เดิม
-    let uiStatus: AuctionItem['status'] = 2;
-    switch (auction.status) {
-      case 1:
-        uiStatus = 1;
-        break;
-      case 2:
-        uiStatus = 2;
-        break;
-      case 3:
-        uiStatus = 3;
-        break;
-      case 4:
-        uiStatus = 4;
-        break;
-      case 5:
-        uiStatus = 5;
-        break;
-      case 6:
-        uiStatus = 6;
-        break;
-    }
+    let uiStatus: AuctionItem['status'] = auction.status;
 
     // Note: currency and remark fields are available in auction object but not displayed in UI
     // auction.currency - currency ID (1=THB, 2=USD, etc.)
@@ -183,7 +163,7 @@ export default function AuctionsPage() {
     } as AuctionItem & { auction_id: number };
   });
 
-  // ดึงรายการหมวดหมู่จาก auctionTypes
+  // ดึงรายการประเภทจาก auctionTypes
   const categories = [
     'ทั้งหมด',
     ...(auctionTypes || [])
@@ -197,21 +177,22 @@ export default function AuctionsPage() {
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // ตรวจสอบหมวดหมู่
+    // ตรวจสอบประเภท - ทำงานทันที
     const matchesCategory =
       selectedCategory === 'ทั้งหมด' || item.category === selectedCategory;
 
-    // ตรวจสอบสถานะ - แปลง selectedStatus เป็น number เพื่อเปรียบเทียบ
+    // ตรวจสอบสถานะ - ทำงานทันที
     const matchesStatus =
       selectedStatus === 'all' || item.status === parseInt(selectedStatus);
 
-    // กรองตามช่วงวันที่
-    const itemDate = safeParseDate(item.startTime);
-    const filterStartDate = safeParseDate(startDate.toISOString());
-    const filterEndDate = safeParseDate(endDate.toISOString());
-    const matchesDate =
-      !isFiltering ||
-      (itemDate >= filterStartDate && itemDate <= filterEndDate);
+    // กรองตามช่วงวันที่ - ใช้เฉพาะเมื่อกดค้นหา
+    let matchesDate = true;
+    if (isFiltering) {
+      const itemDate = safeParseDate(item.startTime);
+      const filterStartDate = safeParseDate(startDate.toISOString());
+      const filterEndDate = safeParseDate(endDate.toISOString());
+      matchesDate = itemDate >= filterStartDate && itemDate <= filterEndDate;
+    }
 
     return matchesSearch && matchesCategory && matchesStatus && matchesDate;
   });
@@ -282,6 +263,11 @@ export default function AuctionsPage() {
   useEffect(() => {
     loadAuctions();
   }, []);
+
+  // Reset current page เมื่อมีการเปลี่ยน filter
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedStatus, searchQuery, isFiltering]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredItems.length / perPage);
@@ -378,12 +364,12 @@ export default function AuctionsPage() {
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* หมวดหมู่ */}
+            {/* ประเภท */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 <div className="flex items-center gap-2 mb-1.5">
                   <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-                  หมวดหมู่
+                  ประเภท
                 </div>
               </label>
               <div className="relative">
@@ -481,7 +467,7 @@ export default function AuctionsPage() {
             <div className="relative flex-1">
               <input
                 type="text"
-                placeholder="ค้นหาตามชื่อตลาดหรือหมวดหมู่..."
+                placeholder="ค้นหาตามชื่อตลาดหรือประเภท..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -661,7 +647,7 @@ export default function AuctionsPage() {
                 <TableHead className="w-[15%]">
                   <div className="flex items-center gap-2">
                     <AucCategoryIcon className="w-5 h-5 text-gray-500" />
-                    หมวดหมู่
+                    ประเภท
                   </div>
                 </TableHead>
                 <TableHead className="w-[16%] text-center">
@@ -731,7 +717,7 @@ export default function AuctionsPage() {
                           <Link
                             href={`/auction/${(item as any).auction_id || ''}`}
                             prefetch={false}
-                            className="text-sm font-medium truncate cursor-pointer text-blue-700 transition-colors block"
+                            className="text-sm font-medium truncate cursor-pointer text-blue-500 transition-colors block"
                             title={item.title}
                           >
                             {item.title}
