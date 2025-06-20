@@ -314,20 +314,17 @@ export default function AuctionFormPage() {
   const loadCompanies = async () => {
     try {
       setLoadingCompanies(true);
-      console.log('🔍 Loading companies...');
 
       const response = await companyService.getAllCompanies();
-      console.log('🏢 Companies API response:', response);
 
       if (response.success) {
         // กรองเฉพาะบริษัทที่ status = 1 (เปิดใช้งาน)
         const activeCompanies = response.data.filter(
           (company: Company) => company.status === 1
         );
-        console.log('✅ Active companies (status=1):', activeCompanies);
         setAvailableCompanies(activeCompanies);
       } else {
-        console.error('❌ Failed to get companies:', response.message);
+        console.error('Failed to get companies:', response.message);
         setAvailableCompanies([]);
       }
     } catch (error) {
@@ -340,23 +337,15 @@ export default function AuctionFormPage() {
 
   const loadAllUsersCompany = async () => {
     try {
-      console.log('🔍 Loading all users-company relationships...');
-
       const response = await userCompanyService.getAllUserCompanies();
-      console.log('📊 All UserCompany API response:', response);
 
       if (response.success) {
-        // กรองเฉพาะ user_company ที่ status = 1
         const activeUsersCompany = response.data.filter(
           (uc: UserCompany) => uc.status === 1
         );
-        console.log(
-          '✅ Active users-company relationships:',
-          activeUsersCompany
-        );
         setUsersCompany(activeUsersCompany);
       } else {
-        console.error('❌ Failed to get users-company:', response.message);
+        console.error('Failed to get users-company:', response.message);
         setUsersCompany([]);
       }
     } catch (error) {
@@ -367,21 +356,16 @@ export default function AuctionFormPage() {
 
   const loadAllUsers = async () => {
     try {
-      console.log('🔍 Loading all users for user-first selection...');
-
       const response = await userService.getAllUsers();
-      console.log('👤 All Users API response:', response);
 
       if (response.success) {
-        // กรองเฉพาะผู้ใช้ที่ status = 1 และไม่ถูกล็อก
         const activeUsers = response.data.filter(
           (user: User) => user.status === 1 && !user.is_locked
         );
-        console.log('✅ Active users for selection:', activeUsers);
         setAllUsers(activeUsers);
         setAvailableUsers(activeUsers); // ใช้เป็นค่าเริ่มต้นสำหรับ dropdown
       } else {
-        console.error('❌ Failed to get all users:', response.message);
+        console.error('Failed to get all users:', response.message);
         setAllUsers([]);
         setAvailableUsers([]);
       }
@@ -395,25 +379,20 @@ export default function AuctionFormPage() {
   const loadUsersByCompany = async (companyId: number) => {
     try {
       setLoadingUsers(true);
-      console.log('🔍 Loading users for company ID:', companyId);
-
       // ใช้ข้อมูลที่โหลดไว้แล้วแทนการเรียก API ใหม่
       // หาผู้ใช้ที่เชื่อมโยงกับบริษัทนี้จาก usersCompany
       const companyUserIds = usersCompany
         .filter((uc) => uc.company_id === companyId && uc.status === 1)
         .map((uc) => uc.user_id);
 
-      console.log('👥 User IDs for company:', companyUserIds);
-
       // กรองผู้ใช้จาก allUsers ที่โหลดไว้แล้ว
       const filteredCompanyUsers = allUsers.filter((user) =>
         companyUserIds.includes(user.user_id)
       );
 
-      console.log('✨ Users for selected company:', filteredCompanyUsers);
       setCompanyUsers(filteredCompanyUsers);
     } catch (error) {
-      console.error('💥 Error loading company users:', error);
+      console.error('Error loading company users:', error);
       setCompanyUsers([]);
     } finally {
       setLoadingUsers(false);
@@ -425,15 +404,6 @@ export default function AuctionFormPage() {
     participantUserIds: number[]
   ) => {
     try {
-      // จำลองการบันทึกข้อมูลผู้เข้าร่วมประมูล
-      console.log('Saving auction participants:', {
-        auctionId,
-        participants: participantUserIds,
-      });
-
-      // ในการใช้งานจริง จะเรียก API เพื่อบันทึกข้อมูลลงฐานข้อมูล
-      // await auctionParticipantService.saveParticipants(auctionId, participantUserIds);
-
       return true;
     } catch (error) {
       console.error('Error saving auction participants:', error);
@@ -443,8 +413,7 @@ export default function AuctionFormPage() {
 
   // Handle company selection
   const handleCompanySelect = (companyId: number) => {
-    console.log('Company selected:', companyId);
-    isAutoSelectingRef.current = false; // ล้าง flag เพราะเป็นการเลือกด้วยตนเอง
+    isAutoSelectingRef.current = false;
     setSelectedCompanyId(companyId);
 
     // แสดงชื่อบริษัทที่เลือกในช่อง input
@@ -476,7 +445,6 @@ export default function AuctionFormPage() {
 
   // Handle user selection
   const handleUserSelect = (userId: number) => {
-    console.log('User selected:', userId);
     setSelectedUserId(userId);
 
     // แสดงชื่อผู้ใช้ที่เลือกในช่อง input (ใช้ allUsers เพื่อให้หาเจอแน่นอน)
@@ -498,10 +466,6 @@ export default function AuctionFormPage() {
       );
     }
 
-    console.log('🔍 User company data found:', userCompanyData);
-    console.log('📊 All usersCompany data:', usersCompany);
-    console.log('👤 Selected user ID:', userId);
-
     if (userCompanyData) {
       // ตั้ง flag ให้รู้ว่าเป็นการ auto-select บริษัท
       isAutoSelectingRef.current = true;
@@ -513,16 +477,11 @@ export default function AuctionFormPage() {
 
       if (autoSelectedCompany) {
         setCompanySearchTerm(autoSelectedCompany.name);
-        console.log('✅ Auto-selected company:', autoSelectedCompany.name);
       } else {
         // ถ้าไม่เจอในรายการ อาจเป็นเพราะข้อมูลยังไม่โหลดเสร็จ
         // ใช้ฟังก์ชันหาชื่อบริษัทแทน
         const companyName = getCompanyNameById(userCompanyData.company_id);
         setCompanySearchTerm(companyName);
-        console.log(
-          '⚠️ Company not found in availableCompanies, using fallback:',
-          companyName
-        );
       }
 
       setShowCompanyDropdown(false);
@@ -532,14 +491,9 @@ export default function AuctionFormPage() {
 
       // ตั้งค่า selectedCompanyId หลังจากโหลดข้อมูลเสร็จแล้ว
       setSelectedCompanyId(userCompanyData.company_id);
-
-      // รีเซ็ต flag หลังจากทำงานเสร็จ (ไม่จำเป็นเพราะ useEffect จะรีเซ็ตให้)
-      // setTimeout(() => {
-      //   isAutoSelectingRef.current = false;
-      // }, 100);
     } else {
       // ถ้าไม่มีบริษัทที่เชื่อมโยง ให้ล้างการเลือกบริษัท
-      console.log('❌ No company relationship found for user:', userId);
+      console.log('No company relationship found for user:', userId);
       setSelectedCompanyId(null);
       setCompanySearchTerm('');
     }

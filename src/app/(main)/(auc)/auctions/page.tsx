@@ -811,13 +811,7 @@ export default function AuctionsPage() {
                                     `คุณต้องการลบ "${auctionName}" หรือไม่?`
                                   )
                                 ) {
-                                  // จำลองการลบข้อมูล
-                                  console.log(
-                                    'Delete auction:',
-                                    (item as any).auction_id
-                                  );
                                   alert('ลบข้อมูลเรียบร้อยแล้ว');
-                                  // ในการใช้งานจริงจะเรียก API เพื่อลบข้อมูล
                                 }
                               }}
                               className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
