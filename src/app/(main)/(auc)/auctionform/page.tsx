@@ -9,10 +9,29 @@ import {
   AucStartTimeIcon,
   AucEndTimeIcon,
   AucOfferIcon,
+  AucUserIcon,
 } from '@/app/components/ui/Icons';
-import { dataAuction_Type } from '@/app/model/dataAuction_Type';
 import { statusConfig, currencyConfig } from '@/app/model/config';
-import { dataAuction, Auction } from '@/app/model/dataAuction';
+import { User, userService } from '@/app/services/userService';
+import { Company, companyService } from '@/app/services/companyService';
+import {
+  UserCompany,
+  userCompanyService,
+} from '@/app/services/userCompanyService';
+import {
+  AuctionParticipant,
+  dataAuction_Participant,
+} from '@/app/model/dataAuction_Participant';
+import {
+  auctionTypeService,
+  AuctionType as ServiceAuctionType,
+} from '@/app/services/auctionTypeService';
+import {
+  auctionsService,
+  Auction,
+  CreateAuctionRequest,
+  UpdateAuctionRequest,
+} from '@/app/services/auctionsService';
 import {
   formatDateForData,
   safeParseDate,
@@ -43,6 +62,31 @@ export default function AuctionFormPage() {
     created_dt: getCurrentDateTime(),
     updated_dt: getCurrentDateTime(),
   });
+
+  // States for participant selection
+  const [selectedParticipants, setSelectedParticipants] = useState<number[]>(
+    []
+  );
+  const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<User[]>([]);
+  const [usersCompany, setUsersCompany] = useState<UserCompany[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(
+    null
+  );
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [companySearchTerm, setCompanySearchTerm] = useState('');
+  const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
+  const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+
+  // States for auction types
+  const [auctionTypes, setAuctionTypes] = useState<ServiceAuctionType[]>([]);
+  const [loadingAuctionTypes, setLoadingAuctionTypes] = useState(false);
 
   // ฟังก์ชันตรวจสอบสิทธิ์การเข้าถึง
   const checkPermission = (auctionData: Auction | undefined) => {
@@ -88,60 +132,130 @@ export default function AuctionFormPage() {
   };
 
   // ฟังก์ชันตรวจสอบ ID ที่ส่งมา
-  const validateAuctionId = (id: string): number | null => {
+  const validateAuctionId = async (id: string): Promise<number | null> => {
     // ตรวจสอบว่าเป็นตัวเลขหรือไม่
     const numericId = parseInt(id);
     if (isNaN(numericId) || numericId < 0) {
       return null;
     }
 
-    // ตรวจสอบว่า ID มีอยู่ในระบบหรือไม่
-    const exists = dataAuction.some(
-      (auction) => auction.auction_id === numericId
-    );
-    if (!exists && numericId !== 0) {
-      return null;
+    // สำหรับ ID = 0 (สร้างใหม่) ให้ผ่านได้เลย
+    if (numericId === 0) {
+      return numericId;
     }
 
-    return numericId;
+    // ตรวจสอบว่า ID มีอยู่ในระบบหรือไม่
+    try {
+      const response = await auctionsService.getAuctionById(numericId);
+      if (!response.success) {
+        return null;
+      }
+      return numericId;
+    } catch (error) {
+      console.error('Error validating auction ID:', error);
+      return null;
+    }
   };
 
   useEffect(() => {
-    if (isEdit && auctionId && auctionId !== '0') {
-      // ตรวจสอบ ID ที่ส่งมา
-      const validatedId = validateAuctionId(auctionId);
+    const initializeData = async () => {
+      // โหลดข้อมูลประเภทประมูล, บริษัท, users-company relationships, และผู้ใช้ทั้งหมด
+      await Promise.all([
+        loadAuctionTypes(),
+        loadCompanies(),
+        loadAllUsersCompany(),
+        loadAllUsers(),
+      ]);
 
-      if (validatedId === null) {
-        setHasPermission(false);
-        setPermissionError('รหัสตลาดไม่ถูกต้องหรือไม่มีอยู่ในระบบ');
-        return;
+      if (isEdit && auctionId && auctionId !== '0') {
+        // ตรวจสอบ ID ที่ส่งมา
+        const validatedId = await validateAuctionId(auctionId);
+
+        if (validatedId === null) {
+          setHasPermission(false);
+          setPermissionError('รหัสตลาดไม่ถูกต้องหรือไม่มีอยู่ในระบบ');
+          return;
+        }
+
+        // โหลดข้อมูลตลาดที่ต้องการแก้ไข
+        await loadAuctionData(validatedId);
+        // โหลดข้อมูลผู้เข้าร่วมประมูล
+        await loadAuctionParticipants(validatedId);
       }
+    };
 
-      // โหลดข้อมูลตลาดที่ต้องการแก้ไข
-      loadAuctionData(validatedId);
-    }
+    initializeData();
   }, [isEdit, auctionId]);
+
+  // เมื่อเลือกบริษัท ให้โหลดผู้ใช้ในบริษัทนั้น
+  useEffect(() => {
+    if (selectedCompanyId) {
+      loadUsersByCompany(selectedCompanyId);
+      setSelectedUserId(null); // รีเซ็ตการเลือกผู้ใช้
+      setUserSearchTerm(''); // รีเซ็ตการค้นหาผู้ใช้
+    } else {
+      setAvailableUsers([]);
+      setSelectedUserId(null);
+      setUserSearchTerm('');
+    }
+  }, [selectedCompanyId]);
+
+  // จัดการการคลิกนอก dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.company-dropdown-container')) {
+        setShowCompanyDropdown(false);
+      }
+      if (!target.closest('.user-dropdown-container')) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // อัพเดทชื่อบริษัทในช่อง input เมื่อข้อมูลบริษัทโหลดเสร็จ
+  useEffect(() => {
+    if (selectedCompanyId && availableCompanies.length > 0) {
+      const selectedCompany = availableCompanies.find(
+        (c) => c.id === selectedCompanyId
+      );
+      if (selectedCompany && !companySearchTerm) {
+        setCompanySearchTerm(selectedCompany.name);
+      }
+    }
+  }, [selectedCompanyId, availableCompanies]);
 
   const loadAuctionData = async (id: number) => {
     try {
       setIsLoading(true);
-      // ดึงข้อมูลจาก dataAuction ตาม auction_id
-      const auction = dataAuction.find((a) => a.auction_id === id);
+      // ดึงข้อมูลจาก API ตาม auction_id
+      const response = await auctionsService.getAuctionById(id);
+
+      if (!response.success) {
+        setHasPermission(false);
+        setPermissionError(response.message || 'ไม่พบข้อมูลตลาด');
+        return;
+      }
+
+      const auction = response.data;
 
       // ตรวจสอบสิทธิ์การเข้าถึง
       if (!checkPermission(auction)) {
         return;
       }
 
-      if (auction) {
-        setFormData({
-          ...auction,
-          // อัพเดท updated_dt เมื่อแก้ไข
-          updated_dt: getCurrentDateTime(),
-        });
-        setHasPermission(true);
-        setPermissionError('');
-      }
+      setFormData({
+        ...auction,
+        // อัพเดท updated_dt เมื่อแก้ไข
+        updated_dt: getCurrentDateTime(),
+      });
+      setHasPermission(true);
+      setPermissionError('');
     } catch (error) {
       console.error('Error loading auction data:', error);
       setHasPermission(false);
@@ -149,6 +263,333 @@ export default function AuctionFormPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadAuctionParticipants = async (auctionId: number) => {
+    try {
+      setLoadingParticipants(true);
+      // ดึงข้อมูลผู้เข้าร่วมประมูลจาก dataAuction_Participant
+      const participants = dataAuction_Participant
+        .filter((p) => p.auction_id === auctionId && p.status === 1)
+        .map((p) => p.user_id);
+
+      setSelectedParticipants(participants);
+    } catch (error) {
+      console.error('Error loading auction participants:', error);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  };
+
+  const loadAuctionTypes = async () => {
+    try {
+      setLoadingAuctionTypes(true);
+      const response = await auctionTypeService.getActiveAuctionTypes();
+
+      if (response.success) {
+        setAuctionTypes(response.data);
+      } else {
+        console.error('Error loading auction types:', response.message);
+        // fallback to empty array or show error message
+        setAuctionTypes([]);
+      }
+    } catch (error) {
+      console.error('Error loading auction types:', error);
+      setAuctionTypes([]);
+    } finally {
+      setLoadingAuctionTypes(false);
+    }
+  };
+
+  const loadCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      console.log('🔍 Loading companies...');
+
+      const response = await companyService.getAllCompanies();
+      console.log('🏢 Companies API response:', response);
+
+      if (response.success) {
+        // กรองเฉพาะบริษัทที่ status = 1 (เปิดใช้งาน)
+        const activeCompanies = response.data.filter(
+          (company: Company) => company.status === 1
+        );
+        console.log('✅ Active companies (status=1):', activeCompanies);
+        setAvailableCompanies(activeCompanies);
+      } else {
+        console.error('❌ Failed to get companies:', response.message);
+        setAvailableCompanies([]);
+      }
+    } catch (error) {
+      console.error('Error loading companies:', error);
+      setAvailableCompanies([]);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
+
+  const loadAllUsersCompany = async () => {
+    try {
+      console.log('🔍 Loading all users-company relationships...');
+
+      const response = await userCompanyService.getAllUserCompanies();
+      console.log('📊 All UserCompany API response:', response);
+
+      if (response.success) {
+        // กรองเฉพาะ user_company ที่ status = 1
+        const activeUsersCompany = response.data.filter(
+          (uc: UserCompany) => uc.status === 1
+        );
+        console.log(
+          '✅ Active users-company relationships:',
+          activeUsersCompany
+        );
+        setUsersCompany(activeUsersCompany);
+      } else {
+        console.error('❌ Failed to get users-company:', response.message);
+        setUsersCompany([]);
+      }
+    } catch (error) {
+      console.error('Error loading users-company:', error);
+      setUsersCompany([]);
+    }
+  };
+
+  const loadAllUsers = async () => {
+    try {
+      console.log('🔍 Loading all users for user-first selection...');
+
+      const response = await userService.getAllUsers();
+      console.log('👤 All Users API response:', response);
+
+      if (response.success) {
+        // กรองเฉพาะผู้ใช้ที่ status = 1 และไม่ถูกล็อก
+        const activeUsers = response.data.filter(
+          (user: User) => user.status === 1 && !user.is_locked
+        );
+        console.log('✅ Active users for selection:', activeUsers);
+        setAllUsers(activeUsers);
+        setAvailableUsers(activeUsers); // ใช้เป็นค่าเริ่มต้นสำหรับ dropdown
+      } else {
+        console.error('❌ Failed to get all users:', response.message);
+        setAllUsers([]);
+        setAvailableUsers([]);
+      }
+    } catch (error) {
+      console.error('Error loading all users:', error);
+      setAllUsers([]);
+      setAvailableUsers([]);
+    }
+  };
+
+  const loadUsersByCompany = async (companyId: number) => {
+    try {
+      setLoadingUsers(true);
+      console.log('🔍 Loading users for company ID:', companyId);
+
+      // ใช้ข้อมูลที่โหลดไว้แล้วแทนการเรียก API ใหม่
+      // หาผู้ใช้ที่เชื่อมโยงกับบริษัทนี้จาก usersCompany
+      const companyUserIds = usersCompany
+        .filter((uc) => uc.company_id === companyId && uc.status === 1)
+        .map((uc) => uc.user_id);
+
+      console.log('👥 User IDs for company:', companyUserIds);
+
+      // กรองผู้ใช้จาก allUsers ที่โหลดไว้แล้ว
+      const filteredCompanyUsers = allUsers.filter((user) =>
+        companyUserIds.includes(user.user_id)
+      );
+
+      console.log('✨ Users for selected company:', filteredCompanyUsers);
+      setCompanyUsers(filteredCompanyUsers);
+    } catch (error) {
+      console.error('💥 Error loading company users:', error);
+      setCompanyUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const saveAuctionParticipants = async (
+    auctionId: number,
+    participantUserIds: number[]
+  ) => {
+    try {
+      // จำลองการบันทึกข้อมูลผู้เข้าร่วมประมูล
+      console.log('Saving auction participants:', {
+        auctionId,
+        participants: participantUserIds,
+      });
+
+      // ในการใช้งานจริง จะเรียก API เพื่อบันทึกข้อมูลลงฐานข้อมูล
+      // await auctionParticipantService.saveParticipants(auctionId, participantUserIds);
+
+      return true;
+    } catch (error) {
+      console.error('Error saving auction participants:', error);
+      return false;
+    }
+  };
+
+  // Handle company selection
+  const handleCompanySelect = (companyId: number) => {
+    console.log('Company selected:', companyId);
+    setSelectedCompanyId(companyId);
+
+    // แสดงชื่อบริษัทที่เลือกในช่อง input
+    const selectedCompany = availableCompanies.find((c) => c.id === companyId);
+    setCompanySearchTerm(selectedCompany ? selectedCompany.name : '');
+    setShowCompanyDropdown(false);
+
+    // ตรวจสอบว่าผู้ใช้ที่เลือกอยู่ (ถ้ามี) อยู่ในบริษัทที่เลือกหรือไม่
+    if (selectedUserId) {
+      const userBelongsToCompany = usersCompany.some(
+        (uc) =>
+          uc.user_id === selectedUserId &&
+          uc.company_id === companyId &&
+          uc.status === 1
+      );
+
+      // ถ้าผู้ใช้ที่เลือกไม่อยู่ในบริษัทใหม่ ให้ล้างการเลือกผู้ใช้
+      if (!userBelongsToCompany) {
+        setSelectedUserId(null);
+        setUserSearchTerm('');
+      }
+    }
+
+    setShowUserDropdown(false);
+
+    // Load users for selected company
+    loadUsersByCompany(companyId);
+  };
+
+  // Handle user selection
+  const handleUserSelect = (userId: number) => {
+    console.log('User selected:', userId);
+    setSelectedUserId(userId);
+
+    // แสดงชื่อผู้ใช้ที่เลือกในช่อง input (ใช้ allUsers เพื่อให้หาเจอแน่นอน)
+    const selectedUser = allUsers.find((u) => u.user_id === userId);
+    setUserSearchTerm(selectedUser ? selectedUser.fullname : '');
+    setShowUserDropdown(false);
+
+    // Auto-select company based on user's primary company
+    // Find user's primary company from usersCompany data
+    const userCompanyData = usersCompany.find(
+      (uc) => uc.user_id === userId && uc.status === 1 && uc.is_primary === true
+    );
+
+    if (userCompanyData) {
+      setSelectedCompanyId(userCompanyData.company_id);
+
+      // แสดงชื่อบริษัทที่เลือกอัตโนมัติ
+      const autoSelectedCompany = availableCompanies.find(
+        (c) => c.id === userCompanyData.company_id
+      );
+
+      if (autoSelectedCompany) {
+        setCompanySearchTerm(autoSelectedCompany.name);
+      } else {
+        // ถ้าไม่เจอในรายการ อาจเป็นเพราะข้อมูลยังไม่โหลดเสร็จ
+        // ใช้ฟังก์ชันหาชื่อบริษัทแทน
+        setCompanySearchTerm(getCompanyNameById(userCompanyData.company_id));
+      }
+
+      setShowCompanyDropdown(false);
+
+      // Also load users for this company to populate the dropdown
+      loadUsersByCompany(userCompanyData.company_id);
+    } else {
+      // ถ้าไม่มีบริษัทหลัก ให้ล้างการเลือกบริษัท
+      setSelectedCompanyId(null);
+      setCompanySearchTerm('');
+    }
+  };
+
+  // ฟังก์ชันหาชื่อผู้ใช้จาก ID
+  const getUserNameById = (userId: number): string => {
+    const user = allUsers.find((u) => u.user_id === userId);
+    return user ? user.fullname : `ผู้ใช้ ID: ${userId}`;
+  };
+
+  // ฟังก์ชันหาชื่อบริษัทจาก ID
+  const getCompanyNameById = (companyId: number): string => {
+    const company = availableCompanies.find((c) => c.id === companyId);
+    return company ? company.name : `บริษัท ID: ${companyId}`;
+  };
+
+  // ฟังก์ชันกรองบริษัทตามคำค้นหา
+  const getFilteredCompanies = () => {
+    // กรองเฉพาะบริษัทที่ status = 1
+    const activeCompanies = availableCompanies.filter(
+      (company) => company.status === 1
+    );
+
+    if (!companySearchTerm.trim()) {
+      return activeCompanies;
+    }
+    return activeCompanies.filter((company) =>
+      company.name.toLowerCase().includes(companySearchTerm.toLowerCase())
+    );
+  };
+
+  // ฟังก์ชันจัดการการพิมพ์ค้นหาบริษัท
+  const handleCompanySearch = (value: string) => {
+    setCompanySearchTerm(value);
+    setShowCompanyDropdown(true);
+
+    // ถ้าไม่มีข้อความ ให้รีเซ็ตการเลือก
+    if (!value.trim()) {
+      setSelectedCompanyId(null);
+      setSelectedUserId(null); // ล้างการเลือกผู้ใช้ด้วย
+      setUserSearchTerm(''); // ล้างข้อความค้นหาผู้ใช้
+      setCompanyUsers([]); // ล้างผู้ใช้ของบริษัท
+    }
+  };
+
+  // ฟังก์ชันกรองผู้ใช้ตามคำค้นหา
+  const getFilteredUsers = () => {
+    // ถ้าเลือกบริษัทแล้ว ให้แสดงเฉพาะผู้ใช้ในบริษัทนั้น
+    // ถ้ายังไม่เลือกบริษัท ให้แสดงผู้ใช้ทั้งหมด
+    const usersToFilter = selectedCompanyId ? companyUsers : allUsers;
+
+    if (!userSearchTerm.trim()) {
+      return usersToFilter;
+    }
+    return usersToFilter.filter(
+      (user) =>
+        user.fullname.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+        user.username.toLowerCase().includes(userSearchTerm.toLowerCase())
+    );
+  };
+
+  // ฟังก์ชันจัดการการพิมพ์ค้นหาผู้ใช้
+  const handleUserSearch = (value: string) => {
+    setUserSearchTerm(value);
+    setShowUserDropdown(true);
+
+    // ถ้าไม่มีข้อความ ให้รีเซ็ตการเลือก
+    if (!value.trim()) {
+      setSelectedUserId(null);
+
+      // ถ้าไม่มีบริษัทที่เลือกไว้จากการพิมพ์ค้นหา (companySearchTerm ว่าง)
+      // แสดงว่าบริษัทถูกเลือกอัตโนมัติจากผู้ใช้ ให้ล้างบริษัทด้วย
+      if (!companySearchTerm.trim()) {
+        setSelectedCompanyId(null);
+        setCompanyUsers([]);
+      }
+    }
+  };
+
+  // ฟังก์ชันล้างการเลือกบริษัทและผู้ใช้
+  const handleClearSelection = () => {
+    setSelectedCompanyId(null);
+    setSelectedUserId(null);
+    setCompanySearchTerm('');
+    setUserSearchTerm('');
+    setCompanyUsers([]);
+    setShowCompanyDropdown(false);
+    setShowUserDropdown(false);
   };
 
   const handleInputChange = (field: keyof Auction, value: any) => {
@@ -189,23 +630,56 @@ export default function AuctionFormPage() {
       }
 
       // เตรียมข้อมูลสำหรับบันทึก
-      const saveData = {
-        ...formData,
-        updated_dt: getCurrentDateTime(),
-      };
+      let response;
 
-      if (!isEdit) {
-        // สำหรับเพิ่มใหม่ ให้สร้าง auction_id ใหม่
-        const maxId = Math.max(...dataAuction.map((a) => a.auction_id), 0);
-        saveData.auction_id = maxId + 1;
-        saveData.created_dt = getCurrentDateTime();
+      if (isEdit) {
+        // อัพเดทข้อมูลที่มีอยู่
+        const updateData: UpdateAuctionRequest = {
+          auction_id: formData.auction_id,
+          name: formData.name,
+          auction_type_id: formData.auction_type_id,
+          start_dt: formData.start_dt,
+          end_dt: formData.end_dt,
+          reserve_price: formData.reserve_price,
+          currency: formData.currency,
+          status: formData.status,
+          remark: formData.remark,
+        };
+
+        response = await auctionsService.updateAuction(
+          formData.auction_id,
+          updateData
+        );
+      } else {
+        // สร้างใหม่
+        const createData: CreateAuctionRequest = {
+          name: formData.name,
+          auction_type_id: formData.auction_type_id,
+          start_dt: formData.start_dt,
+          end_dt: formData.end_dt,
+          reserve_price: formData.reserve_price,
+          currency: formData.currency,
+          status: formData.status,
+          remark: formData.remark,
+        };
+
+        response = await auctionsService.createAuction(createData);
       }
 
-      // จำลองการบันทึกข้อมูล (ในการใช้งานจริงจะเรียก API)
-      console.log(isEdit ? 'Updating auction:' : 'Creating auction:', saveData);
+      if (!response.success) {
+        alert(response.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+        return;
+      }
 
-      // จำลอง API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // จัดการข้อมูลผู้เข้าร่วมประมูล (จะต้องได้ auction_id จาก response)
+      const auctionIdForParticipants = isEdit
+        ? formData.auction_id
+        : response.data?.auction_id || formData.auction_id;
+
+      await saveAuctionParticipants(
+        auctionIdForParticipants,
+        selectedParticipants
+      );
 
       alert(
         isEdit ? 'แก้ไขข้อมูลตลาดเรียบร้อยแล้ว' : 'เพิ่มตลาดใหม่เรียบร้อยแล้ว'
@@ -293,13 +767,17 @@ export default function AuctionFormPage() {
     );
   }
 
-  if (isLoading && isEdit) {
+  if ((isLoading && isEdit) || loadingAuctionTypes) {
     return (
       <Container className="py-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...</p>
+            <p className="text-gray-600">
+              {isEdit
+                ? 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...'
+                : 'กำลังโหลดข้อมูลประเภทประมูล...'}
+            </p>
           </div>
         </div>
       </Container>
@@ -307,19 +785,18 @@ export default function AuctionFormPage() {
   }
 
   return (
-    <Container className="py-6">
+    <Container className="py-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
+              <div className="bg-blue-50 p-3 rounded-xl">
                 <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
                   className="w-8 h-8 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
                   {isEdit ? (
                     <path
@@ -428,12 +905,12 @@ export default function AuctionFormPage() {
                 </div>
               </div>
 
-              {/* หมวดหมู่ */}
+              {/* ประเภท */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center gap-2">
                     <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-                    หมวดหมู่ <span className="text-red-500">*</span>
+                    ประเภท <span className="text-red-500">*</span>
                   </div>
                 </label>
                 <div className="relative">
@@ -447,17 +924,21 @@ export default function AuctionFormPage() {
                     }
                     className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                     required
+                    disabled={loadingAuctionTypes}
                   >
-                    {dataAuction_Type
-                      .filter((type) => type.status === 1)
-                      .map((type) => (
-                        <option
-                          key={type.auction_type_id}
-                          value={type.auction_type_id}
-                        >
-                          {type.name}
-                        </option>
-                      ))}
+                    {loadingAuctionTypes ? (
+                      <option disabled>กำลังโหลดข้อมูล...</option>
+                    ) : auctionTypes.length === 0 ? (
+                      <option disabled>ไม่พบข้อมูลประเภทประมูล</option>
+                    ) : (
+                      auctionTypes
+                        .filter((type) => type.status === 1)
+                        .map((type) => (
+                          <option key={type.id} value={type.id}>
+                            {type.name}
+                          </option>
+                        ))
+                    )}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg
@@ -606,7 +1087,7 @@ export default function AuctionFormPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0118 0Z"
                       />
                     </svg>
                     ราคาประกัน <span className="text-red-500">*</span>
@@ -640,7 +1121,7 @@ export default function AuctionFormPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                        d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0118 0Z"
                       />
                     </svg>
                     หน่วยเงิน <span className="text-red-500">*</span>
@@ -678,6 +1159,259 @@ export default function AuctionFormPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Participant Selection */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <AucUserIcon className="w-5 h-5 text-blue-600" />
+                ผู้เข้าร่วมประมูล
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSelectedParticipants([])}
+                className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+              >
+                ยกเลิกทั้งหมด
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Company and User Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Company Selection */}
+                <div className="company-dropdown-container">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    เลือกบริษัท
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={companySearchTerm}
+                      onChange={(e) => handleCompanySearch(e.target.value)}
+                      onFocus={() => setShowCompanyDropdown(true)}
+                      disabled={loadingCompanies}
+                      placeholder={
+                        loadingCompanies
+                          ? 'กำลังโหลด...'
+                          : 'พิมพ์หรือเลือกบริษัท'
+                      }
+                      className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+
+                    {/* Dropdown List */}
+                    {showCompanyDropdown && !loadingCompanies && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {getFilteredCompanies().length > 0 ? (
+                          getFilteredCompanies().map((company) => (
+                            <button
+                              key={company.id}
+                              type="button"
+                              onClick={() => handleCompanySelect(company.id)}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
+                            >
+                              {company.name}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-gray-500">
+                            ไม่พบบริษัทที่ค้นหา
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* User Selection */}
+                <div className="user-dropdown-container">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    เลือกผู้ใช้
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={userSearchTerm}
+                      onChange={(e) => handleUserSearch(e.target.value)}
+                      onFocus={() => setShowUserDropdown(true)}
+                      disabled={loadingUsers}
+                      placeholder={
+                        loadingUsers ? 'กำลังโหลด...' : 'พิมพ์หรือเลือกผู้ใช้'
+                      }
+                      className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg
+                        className="w-4 h-4 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+
+                    {/* Dropdown List */}
+                    {showUserDropdown && !loadingUsers && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        {getFilteredUsers().length > 0 ? (
+                          getFilteredUsers().map((user) => (
+                            <button
+                              key={user.user_id}
+                              type="button"
+                              onClick={() => handleUserSelect(user.user_id)}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 focus:bg-gray-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">
+                                {user.fullname}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                @{user.username}
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-gray-500">
+                            ไม่พบผู้ใช้ที่ค้นหา
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Add Button */}
+                <div className="flex items-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    disabled={!selectedCompanyId && !selectedUserId}
+                    className="px-4 py-2 bg-gray-500 text-white text-sm font-medium rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                      />
+                    </svg>
+                    ล้าง
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        selectedUserId &&
+                        selectedCompanyId &&
+                        !selectedParticipants.includes(selectedUserId)
+                      ) {
+                        setSelectedParticipants((prev) => [
+                          ...prev,
+                          selectedUserId,
+                        ]);
+                      }
+                    }}
+                    disabled={
+                      !selectedUserId ||
+                      !selectedCompanyId ||
+                      selectedParticipants.includes(selectedUserId)
+                    }
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    เพิ่มผู้เข้าร่วม
+                  </button>
+                </div>
+              </div>
+
+              {/* Selected Participants Display */}
+              {selectedParticipants.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-blue-900 mb-3">
+                    ผู้เข้าร่วมที่เลือก ({selectedParticipants.length} คน)
+                  </h3>
+                  <div className="space-y-2">
+                    {selectedParticipants.map((userId) => (
+                      <div
+                        key={userId}
+                        className="flex items-center justify-between bg-white border border-blue-200 rounded-lg p-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <AucUserIcon className="w-4 h-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {getUserNameById(userId)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              ID: {userId}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedParticipants((prev) =>
+                              prev.filter((id) => id !== userId)
+                            );
+                          }}
+                          className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Loading States */}
+              {(loadingCompanies || loadingUsers) && (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">
+                    {loadingCompanies
+                      ? 'กำลังโหลดข้อมูลบริษัท...'
+                      : 'กำลังโหลดข้อมูลผู้ใช้...'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
