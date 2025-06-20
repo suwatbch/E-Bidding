@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Container from '@/app/components/ui/Container';
 import ThaiDatePicker from '@/app/components/ui/DatePicker';
@@ -187,12 +187,22 @@ export default function AuctionFormPage() {
     initializeData();
   }, [isEdit, auctionId]);
 
+  // Flag เพื่อป้องกันการรีเซ็ตผู้ใช้เมื่อ auto-select บริษัท
+  const isAutoSelectingRef = useRef(false);
+
   // เมื่อเลือกบริษัท ให้โหลดผู้ใช้ในบริษัทนั้น
   useEffect(() => {
     if (selectedCompanyId) {
       loadUsersByCompany(selectedCompanyId);
-      setSelectedUserId(null); // รีเซ็ตการเลือกผู้ใช้
-      setUserSearchTerm(''); // รีเซ็ตการค้นหาผู้ใช้
+
+      // รีเซ็ตการเลือกผู้ใช้เฉพาะเมื่อไม่ใช่ auto-select
+      if (!isAutoSelectingRef.current) {
+        setSelectedUserId(null);
+        setUserSearchTerm('');
+      }
+
+      // รีเซ็ต flag หลังจากประมวลผลเสร็จ
+      isAutoSelectingRef.current = false;
     } else {
       setAvailableUsers([]);
       setSelectedUserId(null);
@@ -434,6 +444,7 @@ export default function AuctionFormPage() {
   // Handle company selection
   const handleCompanySelect = (companyId: number) => {
     console.log('Company selected:', companyId);
+    isAutoSelectingRef.current = false; // ล้าง flag เพราะเป็นการเลือกด้วยตนเอง
     setSelectedCompanyId(companyId);
 
     // แสดงชื่อบริษัทที่เลือกในช่อง input
@@ -473,14 +484,27 @@ export default function AuctionFormPage() {
     setUserSearchTerm(selectedUser ? selectedUser.fullname : '');
     setShowUserDropdown(false);
 
-    // Auto-select company based on user's primary company
-    // Find user's primary company from usersCompany data
-    const userCompanyData = usersCompany.find(
+    // Auto-select company based on user's company relationship
+    // Find user's company from usersCompany data
+    // Try to find primary company first, if not found, use any active company
+    let userCompanyData = usersCompany.find(
       (uc) => uc.user_id === userId && uc.status === 1 && uc.is_primary === true
     );
 
+    // If no primary company found, get the first active company for this user
+    if (!userCompanyData) {
+      userCompanyData = usersCompany.find(
+        (uc) => uc.user_id === userId && uc.status === 1
+      );
+    }
+
+    console.log('🔍 User company data found:', userCompanyData);
+    console.log('📊 All usersCompany data:', usersCompany);
+    console.log('👤 Selected user ID:', userId);
+
     if (userCompanyData) {
-      setSelectedCompanyId(userCompanyData.company_id);
+      // ตั้ง flag ให้รู้ว่าเป็นการ auto-select บริษัท
+      isAutoSelectingRef.current = true;
 
       // แสดงชื่อบริษัทที่เลือกอัตโนมัติ
       const autoSelectedCompany = availableCompanies.find(
@@ -489,18 +513,33 @@ export default function AuctionFormPage() {
 
       if (autoSelectedCompany) {
         setCompanySearchTerm(autoSelectedCompany.name);
+        console.log('✅ Auto-selected company:', autoSelectedCompany.name);
       } else {
         // ถ้าไม่เจอในรายการ อาจเป็นเพราะข้อมูลยังไม่โหลดเสร็จ
         // ใช้ฟังก์ชันหาชื่อบริษัทแทน
-        setCompanySearchTerm(getCompanyNameById(userCompanyData.company_id));
+        const companyName = getCompanyNameById(userCompanyData.company_id);
+        setCompanySearchTerm(companyName);
+        console.log(
+          '⚠️ Company not found in availableCompanies, using fallback:',
+          companyName
+        );
       }
 
       setShowCompanyDropdown(false);
 
-      // Also load users for this company to populate the dropdown
+      // โหลดผู้ใช้ในบริษัทนั้นโดยไม่ผ่าน useEffect
       loadUsersByCompany(userCompanyData.company_id);
+
+      // ตั้งค่า selectedCompanyId หลังจากโหลดข้อมูลเสร็จแล้ว
+      setSelectedCompanyId(userCompanyData.company_id);
+
+      // รีเซ็ต flag หลังจากทำงานเสร็จ (ไม่จำเป็นเพราะ useEffect จะรีเซ็ตให้)
+      // setTimeout(() => {
+      //   isAutoSelectingRef.current = false;
+      // }, 100);
     } else {
-      // ถ้าไม่มีบริษัทหลัก ให้ล้างการเลือกบริษัท
+      // ถ้าไม่มีบริษัทที่เชื่อมโยง ให้ล้างการเลือกบริษัท
+      console.log('❌ No company relationship found for user:', userId);
       setSelectedCompanyId(null);
       setCompanySearchTerm('');
     }
@@ -583,6 +622,7 @@ export default function AuctionFormPage() {
 
   // ฟังก์ชันล้างการเลือกบริษัทและผู้ใช้
   const handleClearSelection = () => {
+    isAutoSelectingRef.current = false; // ล้าง flag
     setSelectedCompanyId(null);
     setSelectedUserId(null);
     setCompanySearchTerm('');
