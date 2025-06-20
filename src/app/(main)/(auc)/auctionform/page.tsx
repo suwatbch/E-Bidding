@@ -876,8 +876,8 @@ export default function AuctionFormPage() {
   }
 
   return (
-    <Container className="py-8">
-      <div className="max-w-4xl mx-auto">
+    <Container>
+      <div className="py-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex items-start justify-between">
