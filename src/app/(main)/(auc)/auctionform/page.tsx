@@ -969,9 +969,14 @@ export default function AuctionFormPage() {
               {/* ประเภท */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-                    ประเภท
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <AucCategoryIcon className="w-4 h-4 text-gray-500" />
+                      ประเภท
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-blue-500 cursor-pointer hover:text-blue-700">
+                      เพิ่มประเภท
+                    </div>
                   </div>
                 </label>
                 <div className="relative">
@@ -1060,16 +1065,9 @@ export default function AuctionFormPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Date & Time */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <AucStartTimeIcon className="w-5 h-5 text-blue-600" />
-              วันเวลา
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Date & Time */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               {/* วันที่เริ่มต้น */}
               <div className="relative w-full">
                 <div className="w-full">
@@ -1110,29 +1108,9 @@ export default function AuctionFormPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Pricing */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-5 h-5 text-blue-600"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 15.75V18a.75.75 0 01-.75.75h-9a.75.75 0 01-.75-.75V9A.75.75 0 016 8.25h2.25M15.75 15.75V12A2.25 2.25 0 0013.5 9.75h-6.75M15.75 15.75L19.5 12M19.5 12l1.5-1.5M19.5 12l1.5 1.5M10.5 9.75L8.25 12M8.25 12L6.75 10.5M8.25 12L6.75 13.5"
-                />
-              </svg>
-              ราคาและเงินตรา
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Pricing */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
               {/* ราคาประกัน */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
