@@ -1379,6 +1379,9 @@ export default function AuctionFormPage() {
                           ...prev,
                           selectedUserId,
                         ]);
+
+                        // เรียกฟังก์ชันล้างการเลือกหลังจากเพิ่มผู้เข้าร่วมเสร็จ
+                        handleClearSelection();
                       }
                     }}
                     disabled={
