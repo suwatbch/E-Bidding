@@ -935,7 +935,7 @@ export default function AuctionFormPage() {
                         d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.001 3.001 0 01-.621-1.72c0-.966.459-1.82 1.17-2.36a3.001 3.001 0 012.7 0 2.974 2.974 0 011.17 2.36 3.001 3.001 0 01-.621 1.72m12.96 0a3.001 3.001 0 01-.621-1.72c0-.966.459-1.82 1.17-2.36a3.001 3.001 0 012.7 0 2.974 2.974 0 011.17 2.36 3.001 3.001 0 01-.621 1.72m-2.35 0a3.001 3.001 0 01-1.85-.875A3.001 3.001 0 0114.25 16.5a3.001 3.001 0 01-2.4 1.125c-.84 0-1.59-.327-2.15-.875a3.001 3.001 0 01-2.4 1.125"
                       />
                     </svg>
-                    ชื่อตลาด <span className="text-red-500">*</span>
+                    ชื่อตลาด
                   </div>
                 </label>
                 <div className="relative">
@@ -971,7 +971,7 @@ export default function AuctionFormPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center gap-2">
                     <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-                    ประเภท <span className="text-red-500">*</span>
+                    ประเภท
                   </div>
                 </label>
                 <div className="relative">
@@ -1024,7 +1024,7 @@ export default function AuctionFormPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <div className="flex items-center gap-2">
                     <AucOfferIcon className="w-4 h-4 text-gray-500" />
-                    สถานะ <span className="text-red-500">*</span>
+                    สถานะ
                   </div>
                 </label>
                 <div className="relative">
@@ -1151,7 +1151,7 @@ export default function AuctionFormPage() {
                         d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0118 0Z"
                       />
                     </svg>
-                    ราคาประกัน <span className="text-red-500">*</span>
+                    ราคาประกัน
                   </div>
                 </label>
                 <input
@@ -1185,7 +1185,7 @@ export default function AuctionFormPage() {
                         d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0118 0Z"
                       />
                     </svg>
-                    หน่วยเงิน <span className="text-red-500">*</span>
+                    หน่วยเงิน
                   </div>
                 </label>
                 <div className="relative">
