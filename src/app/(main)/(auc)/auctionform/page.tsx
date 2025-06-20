@@ -557,6 +557,27 @@ export default function AuctionFormPage() {
     return company ? company.name : `บริษัท ID: ${companyId}`;
   };
 
+  // ฟังก์ชันหาชื่อบริษัทของผู้ใช้จาก user ID
+  const getUserCompanyNameById = (userId: number): string => {
+    // หาความสัมพันธ์ user-company ของผู้ใช้นี้
+    const userCompanyData =
+      usersCompany.find(
+        (uc) =>
+          uc.user_id === userId && uc.status === 1 && uc.is_primary === true
+      ) || usersCompany.find((uc) => uc.user_id === userId && uc.status === 1);
+
+    if (userCompanyData) {
+      const company = availableCompanies.find(
+        (c) => c.id === userCompanyData.company_id
+      );
+      return company
+        ? company.name
+        : `บริษัท ID: ${userCompanyData.company_id}`;
+    }
+
+    return 'ไม่พบข้อมูลบริษัท';
+  };
+
   // ฟังก์ชันกรองบริษัทตามคำค้นหา
   const getFilteredCompanies = () => {
     // กรองเฉพาะบริษัทที่ status = 1
@@ -1417,7 +1438,7 @@ export default function AuctionFormPage() {
                               {getUserNameById(userId)}
                             </div>
                             <div className="text-xs text-gray-500">
-                              ID: {userId}
+                              {getUserCompanyNameById(userId)}
                             </div>
                           </div>
                         </div>
