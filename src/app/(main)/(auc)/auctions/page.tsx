@@ -228,21 +228,21 @@ export default function AuctionsPage() {
           auctionsService.getAuctionParticipants(),
         ]);
 
-      if (auctionsResult.success) {
+      if (auctionsResult.success && auctionsResult.message === null) {
         setAuctions(auctionsResult.data || []);
       } else {
         alert(auctionsResult.message);
         setAuctions([]);
       }
 
-      if (typesResult.success) {
+      if (typesResult.success && typesResult.message === null) {
         setAuctionTypes(typesResult.data || []);
       } else {
         alert(typesResult.message);
         setAuctionTypes([]);
       }
 
-      if (participantsResult.success) {
+      if (participantsResult.success && participantsResult.message === null) {
         setAuctionParticipants(participantsResult.data || []);
       } else {
         alert(participantsResult.message);

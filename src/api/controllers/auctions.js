@@ -67,10 +67,9 @@ router.get('/participants', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลผู้เข้าร่วมประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -108,10 +107,9 @@ router.get('/', async (req, res) => {
         total: result.data.length,
       });
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {
@@ -151,10 +149,9 @@ router.get('/:id', async (req, res) => {
         });
       }
     } else {
-      res.status(500).json({
-        success: false,
-        message: 'เกิดข้อผิดพลาดในการดึงข้อมูลประมูล',
-        error: result.error,
+      res.status(200).json({
+        success: true,
+        message: result.error,
       });
     }
   } catch (error) {

@@ -154,7 +154,7 @@ export default function AuctionFormPage() {
     // ตรวจสอบว่า ID มีอยู่ในระบบหรือไม่
     try {
       const response = await auctionsService.getAuctionById(numericId);
-      if (!response.success) {
+      if (response.message !== null) {
         return null;
       }
       return numericId;
@@ -253,7 +253,7 @@ export default function AuctionFormPage() {
       // ดึงข้อมูลจาก API ตาม auction_id
       const response = await auctionsService.getAuctionById(id);
 
-      if (!response.success) {
+      if (response.message !== null) {
         setHasPermission(false);
         setPermissionError(response.message || 'ไม่พบข้อมูลตลาด');
         return;
@@ -303,11 +303,10 @@ export default function AuctionFormPage() {
       setLoadingAuctionTypes(true);
       const response = await auctionTypeService.getActiveAuctionTypes();
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         setAuctionTypes(response.data);
       } else {
-        console.error('Error loading auction types:', response.message);
-        // fallback to empty array or show error message
+        alert(response.message);
         setAuctionTypes([]);
       }
     } catch (error) {
@@ -324,14 +323,14 @@ export default function AuctionFormPage() {
 
       const response = await companyService.getAllCompanies();
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         // กรองเฉพาะบริษัทที่ status = 1 (เปิดใช้งาน)
         const activeCompanies = response.data.filter(
           (company: Company) => company.status === 1
         );
         setAvailableCompanies(activeCompanies);
       } else {
-        console.error('Failed to get companies:', response.message);
+        alert(response.message);
         setAvailableCompanies([]);
       }
     } catch (error) {
@@ -346,13 +345,13 @@ export default function AuctionFormPage() {
     try {
       const response = await userCompanyService.getAllUserCompanies();
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         const activeUsersCompany = response.data.filter(
           (uc: UserCompany) => uc.status === 1
         );
         setUsersCompany(activeUsersCompany);
       } else {
-        console.error('Failed to get users-company:', response.message);
+        alert(response.message);
         setUsersCompany([]);
       }
     } catch (error) {
@@ -365,14 +364,14 @@ export default function AuctionFormPage() {
     try {
       const response = await userService.getAllUsers();
 
-      if (response.success) {
+      if (response.success && response.message === null) {
         const activeUsers = response.data.filter(
           (user: User) => user.status === 1 && !user.is_locked
         );
         setAllUsers(activeUsers);
         setAvailableUsers(activeUsers); // ใช้เป็นค่าเริ่มต้นสำหรับ dropdown
       } else {
-        console.error('Failed to get all users:', response.message);
+        alert(response.message);
         setAllUsers([]);
         setAvailableUsers([]);
       }
@@ -688,8 +687,8 @@ export default function AuctionFormPage() {
         response = await auctionsService.createAuction(createData);
       }
 
-      if (!response.success) {
-        alert(response.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      if (response.message !== null) {
+        alert(response.message);
         return;
       }
 
@@ -793,7 +792,7 @@ export default function AuctionFormPage() {
 
       const result = await auctionTypeService.createAuctionType(requestData);
 
-      if (result.success) {
+      if (result.success && result.message === null) {
         alert('เพิ่มประเภทการประมูลสำเร็จ');
         closeAuctionTypeModal();
         // โหลดประเภทการประมูลใหม่
@@ -803,7 +802,7 @@ export default function AuctionFormPage() {
           handleInputChange('auction_type_id', result.data.id);
         }
       } else {
-        alert(result.message || 'เกิดข้อผิดพลาดในการเพิ่มประเภทการประมูล');
+        alert(result.message);
       }
     } catch (error: any) {
       console.error('Error creating auction type:', error);
