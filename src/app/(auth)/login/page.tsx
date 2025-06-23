@@ -86,7 +86,6 @@ export default function LoginPage() {
 
       if (returnUrlParam) {
         setReturnUrl(returnUrlParam);
-        console.log('🔄 Return URL set to:', returnUrlParam);
       }
 
       // แสดงข้อความเมื่อ token หมดอายุ
