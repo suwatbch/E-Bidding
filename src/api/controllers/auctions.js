@@ -193,10 +193,10 @@ router.post('/update/:id', async (req, res) => {
     // ตรวจสอบข้อมูลที่จำเป็น
     if (
       !name ||
-      !auction_type_id ||
       !start_dt ||
       !end_dt ||
-      !reserve_price ||
+      reserve_price === undefined ||
+      reserve_price === null ||
       !currency
     ) {
       return res.status(200).json({
@@ -207,7 +207,7 @@ router.post('/update/:id', async (req, res) => {
 
     const result = await updateAuction(auctionId, {
       name,
-      auction_type_id,
+      auction_type_id: auction_type_id || 0, // ให้เป็น 0 ถ้าไม่มีการเลือก
       start_dt,
       end_dt,
       reserve_price,
@@ -253,10 +253,10 @@ router.post('/', async (req, res) => {
     // ตรวจสอบข้อมูลที่จำเป็น
     if (
       !name ||
-      !auction_type_id ||
       !start_dt ||
       !end_dt ||
-      !reserve_price ||
+      reserve_price === undefined ||
+      reserve_price === null ||
       !currency
     ) {
       return res.status(200).json({
@@ -267,7 +267,7 @@ router.post('/', async (req, res) => {
 
     const result = await createAuction({
       name,
-      auction_type_id,
+      auction_type_id: auction_type_id || 0, // ให้เป็น 0 ถ้าไม่มีการเลือก
       start_dt,
       end_dt,
       reserve_price,
