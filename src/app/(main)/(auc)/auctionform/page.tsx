@@ -49,7 +49,7 @@ export default function AuctionFormPage() {
   const [formData, setFormData] = useState<Auction>({
     auction_id: 0,
     name: '',
-    auction_type_id: 1,
+    auction_type_id: 0,
     start_dt: getCurrentDateTime(),
     end_dt: getCurrentDateTime(),
     reserve_price: 0,
