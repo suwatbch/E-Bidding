@@ -1243,7 +1243,10 @@ export default function AuctionFormPage() {
               </h2>
               <button
                 type="button"
-                onClick={() => setSelectedParticipants([])}
+                onClick={() => {
+                  setSelectedParticipants([]);
+                  handleClearSelection();
+                }}
                 className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
               >
                 ยกเลิกทั้งหมด
