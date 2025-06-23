@@ -188,6 +188,140 @@ export const formatTimeRemaining = (
 };
 
 // =============================================================================
+// USER & COMPANY UTILITIES
+// =============================================================================
+
+/**
+ * หาชื่อผู้ใช้จาก ID
+ * @param userId - ID ของผู้ใช้
+ * @param users - Array ของผู้ใช้ทั้งหมด
+ * @returns string ชื่อผู้ใช้หรือ 'ไม่พบข้อมูล'
+ */
+export const getUserNameById = (userId: number, users: any[]): string => {
+  const user = users.find((u) => u.user_id === userId);
+  return user ? `${user.first_name} ${user.last_name}` : 'ไม่พบข้อมูล';
+};
+
+/**
+ * หาชื่อบริษัทจาก ID
+ * @param companyId - ID ของบริษัท
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns string ชื่อบริษัทหรือ 'ไม่พบข้อมูล'
+ */
+export const getCompanyNameById = (
+  companyId: number,
+  companies: any[]
+): string => {
+  const company = companies.find((c) => c.company_id === companyId);
+  return company ? company.company_name : 'ไม่พบข้อมูล';
+};
+
+/**
+ * หาชื่อบริษัทของผู้ใช้จาก user-company relationships
+ * @param userId - ID ของผู้ใช้
+ * @param usersCompany - Array ของ user-company relationships
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns string ชื่อบริษัทหรือ 'ไม่ระบุ'
+ */
+export const getUserCompanyNameById = (
+  userId: number,
+  usersCompany: any[],
+  companies: any[]
+): string => {
+  const userCompanyRelation = usersCompany.find((uc) => uc.user_id === userId);
+  if (userCompanyRelation) {
+    return getCompanyNameById(userCompanyRelation.company_id, companies);
+  }
+  return 'ไม่ระบุ';
+};
+
+/**
+ * กรองบริษัทตามคำค้นหา
+ * @param companies - Array ของบริษัททั้งหมด
+ * @param searchTerm - คำค้นหา
+ * @returns Array ของบริษัทที่กรองแล้ว
+ */
+export const filterCompaniesBySearch = (
+  companies: any[],
+  searchTerm: string
+): any[] => {
+  if (!searchTerm.trim()) return companies;
+
+  const searchLower = searchTerm.toLowerCase();
+  return companies.filter((company) =>
+    company.company_name.toLowerCase().includes(searchLower)
+  );
+};
+
+/**
+ * กรองผู้ใช้ตามคำค้นหา
+ * @param users - Array ของผู้ใช้ทั้งหมด
+ * @param searchTerm - คำค้นหา
+ * @returns Array ของผู้ใช้ที่กรองแล้ว
+ */
+export const filterUsersBySearch = (
+  users: any[],
+  searchTerm: string
+): any[] => {
+  if (!searchTerm.trim()) return users;
+
+  const searchLower = searchTerm.toLowerCase();
+  return users.filter((user) => {
+    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+    return (
+      fullName.includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower)
+    );
+  });
+};
+
+/**
+ * หาบริษัทหลักของผู้ใช้ (is_primary = true)
+ * @param userId - ID ของผู้ใช้
+ * @param usersCompany - Array ของ user-company relationships
+ * @returns number | null ID ของบริษัทหลักหรือ null
+ */
+export const getPrimaryCompanyIdByUserId = (
+  userId: number,
+  usersCompany: any[]
+): number | null => {
+  const primaryRelation = usersCompany.find(
+    (uc) => uc.user_id === userId && uc.is_primary === true
+  );
+  return primaryRelation ? primaryRelation.company_id : null;
+};
+
+/**
+ * หาบริษัททั้งหมดของผู้ใช้
+ * @param userId - ID ของผู้ใช้
+ * @param usersCompany - Array ของ user-company relationships
+ * @returns Array ของ company IDs
+ */
+export const getAllCompanyIdsByUserId = (
+  userId: number,
+  usersCompany: any[]
+): number[] => {
+  return usersCompany
+    .filter((uc) => uc.user_id === userId)
+    .map((uc) => uc.company_id);
+};
+
+/**
+ * หาผู้ใช้ในบริษัทที่ระบุ
+ * @param companyId - ID ของบริษัท
+ * @param usersCompany - Array ของ user-company relationships
+ * @returns Array ของ user IDs
+ */
+export const getUserIdsByCompanyId = (
+  companyId: number,
+  usersCompany: any[]
+): number[] => {
+  return usersCompany
+    .filter((uc) => uc.company_id === companyId)
+    .map((uc) => uc.user_id);
+};
+
+// =============================================================================
 // PARTICIPANT UTILITIES
 // =============================================================================
 
@@ -304,6 +438,84 @@ export const getConnectionStatusText = (isConnected: boolean): string => {
 // =============================================================================
 // AUCTION UTILITIES
 // =============================================================================
+
+/**
+ * ฟังก์ชันสำหรับแสดงผลราคาขณะ focus (ไม่มีคอมม่า)
+ * @param value - ราคาในรูปแบบ number
+ * @returns string ราคาในรูปแบบ input (ไม่มีคอมม่า)
+ */
+export const formatPriceForInput = (value: number): string => {
+  if (value === 0) return '0.00';
+  return value.toString();
+};
+
+/**
+ * ฟังก์ชันสำหรับแสดงผลราคาขณะ blur (มีคอมม่า)
+ * @param value - ราคาในรูปแบบ number
+ * @returns string ราคาในรูปแบบ display (มีคอมม่า)
+ */
+export const formatPriceForDisplay = (value: number): string => {
+  if (value === 0) return '0.00';
+  return new Intl.NumberFormat('th-TH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+/**
+ * ฟังก์ชันจัดการ focus ราคา (ใช้ร่วมกันได้)
+ * @param currentValue - ค่าปัจจุบัน (string หรือ number)
+ * @param updateFunction - ฟังก์ชันสำหรับอัปเดตค่า
+ */
+export const handlePriceFocus = (
+  currentValue: string | number,
+  updateFunction: (formattedValue: string) => void
+): void => {
+  const numericValue =
+    typeof currentValue === 'string'
+      ? parseFloat(currentValue.replace(/,/g, '')) || 0
+      : currentValue || 0;
+  const formattedValue = formatPriceForInput(numericValue);
+  updateFunction(formattedValue);
+};
+
+/**
+ * ฟังก์ชันจัดการ blur ราคา (ใช้ร่วมกันได้)
+ * @param currentValue - ค่าปัจจุบันในรูปแบบ string
+ * @param updateFunction - ฟังก์ชันสำหรับอัปเดตค่า
+ */
+export const handlePriceBlur = (
+  currentValue: string,
+  updateFunction: (formattedValue: string) => void
+): void => {
+  const numericValue = parseFloat(currentValue.replace(/,/g, '')) || 0;
+  const formattedValue = formatPriceForDisplay(numericValue);
+  updateFunction(formattedValue);
+};
+
+/**
+ * ฟังก์ชันจัดการการเปลี่ยนแปลงราคา (รองรับจำกัดทศนิยม 2 ตัว)
+ * @param value - ค่าที่ผู้ใช้พิมพ์
+ * @returns string ค่าที่ผ่านการจัดรูปแบบ
+ */
+export const handlePriceChange = (value: string): string => {
+  // อนุญาตให้มีตัวเลขและจุดทศนิยมได้
+  const cleanValue = value.replace(/[^\d.]/g, '');
+
+  // ป้องกันการมีจุดทศนิยมมากกว่า 1 ตัว และจำกัดทศนิยมไม่เกิน 2 ตัว
+  const parts = cleanValue.split('.');
+  let finalValue = cleanValue;
+
+  if (parts.length > 2) {
+    // เอาเฉพาะส่วนที่ 1 (หลังจุดแรก) และจำกัดไม่เกิน 2 ตัว
+    finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+  } else if (parts.length === 2 && parts[1].length > 2) {
+    // จำกัดทศนิยมไม่เกิน 2 ตัว
+    finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+  }
+
+  return finalValue;
+};
 
 /**
  * จัดรูปแบบราคาเป็นสกุลเงินไทย

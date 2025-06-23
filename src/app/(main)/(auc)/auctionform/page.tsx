@@ -6,7 +6,6 @@ import Container from '@/app/components/ui/Container';
 import ThaiDatePicker from '@/app/components/ui/DatePicker';
 import {
   AucCategoryIcon,
-  AucStartTimeIcon,
   AucOfferIcon,
   AucUserIcon,
 } from '@/app/components/ui/Icons';
@@ -17,10 +16,7 @@ import {
   UserCompany,
   userCompanyService,
 } from '@/app/services/userCompanyService';
-import {
-  AuctionParticipant,
-  dataAuction_Participant,
-} from '@/app/model/dataAuction_Participant';
+import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
 import {
   auctionTypeService,
   AuctionType as ServiceAuctionType,
@@ -35,6 +31,10 @@ import {
   safeParseDate,
   getCurrentDateTime,
   createDateChangeHandler,
+  formatPriceForDisplay,
+  handlePriceFocus,
+  handlePriceBlur,
+  handlePriceChange,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionFormPage() {
@@ -532,7 +532,7 @@ export default function AuctionFormPage() {
       } else {
         // ถ้าไม่เจอในรายการ อาจเป็นเพราะข้อมูลยังไม่โหลดเสร็จ
         // ใช้ฟังก์ชันหาชื่อบริษัทแทน
-        const companyName = getCompanyNameById(userCompanyData.company_id);
+        const companyName = getCompanyName(userCompanyData.company_id);
         setCompanySearchTerm(companyName);
       }
 
@@ -551,20 +551,18 @@ export default function AuctionFormPage() {
     }
   };
 
-  // ฟังก์ชันหาชื่อผู้ใช้จาก ID
-  const getUserNameById = (userId: number): string => {
+  // ใช้ฟังก์ชันจาก globalFunction แทน (ปรับ field names ให้ตรงกับข้อมูลจริง)
+  const getUserName = (userId: number): string => {
     const user = allUsers.find((u) => u.user_id === userId);
     return user ? user.fullname : `ผู้ใช้ ID: ${userId}`;
   };
 
-  // ฟังก์ชันหาชื่อบริษัทจาก ID
-  const getCompanyNameById = (companyId: number): string => {
+  const getCompanyName = (companyId: number): string => {
     const company = availableCompanies.find((c) => c.id === companyId);
     return company ? company.name : `บริษัท ID: ${companyId}`;
   };
 
-  // ฟังก์ชันหาชื่อบริษัทของผู้ใช้จาก user ID
-  const getUserCompanyNameById = (userId: number): string => {
+  const getUserCompanyName = (userId: number): string => {
     // หาความสัมพันธ์ user-company ของผู้ใช้นี้
     const userCompanyData =
       usersCompany.find(
@@ -770,61 +768,10 @@ export default function AuctionFormPage() {
     router.push('/auctions');
   };
 
-  // ฟังก์ชันสำหรับแสดงผลราคาขณะ focus (ไม่มีคอมม่า)
-  const formatPriceForInput = (value: number) => {
-    if (value === 0) return '0.00';
-    return value.toString();
-  };
-
-  // ฟังก์ชันสำหรับแสดงผลราคาขณะ blur (มีคอมม่า)
-  const formatPriceForDisplay = (value: number) => {
-    if (value === 0) return '0.00';
-    return new Intl.NumberFormat('th-TH', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
-  // ฟังก์ชันจัดการ focus ราคา (ใช้ร่วมกันได้)
-  const handlePriceFocus = (
-    currentValue: string | number,
-    updateFunction: (formattedValue: string) => void
-  ) => {
-    const numericValue =
-      typeof currentValue === 'string'
-        ? parseFloat(currentValue.replace(/,/g, '')) || 0
-        : currentValue || 0;
-    const formattedValue = formatPriceForInput(numericValue);
-    updateFunction(formattedValue);
-  };
-
-  const handlePriceBlur = (
-    currentValue: string,
-    updateFunction: (formattedValue: string) => void
-  ) => {
-    const numericValue = parseFloat(currentValue.replace(/,/g, '')) || 0;
-    const formattedValue = formatPriceForDisplay(numericValue);
-    updateFunction(formattedValue);
-  };
-
   // ฟังก์ชันจัดการ onChange ราคาประกัน
   const handleReservePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
-    // อนุญาตให้มีตัวเลขและจุดทศนิยมได้
-    const cleanValue = value.replace(/[^\d.]/g, '');
-
-    // ป้องกันการมีจุดทศนิยมมากกว่า 1 ตัว และจำกัดทศนิยมไม่เกิน 2 ตัว
-    const parts = cleanValue.split('.');
-    let finalValue = cleanValue;
-
-    if (parts.length > 2) {
-      // เอาเฉพาะส่วนที่ 1 (หลังจุดแรก) และจำกัดไม่เกิน 2 ตัว
-      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
-    } else if (parts.length === 2 && parts[1].length > 2) {
-      // จำกัดทศนิยมไม่เกิน 2 ตัว
-      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
-    }
+    const finalValue = handlePriceChange(value);
 
     setReservePriceDisplay(finalValue);
 
@@ -843,21 +790,7 @@ export default function AuctionFormPage() {
   // ฟังก์ชันจัดการ onChange ราคา/หน่วย
   const handleItemPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
-    // อนุญาตให้มีตัวเลขและจุดทศนิยมได้
-    const cleanValue = value.replace(/[^\d.]/g, '');
-
-    // ป้องกันการมีจุดทศนิยมมากกว่า 1 ตัว และจำกัดทศนิยมไม่เกิน 2 ตัว
-    const parts = cleanValue.split('.');
-    let finalValue = cleanValue;
-
-    if (parts.length > 2) {
-      // เอาเฉพาะส่วนที่ 1 (หลังจุดแรก) และจำกัดไม่เกิน 2 ตัว
-      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
-    } else if (parts.length === 2 && parts[1].length > 2) {
-      // จำกัดทศนิยมไม่เกิน 2 ตัว
-      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
-    }
+    const finalValue = handlePriceChange(value);
 
     // อัปเดต form ด้วยค่าที่ไม่มีคอมม่า (เหมือนราคาประกัน)
     setAuctionItemForm((prev) => ({
@@ -1057,13 +990,6 @@ export default function AuctionFormPage() {
       setAuctionItems(updatedItems);
       alert('ลบรายการเรียบร้อยแล้ว');
     }
-  };
-
-  const formatPriceDisplay = (price: number) => {
-    return new Intl.NumberFormat('th-TH', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(price);
   };
 
   // แสดงหน้า Error ถ้าไม่มีสิทธิ์
@@ -1712,10 +1638,10 @@ export default function AuctionFormPage() {
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {getUserNameById(userId)}
+                              {getUserName(userId)}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {getUserCompanyNameById(userId)}
+                              {getUserCompanyName(userId)}
                             </div>
                           </div>
                         </div>
@@ -1850,7 +1776,7 @@ export default function AuctionFormPage() {
                           {item.unit || '-'}
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-sm text-right text-gray-900">
-                          {formatPriceDisplay(item.base_price)}
+                          {formatPriceForDisplay(item.base_price)}
                         </td>
                         <td className="border border-gray-200 px-4 py-3 text-center">
                           <div className="flex items-center justify-center gap-2">
