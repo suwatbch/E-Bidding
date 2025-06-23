@@ -431,47 +431,6 @@ export default function AuctionFormPage() {
     }
   };
 
-  const saveAuctionParticipants = async (
-    auctionId: number,
-    participantUserIds: number[]
-  ) => {
-    try {
-      return true;
-    } catch (error) {
-      console.error('Error saving auction participants:', error);
-      return false;
-    }
-  };
-
-  const saveAuctionItems = async (auctionId: number, items: any[]) => {
-    try {
-      // เตรียมข้อมูลรายการประมูลสำหรับบันทึก
-      const itemsToSave = items.map((item) => ({
-        auction_id: auctionId,
-        item_name: item.item_name,
-        description: item.description,
-        quantity: item.quantity,
-        unit: item.unit,
-        base_price: item.base_price,
-        status: 1, // เปิดใช้งาน
-      }));
-
-      // TODO: เรียก API เพื่อบันทึกข้อมูลรายการประมูล
-      console.log('Saving auction items:', itemsToSave);
-
-      // เมื่อมี API แล้วจะใช้บรรทัดนี้
-      // const response = await auctionItemService.createMultipleItems(itemsToSave);
-      // if (response.message !== null) {
-      //   throw new Error(response.message);
-      // }
-
-      return true;
-    } catch (error) {
-      console.error('Error saving auction items:', error);
-      throw error;
-    }
-  };
-
   // Handle company selection
   const handleCompanySelect = (companyId: number) => {
     isAutoSelectingRef.current = false;
@@ -706,59 +665,81 @@ export default function AuctionFormPage() {
       // เตรียมข้อมูลสำหรับบันทึก
       let response;
 
+      // เตรียมข้อมูลผู้เข้าร่วม
+      const participantsData = selectedParticipants.map((userId) => {
+        // หา company_id ของ user นี้
+        const userCompanyData =
+          usersCompany.find(
+            (uc) =>
+              uc.user_id === userId && uc.status === 1 && uc.is_primary === true
+          ) ||
+          usersCompany.find((uc) => uc.user_id === userId && uc.status === 1);
+
+        return {
+          user_id: userId,
+          company_id: userCompanyData?.company_id || 0,
+          status: 1,
+          is_connected: 0,
+        };
+      });
+
+      // เตรียมข้อมูลรายการประมูล
+      const itemsData = auctionItems.map((item) => ({
+        item_name: item.item_name,
+        description: item.description || '',
+        quantity: item.quantity,
+        unit: item.unit || '',
+        base_price: item.base_price,
+        status: 1,
+      }));
+
       if (isEdit) {
-        // อัพเดทข้อมูลที่มีอยู่
-        const updateData: UpdateAuctionRequest = {
-          auction_id: formData.auction_id,
-          name: formData.name,
-          auction_type_id: formData.auction_type_id,
-          start_dt: formData.start_dt,
-          end_dt: formData.end_dt,
-          reserve_price: formData.reserve_price,
-          currency: formData.currency,
-          status: formData.status,
-          remark: formData.remark,
+        // อัพเดทข้อมูลที่มีอยู่ - ใช้ transaction API
+        const updateData = {
+          createDataAuction: {
+            auction_id: formData.auction_id,
+            name: formData.name,
+            auction_type_id: formData.auction_type_id,
+            start_dt: formData.start_dt,
+            end_dt: formData.end_dt,
+            reserve_price: formData.reserve_price,
+            currency: formData.currency,
+            status: formData.status,
+            remark: formData.remark,
+          },
+          createDataAuction_Participant: participantsData,
+          createDataAuction_Item: itemsData,
         };
 
-        response = await auctionsService.updateAuction(
+        response = await auctionsService.updateAuctionWithParticipants(
           formData.auction_id,
           updateData
         );
       } else {
-        // สร้างใหม่
-        const createData: CreateAuctionRequest = {
-          name: formData.name,
-          auction_type_id: formData.auction_type_id,
-          start_dt: formData.start_dt,
-          end_dt: formData.end_dt,
-          reserve_price: formData.reserve_price,
-          currency: formData.currency,
-          status: formData.status,
-          remark: formData.remark,
+        // สร้างใหม่ - ใช้ transaction API
+        const createData = {
+          createDataAuction: {
+            name: formData.name,
+            auction_type_id: formData.auction_type_id,
+            start_dt: formData.start_dt,
+            end_dt: formData.end_dt,
+            reserve_price: formData.reserve_price,
+            currency: formData.currency,
+            status: formData.status,
+            remark: formData.remark,
+          },
+          createDataAuction_Participant: participantsData,
+          createDataAuction_Item: itemsData,
         };
 
-        response = await auctionsService.createAuction(createData);
+        response = await auctionsService.createAuctionWithParticipants(
+          createData
+        );
       }
 
       if (response.message !== null) {
         alert(response.message);
         return;
-      }
-
-      // จัดการข้อมูลผู้เข้าร่วมประมูล (จะต้องได้ auction_id จาก response)
-      const auctionIdForOperations = isEdit
-        ? formData.auction_id
-        : response.data?.auction_id || formData.auction_id;
-
-      // บันทึกข้อมูลผู้เข้าร่วมประมูล
-      await saveAuctionParticipants(
-        auctionIdForOperations,
-        selectedParticipants
-      );
-
-      // บันทึกข้อมูลรายการประมูล (auction items) - เฉพาะกรณีแก้ไข
-      if (auctionItems.length > 0 && isEdit) {
-        await saveAuctionItems(auctionIdForOperations, auctionItems);
       }
 
       alert(

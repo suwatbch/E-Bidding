@@ -15,6 +15,10 @@ const {
   updateAuctionParticipant,
   deleteAuctionParticipant,
   createMultipleAuctionParticipants,
+  createAuctionWithParticipants,
+  updateAuctionWithParticipants,
+  getAuctionParticipantsWithDetails,
+  getAuctionItems,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -236,6 +240,156 @@ router.post('/update/:id', async (req, res) => {
   }
 });
 
+// POST /api/auctions/update-with-participants/:id - อัพเดทประมูลพร้อมผู้เข้าร่วม (Transaction)
+router.post('/update-with-participants/:id', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const {
+      createDataAuction,
+      createDataAuction_Participant,
+      createDataAuction_Item,
+    } = req.body;
+
+    // ตรวจสอบข้อมูลตลาดประมูลที่จำเป็น
+    if (!createDataAuction) {
+      return res.status(200).json({
+        success: true,
+        message: 'ข้อมูลตลาดประมูลไม่ครบถ้วน',
+      });
+    }
+
+    const {
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status,
+      remark,
+    } = createDataAuction;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (
+      !name ||
+      !start_dt ||
+      !end_dt ||
+      reserve_price === undefined ||
+      reserve_price === null ||
+      !currency
+    ) {
+      return res.status(200).json({
+        success: true,
+        message: 'ข้อมูลตลาดประมูลไม่ครบถ้วน กรุณากรอกข้อมูลที่จำเป็นให้ครบ',
+      });
+    }
+
+    // เตรียมข้อมูล auction
+    const auctionData = {
+      name,
+      auction_type_id: auction_type_id || 0,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status: status !== undefined ? status : 1,
+      remark,
+    };
+
+    // เตรียมข้อมูล participants (ถ้ามี)
+    let participantsData = [];
+    if (
+      createDataAuction_Participant &&
+      Array.isArray(createDataAuction_Participant) &&
+      createDataAuction_Participant.length > 0
+    ) {
+      // ตรวจสอบว่าทุก participant มี user_id
+      const invalidParticipants = createDataAuction_Participant.filter(
+        (p) => !p.user_id
+      );
+      if (invalidParticipants.length > 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'ผู้เข้าร่วมบางคนไม่มี user_id',
+        });
+      }
+
+      participantsData = createDataAuction_Participant.map((p) => ({
+        user_id: p.user_id,
+        company_id: p.company_id || 0,
+        status: p.status || 1,
+        is_connected: p.is_connected || 0,
+      }));
+    }
+
+    // เตรียมข้อมูล auction items (ถ้ามี)
+    let itemsData = [];
+    if (
+      createDataAuction_Item &&
+      Array.isArray(createDataAuction_Item) &&
+      createDataAuction_Item.length > 0
+    ) {
+      // ตรวจสอบข้อมูล items ที่จำเป็น
+      const invalidItems = createDataAuction_Item.filter(
+        (item) =>
+          !item.item_name ||
+          item.quantity === undefined ||
+          item.base_price === undefined
+      );
+      if (invalidItems.length > 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'ข้อมูลรายการประมูลไม่ครบถ้วน',
+        });
+      }
+
+      itemsData = createDataAuction_Item.map((item) => ({
+        item_name: item.item_name,
+        description: item.description || '',
+        quantity: item.quantity,
+        unit: item.unit || '',
+        base_price: item.base_price,
+        status: item.status || 1,
+      }));
+    }
+
+    // อัปเดต auction พร้อม participants และ items ด้วย transaction
+    const result = await updateAuctionWithParticipants(
+      auctionId,
+      auctionData,
+      participantsData,
+      itemsData
+    );
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
 // POST /api/auctions - สร้างประมูลใหม่
 router.post('/', async (req, res) => {
   try {
@@ -279,6 +433,147 @@ router.post('/', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
+        data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/with-participants - สร้างประมูลใหม่พร้อมผู้เข้าร่วม (Transaction)
+router.post('/with-participants', async (req, res) => {
+  try {
+    const {
+      createDataAuction,
+      createDataAuction_Participant,
+      createDataAuction_Item,
+    } = req.body;
+
+    // ตรวจสอบข้อมูลตลาดประมูลที่จำเป็น
+    if (!createDataAuction) {
+      return res.status(200).json({
+        success: true,
+        message: 'ข้อมูลตลาดประมูลไม่ครบถ้วน',
+      });
+    }
+
+    const {
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status,
+      remark,
+    } = createDataAuction;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (
+      !name ||
+      !start_dt ||
+      !end_dt ||
+      reserve_price === undefined ||
+      reserve_price === null ||
+      !currency
+    ) {
+      return res.status(200).json({
+        success: true,
+        message: 'ข้อมูลตลาดประมูลไม่ครบถ้วน กรุณากรอกข้อมูลที่จำเป็นให้ครบ',
+      });
+    }
+
+    // เตรียมข้อมูล auction
+    const auctionData = {
+      name,
+      auction_type_id: auction_type_id || 0,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status: status !== undefined ? status : 1,
+      remark,
+    };
+
+    // เตรียมข้อมูล participants (ถ้ามี)
+    let participantsData = [];
+    if (
+      createDataAuction_Participant &&
+      Array.isArray(createDataAuction_Participant) &&
+      createDataAuction_Participant.length > 0
+    ) {
+      // ตรวจสอบว่าทุก participant มี user_id
+      const invalidParticipants = createDataAuction_Participant.filter(
+        (p) => !p.user_id
+      );
+      if (invalidParticipants.length > 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'ผู้เข้าร่วมบางคนไม่มี user_id',
+        });
+      }
+
+      participantsData = createDataAuction_Participant.map((p) => ({
+        user_id: p.user_id,
+        company_id: p.company_id || 0,
+        status: p.status || 1,
+        is_connected: p.is_connected || 0,
+      }));
+    }
+
+    // เตรียมข้อมูล auction items (ถ้ามี)
+    let itemsData = [];
+    if (
+      createDataAuction_Item &&
+      Array.isArray(createDataAuction_Item) &&
+      createDataAuction_Item.length > 0
+    ) {
+      // ตรวจสอบข้อมูล items ที่จำเป็น
+      const invalidItems = createDataAuction_Item.filter(
+        (item) =>
+          !item.item_name ||
+          item.quantity === undefined ||
+          item.base_price === undefined
+      );
+      if (invalidItems.length > 0) {
+        return res.status(200).json({
+          success: true,
+          message: 'ข้อมูลรายการประมูลไม่ครบถ้วน',
+        });
+      }
+
+      itemsData = createDataAuction_Item.map((item) => ({
+        item_name: item.item_name,
+        description: item.description || '',
+        quantity: item.quantity,
+        unit: item.unit || '',
+        base_price: item.base_price,
+        status: item.status || 1,
+      }));
+    }
+
+    // สร้าง auction พร้อม participants และ items ด้วย transaction
+    const result = await createAuctionWithParticipants(
+      auctionData,
+      participantsData,
+      itemsData
+    );
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
         message: null,
       });
     } else {
@@ -483,6 +778,76 @@ router.post('/participants/delete/:id', async (req, res) => {
     if (result.success) {
       res.status(200).json({
         success: true,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/auctions/:id/participants - ดึงข้อมูลผู้เข้าร่วมของตลาดประมูล
+router.get('/:id/participants', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const result = await getAuctionParticipantsWithDetails(auctionId);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/auctions/:id/items - ดึงข้อมูลรายการสินค้าของตลาดประมูล
+router.get('/:id/items', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const result = await getAuctionItems(auctionId);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
         message: null,
       });
     } else {

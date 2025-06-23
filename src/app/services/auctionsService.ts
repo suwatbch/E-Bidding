@@ -102,16 +102,29 @@ export interface AuctionParticipant {
   id: number;
   auction_id: number;
   user_id: number;
+  company_id: number;
   status: number;
   is_connected: boolean;
   joined_dt: string;
 }
 
-// Bid interface
+export interface AuctionItem {
+  item_id: number; // ฐานข้อมูลใช้ item_id ไม่ใช่ id
+  auction_id: number;
+  item_name: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  base_price: number;
+  status: number;
+  // หมายเหตุ: ฐานข้อมูลไม่มี created_dt, updated_dt สำหรับ auction_item
+}
+
 export interface AuctionBid {
   bid_id: number;
   auction_id: number;
   user_id: number;
+  company_id: number;
   bid_amount: number;
   bid_time: string;
   status: string;
@@ -164,6 +177,44 @@ export interface UpdateAuctionRequest extends CreateAuctionRequest {
 export interface CreateBidRequest {
   auction_id: number;
   bid_amount: number;
+}
+
+export interface CreateAuctionWithParticipantsRequest {
+  createDataAuction: CreateAuctionRequest;
+  createDataAuction_Participant?: {
+    user_id: number;
+    company_id?: number;
+    status?: number;
+    is_connected?: number;
+  }[];
+  createDataAuction_Item?: {
+    item_name: string;
+    description?: string;
+    quantity: number;
+    unit?: string;
+    base_price: number;
+    status?: number;
+  }[];
+}
+
+export interface UpdateAuctionWithParticipantsRequest {
+  createDataAuction: UpdateAuctionRequest;
+  createDataAuction_Participant?: {
+    id?: number; // 0 หรือไม่มี = INSERT ใหม่, มีค่า = UPDATE
+    user_id: number;
+    company_id?: number;
+    status?: number;
+    is_connected?: number;
+  }[];
+  createDataAuction_Item?: {
+    item_id?: number; // 0 หรือไม่มี = INSERT ใหม่, มีค่า = UPDATE
+    item_name: string;
+    description?: string;
+    quantity: number;
+    unit?: string;
+    base_price: number;
+    status?: number;
+  }[];
 }
 
 // Bid Status Constants
@@ -432,6 +483,29 @@ export const auctionsService = {
   },
 
   /**
+   * สร้างประมูลใหม่พร้อมผู้เข้าร่วม (Transaction)
+   */
+  createAuctionWithParticipants: async (
+    auctionData: CreateAuctionWithParticipantsRequest
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        '/with-participants',
+        auctionData
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating auction with participants:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการสร้างประมูลและผู้เข้าร่วม',
+      };
+    }
+  },
+
+  /**
    * อัพเดทข้อมูลประมูล
    */
   updateAuction: async (
@@ -450,6 +524,30 @@ export const auctionsService = {
         success: false,
         message:
           error.response?.data?.message || 'เกิดข้อผิดพลาดในการอัพเดทประมูล',
+      };
+    }
+  },
+
+  /**
+   * อัพเดทประมูลพร้อมผู้เข้าร่วม (Transaction)
+   */
+  updateAuctionWithParticipants: async (
+    id: number,
+    auctionData: UpdateAuctionWithParticipantsRequest
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/update-with-participants/${id}`,
+        auctionData
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating auction with participants:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการอัพเดทประมูลและผู้เข้าร่วม',
       };
     }
   },
@@ -499,6 +597,38 @@ export const auctionsService = {
       return response.data;
     } catch (error: any) {
       return handleParticipantsApiError(error, 'ดึงข้อมูลผู้เข้าร่วมประมูล');
+    }
+  },
+
+  /**
+   * เพิ่มผู้เข้าร่วมประมูลหลายคน
+   */
+  createMultipleAuctionParticipants: async (
+    auctionId: number,
+    participants: {
+      user_id: number;
+      company_id?: number;
+      status?: number;
+      is_connected?: number;
+    }[]
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        '/participants/multiple',
+        {
+          auction_id: auctionId,
+          participants,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating multiple auction participants:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการเพิ่มผู้เข้าร่วมประมูล',
+      };
     }
   },
 
@@ -563,6 +693,41 @@ export const auctionsService = {
       return {
         success: false,
         message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการเสนอราคา',
+      };
+    }
+  },
+
+  /**
+   * ดึงข้อมูลผู้เข้าร่วมของตลาดประมูลพร้อมรายละเอียด
+   */
+  getAuctionParticipantsWithDetails: async (
+    auctionId: number
+  ): Promise<AuctionParticipantsResponse> => {
+    try {
+      const response: AxiosResponse<AuctionParticipantsResponse> =
+        await auctionsApi.get(`/${auctionId}/participants`);
+      return response.data;
+    } catch (error: any) {
+      return handleParticipantsApiError(error, 'ดึงข้อมูลผู้เข้าร่วมประมูล');
+    }
+  },
+
+  /**
+   * ดึงข้อมูลรายการสินค้าของตลาดประมูล
+   */
+  getAuctionItems: async (auctionId: number): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.get(
+        `/${auctionId}/items`
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error fetching auction items:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการดึงข้อมูลรายการสินค้า',
       };
     }
   },

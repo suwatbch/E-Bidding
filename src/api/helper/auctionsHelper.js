@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/dataconfig');
+const { executeQuery, getConnection } = require('../config/dataconfig');
 
 // ดึงข้อมูลประมูลทั้งหมด
 async function getAllAuctions() {
@@ -99,7 +99,7 @@ async function createAuction(auctionData) {
     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
   `;
 
-  return await executeQuery(query, [
+  const result = await executeQuery(query, [
     name,
     auction_type_id,
     start_dt,
@@ -109,6 +109,13 @@ async function createAuction(auctionData) {
     status,
     remark,
   ]);
+
+  // เพิ่ม auction_id ใน response data
+  if (result.success && result.data && result.data.insertId) {
+    result.data = { auction_id: result.data.insertId };
+  }
+
+  return result;
 }
 
 // อัพเดทข้อมูลประมูล
@@ -337,6 +344,388 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
   return await executeQuery(query, flatValues);
 }
 
+// สร้างประมูลใหม่พร้อมผู้เข้าร่วม (Transaction)
+async function createAuctionWithParticipants(auctionData, participants, items) {
+  let connection;
+
+  try {
+    // สร้าง connection สำหรับ transaction
+    connection = await getConnection();
+    await connection.beginTransaction();
+
+    // 1. สร้าง auction ใหม่
+    const {
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status = 1,
+      remark,
+    } = auctionData;
+
+    const auctionQuery = `
+      INSERT INTO auction (
+        name, 
+        auction_type_id, 
+        start_dt, 
+        end_dt, 
+        reserve_price, 
+        currency, 
+        status, 
+        is_deleted,
+        remark
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+    `;
+
+    const [auctionResult] = await connection.execute(auctionQuery, [
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status,
+      remark,
+    ]);
+
+    const auctionId = auctionResult.insertId;
+
+    // 2. เพิ่มผู้เข้าร่วมประมูล (ถ้ามี)
+    if (participants && participants.length > 0) {
+      const values = participants.map((p) => [
+        auctionId,
+        p.user_id,
+        p.company_id || 0,
+        p.status || 1,
+        p.is_connected || 0,
+      ]);
+
+      const placeholders = participants
+        .map(() => '(?, ?, ?, ?, ?, NOW())')
+        .join(', ');
+      const flatValues = values.flat();
+
+      const participantQuery = `
+        INSERT INTO auction_participant (
+          auction_id,
+          user_id,
+          company_id,
+          status,
+          is_connected,
+          joined_dt
+        )
+        VALUES ${placeholders}
+      `;
+
+      await connection.execute(participantQuery, flatValues);
+    }
+
+    // 3. เพิ่มรายการประมูล (ถ้ามี)
+    if (items && items.length > 0) {
+      const itemValues = items.map((item) => [
+        auctionId,
+        item.item_name,
+        item.description || '',
+        item.quantity,
+        item.unit || '',
+        item.base_price,
+        item.status || 1,
+      ]);
+
+      const itemPlaceholders = items
+        .map(() => '(?, ?, ?, ?, ?, ?, ?)')
+        .join(', ');
+      const flatItemValues = itemValues.flat();
+
+      const itemQuery = `
+        INSERT INTO auction_item (
+          auction_id,
+          item_name,
+          description,
+          quantity,
+          unit,
+          base_price,
+          status
+        )
+        VALUES ${itemPlaceholders}
+      `;
+
+      await connection.execute(itemQuery, flatItemValues);
+    }
+
+    // Commit transaction
+    await connection.commit();
+
+    return {
+      success: true,
+      data: { auction_id: auctionId },
+      message: null,
+    };
+  } catch (error) {
+    // Rollback transaction ถ้าเกิดข้อผิดพลาด
+    if (connection) {
+      await connection.rollback();
+    }
+
+    console.error('Transaction failed:', error);
+    return {
+      success: false,
+      error: error.message || 'เกิดข้อผิดพลาดในการสร้างประมูลและผู้เข้าร่วม',
+    };
+  } finally {
+    // ปิด connection
+    if (connection) {
+      await connection.end();
+    }
+  }
+}
+
+// อัปเดตประมูลพร้อมผู้เข้าร่วม (Smart Update)
+async function updateAuctionWithParticipants(
+  auctionId,
+  auctionData,
+  participants,
+  items
+) {
+  let connection;
+
+  try {
+    // สร้าง connection สำหรับ transaction
+    connection = await getConnection();
+    await connection.beginTransaction();
+
+    // 1. อัปเดต auction (เสมอ) - ใช้แบบเดียวกับ updateAuction
+    const {
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status,
+      remark,
+    } = auctionData;
+
+    const auctionQuery = `
+      UPDATE auction 
+      SET 
+        name = ?, 
+        auction_type_id = ?, 
+        start_dt = ?, 
+        end_dt = ?, 
+        reserve_price = ?, 
+        currency = ?, 
+        status = ?,
+        remark = ?,
+        updated_dt = NOW()
+      WHERE auction_id = ? AND is_deleted = 0
+    `;
+
+    await connection.execute(auctionQuery, [
+      name,
+      auction_type_id,
+      start_dt,
+      end_dt,
+      reserve_price,
+      currency,
+      status,
+      remark,
+      auctionId,
+    ]);
+
+    // 2. Smart Update: Participants (ป้องกันข้อมูลซ้ำ)
+    if (participants && participants.length > 0) {
+      // ลบผู้เข้าร่วมเดิมทั้งหมดก่อน (ง่ายกว่าการจัดการ UPDATE/INSERT)
+      const deleteParticipantsQuery = `
+        UPDATE auction_participant 
+        SET status = 0
+        WHERE auction_id = ?
+      `;
+      await connection.execute(deleteParticipantsQuery, [auctionId]);
+
+      // INSERT ผู้เข้าร่วมใหม่ทั้งหมด
+      for (const participant of participants) {
+        const insertParticipantQuery = `
+          INSERT INTO auction_participant (
+            auction_id,
+            user_id,
+            company_id,
+            status,
+            is_connected,
+            joined_dt
+          )
+          VALUES (?, ?, ?, ?, ?, NOW())
+        `;
+
+        await connection.execute(insertParticipantQuery, [
+          auctionId,
+          participant.user_id,
+          participant.company_id || 0,
+          participant.status || 1,
+          participant.is_connected || 0,
+        ]);
+      }
+    }
+
+    // 3. Smart Update: Items (ปรับปรุงใหม่)
+    if (items && items.length > 0) {
+      console.log('Smart Update Items - Processing items:', items.length);
+
+      for (const item of items) {
+        console.log('Processing item:', {
+          item_id: item.item_id,
+          item_name: item.item_name,
+        });
+
+        if (item.item_id && item.item_id > 0) {
+          // UPDATE existing item
+          console.log('Updating existing item with item_id:', item.item_id);
+
+          const updateItemQuery = `
+            UPDATE auction_item 
+            SET 
+              item_name = ?,
+              description = ?,
+              quantity = ?,
+              unit = ?,
+              base_price = ?,
+              status = ?
+            WHERE item_id = ? AND auction_id = ?
+          `;
+
+          const updateResult = await connection.execute(updateItemQuery, [
+            item.item_name,
+            item.description || '',
+            item.quantity,
+            item.unit || '',
+            item.base_price,
+            item.status || 1,
+            item.item_id,
+            auctionId,
+          ]);
+
+          console.log('Update result:', updateResult[0]);
+
+          // ตรวจสอบว่า UPDATE สำเร็จหรือไม่
+          if (updateResult[0].affectedRows === 0) {
+            console.log(
+              'No rows updated, item might not exist. Inserting new item...'
+            );
+
+            // ถ้า UPDATE ไม่สำเร็จ ให้ INSERT ใหม่
+            const insertItemQuery = `
+              INSERT INTO auction_item (
+                auction_id,
+                item_name,
+                description,
+                quantity,
+                unit,
+                base_price,
+                status
+              )
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `;
+
+            await connection.execute(insertItemQuery, [
+              auctionId,
+              item.item_name,
+              item.description || '',
+              item.quantity,
+              item.unit || '',
+              item.base_price,
+              item.status || 1,
+            ]);
+          }
+        } else {
+          // INSERT new item
+          console.log('Inserting new item:', item.item_name);
+
+          const insertItemQuery = `
+            INSERT INTO auction_item (
+              auction_id,
+              item_name,
+              description,
+              quantity,
+              unit,
+              base_price,
+              status
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          await connection.execute(insertItemQuery, [
+            auctionId,
+            item.item_name,
+            item.description || '',
+            item.quantity,
+            item.unit || '',
+            item.base_price,
+            item.status || 1,
+          ]);
+        }
+      }
+    }
+
+    // Commit transaction
+    await connection.commit();
+
+    return {
+      success: true,
+      data: { auction_id: auctionId },
+      message: null,
+    };
+  } catch (error) {
+    // Rollback transaction ถ้าเกิดข้อผิดพลาด
+    if (connection) {
+      await connection.rollback();
+    }
+
+    console.error('Transaction failed:', error);
+    return {
+      success: false,
+      error: error.message || 'เกิดข้อผิดพลาดในการอัปเดตประมูลและผู้เข้าร่วม',
+    };
+  } finally {
+    // ปิด connection
+    if (connection) {
+      await connection.end();
+    }
+  }
+}
+
+// ดึงข้อมูลผู้เข้าร่วมของตลาดประมูลพร้อมรายละเอียด
+async function getAuctionParticipantsWithDetails(auctionId) {
+  const query = `
+    SELECT 
+      ap.*,
+      u.fullname as user_name,
+      u.email as user_email,
+      c.name as company_name
+    FROM auction_participant ap
+    LEFT JOIN users u ON ap.user_id = u.user_id
+    LEFT JOIN company c ON ap.company_id = c.company_id
+    WHERE ap.auction_id = ? AND ap.status > 0
+    ORDER BY ap.joined_dt
+  `;
+
+  return await executeQuery(query, [auctionId]);
+}
+
+// ดึงข้อมูลรายการสินค้าของตลาดประมูล
+async function getAuctionItems(auctionId) {
+  const query = `
+    SELECT *
+    FROM auction_item 
+    WHERE auction_id = ? AND status > 0
+    ORDER BY item_id
+  `;
+
+  return await executeQuery(query, [auctionId]);
+}
+
 module.exports = {
   getAllAuctions,
   getAuctionById,
@@ -352,4 +741,8 @@ module.exports = {
   updateAuctionParticipant,
   deleteAuctionParticipant,
   createMultipleAuctionParticipants,
+  createAuctionWithParticipants,
+  updateAuctionWithParticipants,
+  getAuctionParticipantsWithDetails,
+  getAuctionItems,
 };
