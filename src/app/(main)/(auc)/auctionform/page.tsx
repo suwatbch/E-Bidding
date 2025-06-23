@@ -105,8 +105,12 @@ export default function AuctionFormPage() {
     description: '',
     quantity: 1,
     unit: '',
-    base_price: '',
+    base_price: '0.00',
   });
+
+  // States for price input display
+  const [reservePriceFocused, setReservePriceFocused] = useState(false);
+  const [reservePriceDisplay, setReservePriceDisplay] = useState('0.00');
 
   // ฟังก์ชันตรวจสอบสิทธิ์การเข้าถึง
   const checkPermission = (auctionData: Auction | undefined) => {
@@ -430,6 +434,35 @@ export default function AuctionFormPage() {
     }
   };
 
+  const saveAuctionItems = async (auctionId: number, items: any[]) => {
+    try {
+      // เตรียมข้อมูลรายการประมูลสำหรับบันทึก
+      const itemsToSave = items.map((item) => ({
+        auction_id: auctionId,
+        item_name: item.item_name,
+        description: item.description,
+        quantity: item.quantity,
+        unit: item.unit,
+        base_price: item.base_price,
+        status: 1, // เปิดใช้งาน
+      }));
+
+      // TODO: เรียก API เพื่อบันทึกข้อมูลรายการประมูล
+      console.log('Saving auction items:', itemsToSave);
+
+      // เมื่อมี API แล้วจะใช้บรรทัดนี้
+      // const response = await auctionItemService.createMultipleItems(itemsToSave);
+      // if (response.message !== null) {
+      //   throw new Error(response.message);
+      // }
+
+      return true;
+    } catch (error) {
+      console.error('Error saving auction items:', error);
+      throw error;
+    }
+  };
+
   // Handle company selection
   const handleCompanySelect = (companyId: number) => {
     isAutoSelectingRef.current = false;
@@ -706,14 +739,20 @@ export default function AuctionFormPage() {
       }
 
       // จัดการข้อมูลผู้เข้าร่วมประมูล (จะต้องได้ auction_id จาก response)
-      const auctionIdForParticipants = isEdit
+      const auctionIdForOperations = isEdit
         ? formData.auction_id
         : response.data?.auction_id || formData.auction_id;
 
+      // บันทึกข้อมูลผู้เข้าร่วมประมูล
       await saveAuctionParticipants(
-        auctionIdForParticipants,
+        auctionIdForOperations,
         selectedParticipants
       );
+
+      // บันทึกข้อมูลรายการประมูล (auction items) - เฉพาะกรณีแก้ไข
+      if (auctionItems.length > 0 && isEdit) {
+        await saveAuctionItems(auctionIdForOperations, auctionItems);
+      }
 
       alert(
         isEdit ? 'แก้ไขข้อมูลตลาดเรียบร้อยแล้ว' : 'เพิ่มตลาดใหม่เรียบร้อยแล้ว'
@@ -731,9 +770,100 @@ export default function AuctionFormPage() {
     router.push('/auctions');
   };
 
-  const formatPrice = (value: string) => {
-    const number = value.replace(/[^\d]/g, '');
-    return number.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // ฟังก์ชันสำหรับแสดงผลราคาขณะ focus (ไม่มีคอมม่า)
+  const formatPriceForInput = (value: number) => {
+    if (value === 0) return '0.00';
+    return value.toString();
+  };
+
+  // ฟังก์ชันสำหรับแสดงผลราคาขณะ blur (มีคอมม่า)
+  const formatPriceForDisplay = (value: number) => {
+    if (value === 0) return '0.00';
+    return new Intl.NumberFormat('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  // ฟังก์ชันจัดการ focus ราคา (ใช้ร่วมกันได้)
+  const handlePriceFocus = (
+    currentValue: string | number,
+    updateFunction: (formattedValue: string) => void
+  ) => {
+    const numericValue =
+      typeof currentValue === 'string'
+        ? parseFloat(currentValue.replace(/,/g, '')) || 0
+        : currentValue || 0;
+    const formattedValue = formatPriceForInput(numericValue);
+    updateFunction(formattedValue);
+  };
+
+  const handlePriceBlur = (
+    currentValue: string,
+    updateFunction: (formattedValue: string) => void
+  ) => {
+    const numericValue = parseFloat(currentValue.replace(/,/g, '')) || 0;
+    const formattedValue = formatPriceForDisplay(numericValue);
+    updateFunction(formattedValue);
+  };
+
+  // ฟังก์ชันจัดการ onChange ราคาประกัน
+  const handleReservePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // อนุญาตให้มีตัวเลขและจุดทศนิยมได้
+    const cleanValue = value.replace(/[^\d.]/g, '');
+
+    // ป้องกันการมีจุดทศนิยมมากกว่า 1 ตัว และจำกัดทศนิยมไม่เกิน 2 ตัว
+    const parts = cleanValue.split('.');
+    let finalValue = cleanValue;
+
+    if (parts.length > 2) {
+      // เอาเฉพาะส่วนที่ 1 (หลังจุดแรก) และจำกัดไม่เกิน 2 ตัว
+      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+    } else if (parts.length === 2 && parts[1].length > 2) {
+      // จำกัดทศนิยมไม่เกิน 2 ตัว
+      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+
+    setReservePriceDisplay(finalValue);
+
+    // แปลงเป็นตัวเลขสำหรับบันทึก
+    const numericValue = parseFloat(finalValue) || 0;
+    handleInputChange('reserve_price', numericValue);
+  };
+
+  // อัปเดต reservePriceDisplay เมื่อ formData.reserve_price เปลี่ยน
+  useEffect(() => {
+    if (!reservePriceFocused) {
+      setReservePriceDisplay(formatPriceForDisplay(formData.reserve_price));
+    }
+  }, [formData.reserve_price, reservePriceFocused]);
+
+  // ฟังก์ชันจัดการ onChange ราคา/หน่วย
+  const handleItemPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // อนุญาตให้มีตัวเลขและจุดทศนิยมได้
+    const cleanValue = value.replace(/[^\d.]/g, '');
+
+    // ป้องกันการมีจุดทศนิยมมากกว่า 1 ตัว และจำกัดทศนิยมไม่เกิน 2 ตัว
+    const parts = cleanValue.split('.');
+    let finalValue = cleanValue;
+
+    if (parts.length > 2) {
+      // เอาเฉพาะส่วนที่ 1 (หลังจุดแรก) และจำกัดไม่เกิน 2 ตัว
+      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+    } else if (parts.length === 2 && parts[1].length > 2) {
+      // จำกัดทศนิยมไม่เกิน 2 ตัว
+      finalValue = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+
+    // อัปเดต form ด้วยค่าที่ไม่มีคอมม่า (เหมือนราคาประกัน)
+    setAuctionItemForm((prev) => ({
+      ...prev,
+      base_price: finalValue,
+    }));
   };
 
   const formatDateTime = (dateStr: string) => {
@@ -824,7 +954,7 @@ export default function AuctionFormPage() {
       description: '',
       quantity: 1,
       unit: '',
-      base_price: '',
+      base_price: '0.00',
     });
     setEditingItemIndex(null);
     setIsAuctionItemModalOpen(true);
@@ -837,7 +967,7 @@ export default function AuctionFormPage() {
       description: item.description || '',
       quantity: item.quantity,
       unit: item.unit || '',
-      base_price: formatPrice(item.base_price.toString()),
+      base_price: formatPriceForDisplay(item.base_price),
     });
     setEditingItemIndex(index);
     setIsAuctionItemModalOpen(true);
@@ -850,7 +980,7 @@ export default function AuctionFormPage() {
       description: '',
       quantity: 1,
       unit: '',
-      base_price: '',
+      base_price: '0.00',
     });
     setEditingItemIndex(null);
   };
@@ -864,14 +994,6 @@ export default function AuctionFormPage() {
       setAuctionItemForm((prev) => ({
         ...prev,
         [name]: numValue,
-      }));
-    } else if (name === 'base_price') {
-      // ลบทุกอย่างยกเว้นตัวเลข
-      const numericValue = value.replace(/[^\d]/g, '');
-      const formattedValue = formatPrice(numericValue);
-      setAuctionItemForm((prev) => ({
-        ...prev,
-        [name]: formattedValue,
       }));
     } else {
       setAuctionItemForm((prev) => ({
@@ -1299,13 +1421,22 @@ export default function AuctionFormPage() {
                 </label>
                 <input
                   type="text"
-                  value={formatPrice(formData.reserve_price.toString())}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^\d]/g, '');
-                    handleInputChange('reserve_price', parseInt(value) || 0);
+                  value={reservePriceDisplay}
+                  onFocus={() => {
+                    setReservePriceFocused(true);
+                    handlePriceFocus(formData.reserve_price, (formattedValue) =>
+                      setReservePriceDisplay(formattedValue)
+                    );
+                  }}
+                  onChange={handleReservePriceChange}
+                  onBlur={() => {
+                    setReservePriceFocused(false);
+                    handlePriceBlur(reservePriceDisplay, (formattedValue) =>
+                      setReservePriceDisplay(formattedValue)
+                    );
                   }}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="0"
+                  placeholder="0.00"
                   required
                 />
               </div>
@@ -1693,7 +1824,7 @@ export default function AuctionFormPage() {
                         หน่วย
                       </th>
                       <th className="border border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ราคา
+                        ราคา/หน่วย
                       </th>
                       <th className="border border-gray-200 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         จัดการ
@@ -2330,14 +2461,34 @@ export default function AuctionFormPage() {
                           d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
                         />
                       </svg>
-                      ราคา *
+                      ราคา/หน่วย *
                     </div>
                   </label>
                   <input
                     type="text"
                     name="base_price"
                     value={auctionItemForm.base_price}
-                    onChange={handleAuctionItemFormChange}
+                    onFocus={() => {
+                      handlePriceFocus(
+                        auctionItemForm.base_price,
+                        (formattedValue) =>
+                          setAuctionItemForm((prev) => ({
+                            ...prev,
+                            base_price: formattedValue,
+                          }))
+                      );
+                    }}
+                    onChange={handleItemPriceChange}
+                    onBlur={() => {
+                      handlePriceBlur(
+                        auctionItemForm.base_price,
+                        (formattedValue) =>
+                          setAuctionItemForm((prev) => ({
+                            ...prev,
+                            base_price: formattedValue,
+                          }))
+                      );
+                    }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
                       focus:ring-green-500 focus:border-transparent"
                     placeholder="0.00"
