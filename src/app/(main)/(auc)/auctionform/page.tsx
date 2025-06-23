@@ -95,6 +95,19 @@ export default function AuctionFormPage() {
     status: true,
   });
 
+  // States for auction items
+  const [auctionItems, setAuctionItems] = useState<any[]>([]);
+  const [isAuctionItemModalOpen, setIsAuctionItemModalOpen] = useState(false);
+  const [isSubmittingAuctionItem, setIsSubmittingAuctionItem] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
+  const [auctionItemForm, setAuctionItemForm] = useState({
+    item_name: '',
+    description: '',
+    quantity: 1,
+    unit: '',
+    base_price: '',
+  });
+
   // ฟังก์ชันตรวจสอบสิทธิ์การเข้าถึง
   const checkPermission = (auctionData: Auction | undefined) => {
     if (!auctionData) {
@@ -764,19 +777,11 @@ export default function AuctionFormPage() {
   const handleAuctionTypeFormChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, type } = e.target;
-    if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
-      setAuctionTypeForm((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
-    } else {
-      setAuctionTypeForm((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
+    const { name, value } = e.target;
+    setAuctionTypeForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleAuctionTypeSubmit = async (e: React.FormEvent) => {
@@ -810,6 +815,133 @@ export default function AuctionFormPage() {
     } finally {
       setIsSubmittingAuctionType(false);
     }
+  };
+
+  // Auction Item Modal Functions
+  const openAuctionItemModal = () => {
+    setAuctionItemForm({
+      item_name: '',
+      description: '',
+      quantity: 1,
+      unit: '',
+      base_price: '',
+    });
+    setEditingItemIndex(null);
+    setIsAuctionItemModalOpen(true);
+  };
+
+  const openEditItemModal = (index: number) => {
+    const item = auctionItems[index];
+    setAuctionItemForm({
+      item_name: item.item_name,
+      description: item.description || '',
+      quantity: item.quantity,
+      unit: item.unit || '',
+      base_price: formatPrice(item.base_price.toString()),
+    });
+    setEditingItemIndex(index);
+    setIsAuctionItemModalOpen(true);
+  };
+
+  const closeAuctionItemModal = () => {
+    setIsAuctionItemModalOpen(false);
+    setAuctionItemForm({
+      item_name: '',
+      description: '',
+      quantity: 1,
+      unit: '',
+      base_price: '',
+    });
+    setEditingItemIndex(null);
+  };
+
+  const handleAuctionItemFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    if (name === 'quantity') {
+      const numValue = parseInt(value) || 1;
+      setAuctionItemForm((prev) => ({
+        ...prev,
+        [name]: numValue,
+      }));
+    } else if (name === 'base_price') {
+      // ลบทุกอย่างยกเว้นตัวเลข
+      const numericValue = value.replace(/[^\d]/g, '');
+      const formattedValue = formatPrice(numericValue);
+      setAuctionItemForm((prev) => ({
+        ...prev,
+        [name]: formattedValue,
+      }));
+    } else {
+      setAuctionItemForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleAuctionItemSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingAuctionItem(true);
+
+    try {
+      if (!auctionItemForm.item_name.trim()) {
+        alert('กรุณากรอกชื่อรายการ');
+        return;
+      }
+
+      const numericPrice = parseFloat(
+        auctionItemForm.base_price.replace(/,/g, '')
+      );
+      if (!auctionItemForm.base_price || numericPrice < 0) {
+        alert('กรุณากรอกราคาที่ถูกต้อง');
+        return;
+      }
+
+      const newItem = {
+        item_name: auctionItemForm.item_name.trim(),
+        description: auctionItemForm.description.trim(),
+        quantity: auctionItemForm.quantity,
+        unit: auctionItemForm.unit.trim(),
+        base_price: numericPrice,
+        status: true,
+      };
+
+      if (editingItemIndex !== null) {
+        // แก้ไขรายการที่มีอยู่
+        const updatedItems = [...auctionItems];
+        updatedItems[editingItemIndex] = newItem;
+        setAuctionItems(updatedItems);
+        alert('แก้ไขรายการเรียบร้อยแล้ว');
+      } else {
+        // เพิ่มรายการใหม่
+        setAuctionItems((prev) => [...prev, newItem]);
+        alert('เพิ่มรายการเรียบร้อยแล้ว');
+      }
+
+      closeAuctionItemModal();
+    } catch (error) {
+      console.error('Error saving auction item:', error);
+      alert('เกิดข้อผิดพลาดในการบันทึกรายการ');
+    } finally {
+      setIsSubmittingAuctionItem(false);
+    }
+  };
+
+  const handleDeleteItem = (index: number) => {
+    if (confirm('คุณต้องการลบรายการนี้หรือไม่?')) {
+      const updatedItems = auctionItems.filter((_, i) => i !== index);
+      setAuctionItems(updatedItems);
+      alert('ลบรายการเรียบร้อยแล้ว');
+    }
+  };
+
+  const formatPriceDisplay = (price: number) => {
+    return new Intl.NumberFormat('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(price);
   };
 
   // แสดงหน้า Error ถ้าไม่มีสิทธิ์
@@ -1493,6 +1625,174 @@ export default function AuctionFormPage() {
             </div>
           </div>
 
+          {/* Auction Items */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                  />
+                </svg>
+                รายการประมูล
+                {auctionItems.length > 0 && (
+                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+                    {auctionItems.length} รายการ
+                  </span>
+                )}
+              </h2>
+              <button
+                type="button"
+                onClick={openAuctionItemModal}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                เพิ่มรายการ
+              </button>
+            </div>
+
+            {/* Items Table */}
+            {auctionItems.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="border border-gray-200 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ลำดับ
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ชื่อรายการ
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        คำอธิบาย
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        จำนวน
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        หน่วย
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        ราคา
+                      </th>
+                      <th className="border border-gray-200 px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        จัดการ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {auctionItems.map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="border border-gray-200 px-4 py-3 text-sm text-gray-900">
+                          {index + 1}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-sm font-medium text-gray-900">
+                          {item.item_name}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-sm text-gray-500">
+                          {item.description || '-'}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-sm text-center text-gray-900">
+                          {item.quantity.toLocaleString()}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-sm text-center text-gray-900">
+                          {item.unit || '-'}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-sm text-right text-gray-900">
+                          {formatPriceDisplay(item.base_price)}
+                        </td>
+                        <td className="border border-gray-200 px-4 py-3 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditItemModal(index)}
+                              className="text-blue-600 hover:text-blue-800 p-1 rounded transition-colors"
+                              title="แก้ไข"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteItem(index)}
+                              className="text-red-600 hover:text-red-800 p-1 rounded transition-colors"
+                              title="ลบ"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <svg
+                  className="w-12 h-12 text-gray-400 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p className="text-gray-500 text-sm">ยังไม่มีรายการประมูล</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  คลิกปุ่ม "เพิ่มรายการ" เพื่อเพิ่มรายการประมูล
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Remark */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -1525,7 +1825,6 @@ export default function AuctionFormPage() {
               </div>
             </div>
           </div>
-
           {/* Action Buttons */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex justify-end gap-4">
@@ -1721,32 +2020,6 @@ export default function AuctionFormPage() {
                     placeholder="คำอธิบายเพิ่มเติม..."
                   />
                 </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="status"
-                    checked={auctionTypeForm.status}
-                    onChange={handleAuctionTypeFormChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label className="ml-2 flex items-center gap-2 text-sm text-gray-700">
-                    <svg
-                      className="w-5 h-5 text-gray-500"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    เปิดใช้งาน
-                  </label>
-                </div>
               </form>
             </div>
 
@@ -1832,6 +2105,336 @@ export default function AuctionFormPage() {
                           />
                         </svg>
                         เพิ่มประเภท
+                      </>
+                    )}
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auction Item Modal */}
+      {isAuctionItemModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md relative overflow-hidden">
+            {/* Modal Header - Fixed */}
+            <div className="bg-gradient-to-r from-green-50 via-white to-green-50 py-4 px-5 border-b border-green-100/50">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors duration-200 
+                  hover:bg-gray-100/80 rounded-lg p-1"
+                onClick={closeAuctionItemModal}
+                disabled={isSubmittingAuctionItem}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <h2 className="text-lg font-bold text-gray-900">
+                <div className="flex items-center gap-2">
+                  <div className="bg-green-100 p-1.5 rounded-lg">
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                      />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {editingItemIndex !== null
+                        ? 'แก้ไขรายการประมูล'
+                        : 'เพิ่มรายการประมูล'}
+                    </div>
+                    <div className="text-xs text-gray-500 font-normal">
+                      กรุณากรอกข้อมูลรายการ
+                    </div>
+                  </div>
+                </div>
+              </h2>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div
+              className="max-h-[calc(100vh-12rem)] overflow-y-auto px-5 py-4 
+              [&::-webkit-scrollbar]:w-2
+              [&::-webkit-scrollbar-track]:bg-gray-100
+              [&::-webkit-scrollbar-track]:rounded-lg
+              [&::-webkit-scrollbar-thumb]:bg-gray-300
+              [&::-webkit-scrollbar-thumb]:rounded-lg
+              [&::-webkit-scrollbar-thumb]:border-2
+              [&::-webkit-scrollbar-thumb]:border-gray-100
+              hover:[&::-webkit-scrollbar-thumb]:bg-gray-400"
+            >
+              <form
+                id="auctionItemForm"
+                onSubmit={handleAuctionItemSubmit}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
+                      ชื่อรายการ *
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="item_name"
+                    value={auctionItemForm.item_name}
+                    onChange={handleAuctionItemFormChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-green-500 focus:border-transparent"
+                    placeholder="กรอกชื่อรายการ"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 6h16M4 12h16M4 18h7"
+                        />
+                      </svg>
+                      คำอธิบาย
+                    </div>
+                  </label>
+                  <textarea
+                    name="description"
+                    value={auctionItemForm.description}
+                    onChange={handleAuctionItemFormChange}
+                    rows={3}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-green-500 focus:border-transparent"
+                    placeholder="คำอธิบายเพิ่มเติม..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
+                          />
+                        </svg>
+                        จำนวน *
+                      </div>
+                    </label>
+                    <input
+                      type="number"
+                      name="quantity"
+                      value={auctionItemForm.quantity}
+                      onChange={handleAuctionItemFormChange}
+                      min="1"
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-green-500 focus:border-transparent"
+                      placeholder="1"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="w-5 h-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        หน่วย
+                      </div>
+                    </label>
+                    <input
+                      type="text"
+                      name="unit"
+                      value={auctionItemForm.unit}
+                      onChange={handleAuctionItemFormChange}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                        focus:ring-green-500 focus:border-transparent"
+                      placeholder="เช่น ชิ้น, กิโลกรัม"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="flex items-center gap-2">
+                      <svg
+                        className="w-5 h-5 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                        />
+                      </svg>
+                      ราคา *
+                    </div>
+                  </label>
+                  <input
+                    type="text"
+                    name="base_price"
+                    value={auctionItemForm.base_price}
+                    onChange={handleAuctionItemFormChange}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 
+                      focus:ring-green-500 focus:border-transparent"
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* Modal Footer - Fixed */}
+            <div className="bg-gradient-to-r from-gray-50 via-white to-gray-50 py-3 px-5 border-t border-gray-100">
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={closeAuctionItemModal}
+                  disabled={isSubmittingAuctionItem}
+                  className={`group px-3 py-1.5 text-sm font-medium border border-gray-200 
+                    rounded-lg focus:outline-none focus:ring-2 
+                    focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 ${
+                      isSubmittingAuctionItem
+                        ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                        : 'text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300'
+                    }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <svg
+                      className={`w-4 h-4 ${
+                        isSubmittingAuctionItem
+                          ? 'text-gray-400'
+                          : 'text-gray-500 group-hover:text-gray-600'
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                    ยกเลิก
+                  </div>
+                </button>
+                <button
+                  type="submit"
+                  form="auctionItemForm"
+                  disabled={isSubmittingAuctionItem}
+                  className={`group px-3 py-1.5 text-sm font-medium text-white border border-transparent rounded-lg 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 
+                    transition-all duration-200 shadow-md hover:shadow-md ${
+                      isSubmittingAuctionItem
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600'
+                    }`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    {isSubmittingAuctionItem ? (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white animate-spin"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        กำลังบันทึก...
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="w-4 h-4 text-white"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d={
+                              editingItemIndex !== null
+                                ? 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                                : 'M12 6v6m0 0v6m0-6h6m-6 0H6'
+                            }
+                          />
+                        </svg>
+                        {editingItemIndex !== null
+                          ? 'บันทึกการแก้ไข'
+                          : 'เพิ่มรายการ'}
                       </>
                     )}
                   </div>
