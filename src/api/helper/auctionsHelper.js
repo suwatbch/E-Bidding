@@ -213,6 +213,7 @@ async function getAllAuctionParticipants() {
       id,
       auction_id,
       user_id,
+      company_id,
       status,
       is_connected,
       joined_dt
@@ -231,6 +232,7 @@ async function getAuctionParticipantsByAuctionId(auctionId) {
       id,
       auction_id,
       user_id,
+      company_id,
       status,
       is_connected,
       joined_dt
@@ -240,6 +242,99 @@ async function getAuctionParticipantsByAuctionId(auctionId) {
   `;
 
   return await executeQuery(query, [auctionId]);
+}
+
+// เพิ่มผู้เข้าร่วมประมูล
+async function createAuctionParticipant(participantData) {
+  const {
+    auction_id,
+    user_id,
+    company_id = 0,
+    status = 1,
+    is_connected = 0,
+  } = participantData;
+
+  const query = `
+    INSERT INTO auction_participant (
+      auction_id,
+      user_id,
+      company_id,
+      status,
+      is_connected,
+      joined_dt
+    )
+    VALUES (?, ?, ?, ?, ?, NOW())
+  `;
+
+  return await executeQuery(query, [
+    auction_id,
+    user_id,
+    company_id,
+    status,
+    is_connected,
+  ]);
+}
+
+// อัพเดทข้อมูลผู้เข้าร่วมประมูล
+async function updateAuctionParticipant(participantId, participantData) {
+  const { company_id, status, is_connected } = participantData;
+
+  const query = `
+    UPDATE auction_participant 
+    SET 
+      company_id = ?,
+      status = ?,
+      is_connected = ?
+    WHERE id = ?
+  `;
+
+  return await executeQuery(query, [
+    company_id,
+    status,
+    is_connected,
+    participantId,
+  ]);
+}
+
+// ลบผู้เข้าร่วมประมูล (soft delete)
+async function deleteAuctionParticipant(participantId) {
+  const query = `
+    UPDATE auction_participant 
+    SET status = 0
+    WHERE id = ?
+  `;
+
+  return await executeQuery(query, [participantId]);
+}
+
+// เพิ่มผู้เข้าร่วมประมูลหลายคนพร้อมกัน
+async function createMultipleAuctionParticipants(auctionId, participants) {
+  const values = participants.map((p) => [
+    auctionId,
+    p.user_id,
+    p.company_id || 0,
+    p.status || 1,
+    p.is_connected || 0,
+  ]);
+
+  const placeholders = participants
+    .map(() => '(?, ?, ?, ?, ?, NOW())')
+    .join(', ');
+  const flatValues = values.flat();
+
+  const query = `
+    INSERT INTO auction_participant (
+      auction_id,
+      user_id,
+      company_id,
+      status,
+      is_connected,
+      joined_dt
+    )
+    VALUES ${placeholders}
+  `;
+
+  return await executeQuery(query, flatValues);
 }
 
 module.exports = {
@@ -253,4 +348,8 @@ module.exports = {
   getAllAuctionTypes,
   getAllAuctionParticipants,
   getAuctionParticipantsByAuctionId,
+  createAuctionParticipant,
+  updateAuctionParticipant,
+  deleteAuctionParticipant,
+  createMultipleAuctionParticipants,
 };

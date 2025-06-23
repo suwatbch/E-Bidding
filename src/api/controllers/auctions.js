@@ -11,6 +11,10 @@ const {
   getAllAuctionTypes,
   getAllAuctionParticipants,
   getAuctionParticipantsByAuctionId,
+  createAuctionParticipant,
+  updateAuctionParticipant,
+  deleteAuctionParticipant,
+  createMultipleAuctionParticipants,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -305,6 +309,176 @@ router.post('/delete/:id', async (req, res) => {
     }
 
     const result = await deleteAuction(auctionId);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/participants - เพิ่มผู้เข้าร่วมประมูล
+router.post('/participants', async (req, res) => {
+  try {
+    const { auction_id, user_id, company_id, status, is_connected } = req.body;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!auction_id || !user_id) {
+      return res.status(200).json({
+        success: true,
+        message: 'ข้อมูลไม่ครบถ้วน กรุณาระบุ auction_id และ user_id',
+      });
+    }
+
+    const result = await createAuctionParticipant({
+      auction_id,
+      user_id,
+      company_id: company_id || 0,
+      status: status !== undefined ? status : 1,
+      is_connected: is_connected || 0,
+    });
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/participants/multiple - เพิ่มผู้เข้าร่วมประมูลหลายคน
+router.post('/participants/multiple', async (req, res) => {
+  try {
+    const { auction_id, participants } = req.body;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!auction_id || !participants || !Array.isArray(participants)) {
+      return res.status(200).json({
+        success: true,
+        message:
+          'ข้อมูลไม่ครบถ้วน กรุณาระบุ auction_id และ participants (array)',
+      });
+    }
+
+    if (participants.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'กรุณาระบุผู้เข้าร่วมอย่างน้อย 1 คน',
+      });
+    }
+
+    // ตรวจสอบว่าทุก participant มี user_id
+    const invalidParticipants = participants.filter((p) => !p.user_id);
+    if (invalidParticipants.length > 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'ผู้เข้าร่วมบางคนไม่มี user_id',
+      });
+    }
+
+    const result = await createMultipleAuctionParticipants(
+      auction_id,
+      participants
+    );
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/participants/update/:id - อัพเดทข้อมูลผู้เข้าร่วมประมูล
+router.post('/participants/update/:id', async (req, res) => {
+  try {
+    const participantId = parseInt(req.params.id);
+
+    if (isNaN(participantId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสผู้เข้าร่วมไม่ถูกต้อง',
+      });
+    }
+
+    const { company_id, status, is_connected } = req.body;
+
+    const result = await updateAuctionParticipant(participantId, {
+      company_id: company_id !== undefined ? company_id : 0,
+      status: status !== undefined ? status : 1,
+      is_connected: is_connected !== undefined ? is_connected : 0,
+    });
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/participants/delete/:id - ลบผู้เข้าร่วมประมูล
+router.post('/participants/delete/:id', async (req, res) => {
+  try {
+    const participantId = parseInt(req.params.id);
+
+    if (isNaN(participantId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสผู้เข้าร่วมไม่ถูกต้อง',
+      });
+    }
+
+    const result = await deleteAuctionParticipant(participantId);
 
     if (result.success) {
       res.status(200).json({
