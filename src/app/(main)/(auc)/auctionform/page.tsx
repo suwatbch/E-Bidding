@@ -16,7 +16,7 @@ import {
   UserCompany,
   userCompanyService,
 } from '@/app/services/userCompanyService';
-import { dataAuction_Participant } from '@/app/model/dataAuction_Participant';
+
 import {
   auctionTypeService,
   AuctionType as ServiceAuctionType,
@@ -302,14 +302,23 @@ export default function AuctionFormPage() {
   const loadAuctionParticipants = async (auctionId: number) => {
     try {
       setLoadingParticipants(true);
-      // ดึงข้อมูลผู้เข้าร่วมประมูลจาก dataAuction_Participant
-      const participants = dataAuction_Participant
-        .filter((p) => p.auction_id === auctionId && p.status === 1)
-        .map((p) => p.user_id);
+      // ดึงข้อมูลผู้เข้าร่วมประมูลจาก auctionsService
+      const response = await auctionsService.getAuctionParticipants(auctionId);
 
-      setSelectedParticipants(participants);
+      if (response.success && response.message === null) {
+        // กรองเฉพาะผู้เข้าร่วมที่ active และเอาเฉพาะ user_id
+        const participants = response.data
+          .filter((p) => p.status === 1)
+          .map((p) => p.user_id);
+
+        setSelectedParticipants(participants);
+      } else {
+        console.warn('Failed to load auction participants:', response.message);
+        setSelectedParticipants([]);
+      }
     } catch (error) {
       console.error('Error loading auction participants:', error);
+      setSelectedParticipants([]);
     } finally {
       setLoadingParticipants(false);
     }

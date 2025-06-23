@@ -107,6 +107,18 @@ export interface AuctionParticipant {
   joined_dt: string;
 }
 
+// Bid interface
+export interface AuctionBid {
+  bid_id: number;
+  auction_id: number;
+  user_id: number;
+  bid_amount: number;
+  bid_time: string;
+  status: string;
+  attempt: number;
+  is_winning: boolean;
+}
+
 export interface ApiResponse {
   success: boolean;
   message: string;
@@ -124,6 +136,10 @@ export interface AuctionTypesResponse extends ApiResponse {
 
 export interface AuctionParticipantsResponse extends ApiResponse {
   data: AuctionParticipant[];
+}
+
+export interface AuctionBidsResponse extends ApiResponse {
+  data: AuctionBid[];
 }
 
 export interface SingleAuctionResponse extends ApiResponse {
@@ -144,6 +160,47 @@ export interface CreateAuctionRequest {
 export interface UpdateAuctionRequest extends CreateAuctionRequest {
   auction_id: number;
 }
+
+export interface CreateBidRequest {
+  auction_id: number;
+  bid_amount: number;
+}
+
+// Bid Status Constants
+export const BidStatus = {
+  ACCEPT: 'accept',
+  REJECTED: 'rejected',
+  CANCELED: 'canceled',
+} as const;
+
+export type BidStatusType = (typeof BidStatus)[keyof typeof BidStatus];
+
+// Bid Status Utility Functions
+export const getBidStatusText = (status: string): string => {
+  switch (status) {
+    case BidStatus.ACCEPT:
+      return 'ยอมรับ';
+    case BidStatus.REJECTED:
+      return 'ปฏิเสธ';
+    case BidStatus.CANCELED:
+      return 'ยกเลิก';
+    default:
+      return 'ไม่ทราบสถานะ';
+  }
+};
+
+export const getBidStatusColor = (status: string): string => {
+  switch (status) {
+    case BidStatus.ACCEPT:
+      return 'text-green-600 bg-green-100';
+    case BidStatus.REJECTED:
+      return 'text-red-600 bg-red-100';
+    case BidStatus.CANCELED:
+      return 'text-gray-600 bg-gray-100';
+    default:
+      return 'text-gray-600 bg-gray-100';
+  }
+};
 
 // Error handling helpers
 const handleAuctionsApiError = (
@@ -216,6 +273,40 @@ const handleParticipantsApiError = (
   error: any,
   operation: string
 ): AuctionParticipantsResponse => {
+  console.error(`Error ${operation}:`, error);
+
+  const status = error.response?.status;
+  const serverMessage = error.response?.data?.message;
+  let userMessage = `เกิดข้อผิดพลาดในการ${operation}`;
+
+  if (status === 400) {
+    userMessage = serverMessage || 'ข้อมูลไม่ถูกต้อง';
+  } else if (status === 401) {
+    userMessage = 'กรุณาเข้าสู่ระบบใหม่';
+  } else if (status === 403) {
+    userMessage = 'คุณไม่มีสิทธิ์ในการดำเนินการนี้';
+  } else if (status === 404) {
+    userMessage = 'ไม่พบข้อมูลที่ต้องการ';
+  } else if (status >= 500) {
+    userMessage = 'เกิดข้อผิดพลาดในเซิร์ฟเวอร์';
+  } else if (error.code === 'ECONNABORTED') {
+    userMessage = 'การเชื่อมต่อใช้เวลาเกินกำหนด';
+  } else if (error.code === 'NETWORK_ERROR' || error.code === 'ECONNREFUSED') {
+    userMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
+  }
+
+  return {
+    success: false,
+    message: userMessage,
+    data: [],
+  };
+};
+
+// Handle Bids API Error
+const handleBidsApiError = (
+  error: any,
+  operation: string
+): AuctionBidsResponse => {
   console.error(`Error ${operation}:`, error);
 
   const status = error.response?.status;
@@ -408,6 +499,177 @@ export const auctionsService = {
       return response.data;
     } catch (error: any) {
       return handleParticipantsApiError(error, 'ดึงข้อมูลผู้เข้าร่วมประมูล');
+    }
+  },
+
+  /**
+   * ดึงข้อมูลการเสนอราคาทั้งหมดในประมูล
+   */
+  getAuctionBids: async (auctionId: number): Promise<AuctionBidsResponse> => {
+    try {
+      const response: AxiosResponse<AuctionBidsResponse> =
+        await auctionsApi.get(`/${auctionId}/bids`);
+      return response.data;
+    } catch (error: any) {
+      return handleBidsApiError(error, 'ดึงข้อมูลการเสนอราคา');
+    }
+  },
+
+  /**
+   * ดึงข้อมูลการเสนอราคาที่ยอมรับแล้ว
+   */
+  getAcceptedBids: async (auctionId: number): Promise<AuctionBidsResponse> => {
+    try {
+      const response: AxiosResponse<AuctionBidsResponse> =
+        await auctionsApi.get(`/${auctionId}/bids`, {
+          params: { status: 'accept' },
+        });
+      return response.data;
+    } catch (error: any) {
+      return handleBidsApiError(error, 'ดึงข้อมูลการเสนอราคาที่ยอมรับ');
+    }
+  },
+
+  /**
+   * ดึงข้อมูลการเสนอราคาของผู้ใช้
+   */
+  getUserBids: async (
+    auctionId: number,
+    userId: number
+  ): Promise<AuctionBidsResponse> => {
+    try {
+      const response: AxiosResponse<AuctionBidsResponse> =
+        await auctionsApi.get(`/${auctionId}/bids`, {
+          params: { user_id: userId },
+        });
+      return response.data;
+    } catch (error: any) {
+      return handleBidsApiError(error, 'ดึงข้อมูลการเสนอราคาของผู้ใช้');
+    }
+  },
+
+  /**
+   * สร้างการเสนอราคาใหม่
+   */
+  createBid: async (bidData: CreateBidRequest): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/bids`,
+        bidData
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating bid:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการเสนอราคา',
+      };
+    }
+  },
+
+  // =============================================================================
+  // BID UTILITY FUNCTIONS (using mock data until API is ready)
+  // =============================================================================
+
+  /**
+   * ดึงการเสนอราคาล่าสุดของแต่ละบริษัท
+   */
+  getLatestBidByCompany: async (auctionId: number): Promise<AuctionBid[]> => {
+    try {
+      const response = await auctionsService.getAcceptedBids(auctionId);
+      if (response.success) {
+        const bids = response.data;
+        const latestBids: { [companyId: number]: AuctionBid } = {};
+
+        bids.forEach((bid) => {
+          // Note: This will need company mapping logic
+          const companyId = bid.user_id; // Placeholder until company mapping is available
+          if (
+            !latestBids[companyId] ||
+            new Date(bid.bid_time) > new Date(latestBids[companyId].bid_time)
+          ) {
+            latestBids[companyId] = bid;
+          }
+        });
+
+        return Object.values(latestBids).sort(
+          (a, b) => a.bid_amount - b.bid_amount
+        );
+      }
+      return [];
+    } catch (error) {
+      console.error('Error getting latest bids by company:', error);
+      return [];
+    }
+  },
+
+  /**
+   * ดึงราคาเสนอต่ำสุด
+   */
+  getLowestBid: async (auctionId: number): Promise<AuctionBid | null> => {
+    try {
+      const latestBids = await auctionsService.getLatestBidByCompany(auctionId);
+      return latestBids.length > 0 ? latestBids[0] : null;
+    } catch (error) {
+      console.error('Error getting lowest bid:', error);
+      return null;
+    }
+  },
+
+  /**
+   * ดึงราคาเสนอที่ชนะ (is_winning = true)
+   */
+  getWinningBid: async (auctionId: number): Promise<AuctionBid | null> => {
+    try {
+      const response = await auctionsService.getAuctionBids(auctionId);
+      if (response.success) {
+        const winningBid = response.data.find((bid) => bid.is_winning);
+        return winningBid || null;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting winning bid:', error);
+      return null;
+    }
+  },
+
+  /**
+   * ดึงสถิติการเสนอราคาตามสถานะ
+   */
+  getBidStatsByStatus: async (auctionId: number) => {
+    try {
+      const response = await auctionsService.getAuctionBids(auctionId);
+      if (response.success) {
+        const bids = response.data;
+        return {
+          accept: bids.filter((bid) => bid.status === BidStatus.ACCEPT).length,
+          rejected: bids.filter((bid) => bid.status === BidStatus.REJECTED)
+            .length,
+          canceled: bids.filter((bid) => bid.status === BidStatus.CANCELED)
+            .length,
+          total: bids.length,
+        };
+      }
+      return { accept: 0, rejected: 0, canceled: 0, total: 0 };
+    } catch (error) {
+      console.error('Error getting bid stats by status:', error);
+      return { accept: 0, rejected: 0, canceled: 0, total: 0 };
+    }
+  },
+
+  /**
+   * ตรวจสอบว่าผู้ใช้มีการเสนอราคาหรือไม่
+   */
+  hasUserBid: async (auctionId: number, userId: number): Promise<boolean> => {
+    try {
+      const response = await auctionsService.getUserBids(auctionId, userId);
+      if (response.success) {
+        return response.data.some((bid) => bid.status === BidStatus.ACCEPT);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking if user has bid:', error);
+      return false;
     }
   },
 };

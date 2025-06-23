@@ -1,34 +1,78 @@
-/**
- * Utility Functions for E-Bidding Application
- * รวมฟังก์ชันต่างๆ ที่ใช้ในระบบประมูลออนไลน์
- */
-
 import {
-  dataAuction_Participant,
-  AuctionParticipant,
-} from '@/app/model/dataAuction_Participant';
-import {
-  dataAuction_Bid,
-  AuctionBid,
+  auctionsService,
+  type AuctionParticipant,
+  type AuctionBid,
   getBidStatusText,
   getBidStatusColor,
-} from '@/app/model/dataAuction_Bid';
-import { initialCompanies } from '@/app/model/dataCompany';
-import {
-  dataUser_Company,
-  getCompanyByUserId,
-  getUserRole,
-  canUserBid,
-  getPrimaryCompanyByUserId,
-  getAllCompaniesByUserId,
-  getUserRoleInCompany,
-  canUserBidInCompany,
-  isUserAdmin,
-  isUserAdminInCompany,
-  getUserCompanyRelations,
-  hasUserCompanyRelation,
-  getRoleDisplayName,
-} from '@/app/model/dataUser_Company';
+} from '@/app/services/auctionsService';
+
+import { type UserCompany } from '@/app/services/userCompanyService';
+
+// =============================================================================
+// USER COMPANY UTILITIES (NEW VERSIONS WITH userCompanyService)
+// =============================================================================
+
+/**
+ * หาบริษัทหลักของผู้ใช้จาก UserCompany array
+ * @param userId - ID ของผู้ใช้
+ * @param userCompanies - Array ของ UserCompany จาก userCompanyService
+ * @returns number | null - ID ของบริษัทหลักหรือ null
+ */
+export const getCompanyByUserIdFromArray = (
+  userId: number,
+  userCompanies: UserCompany[]
+): number | null => {
+  const primaryCompany = userCompanies.find(
+    (uc) => uc.user_id === userId && uc.is_primary === true
+  );
+
+  if (primaryCompany) {
+    return primaryCompany.company_id;
+  }
+
+  // Fallback: หาบริษัทแรกที่เจอ
+  const firstCompany = userCompanies.find((uc) => uc.user_id === userId);
+  return firstCompany ? firstCompany.company_id : null;
+};
+
+/**
+ * หารหัสของบริษัทหลักของผู้ใช้
+ * @param userId - ID ของผู้ใช้
+ * @param userCompanies - Array ของ UserCompany จาก userCompanyService
+ * @returns string | null - role ของผู้ใช้หรือ null
+ */
+export const getUserRoleFromArray = (
+  userId: number,
+  userCompanies: UserCompany[]
+): string | null => {
+  const primaryCompany = userCompanies.find(
+    (uc) => uc.user_id === userId && uc.is_primary === true
+  );
+
+  if (primaryCompany) {
+    return primaryCompany.role_in_company;
+  }
+
+  // Fallback: หาบริษัทแรกที่เจอ
+  const firstCompany = userCompanies.find((uc) => uc.user_id === userId);
+  return firstCompany ? firstCompany.role_in_company : null;
+};
+
+/**
+ * ตรวจสอบว่าผู้ใช้สามารถประมูลได้หรือไม่
+ * @param userId - ID ของผู้ใช้
+ * @param userCompanies - Array ของ UserCompany จาก userCompanyService
+ * @returns boolean - สามารถประมูลได้หรือไม่
+ */
+export const canUserBidFromArray = (
+  userId: number,
+  userCompanies: UserCompany[]
+): boolean => {
+  const userCompany = userCompanies.find(
+    (uc) => uc.user_id === userId && uc.status === 1
+  );
+  return !!userCompany;
+};
 
 // =============================================================================
 // DATE & TIME UTILITIES
@@ -217,21 +261,32 @@ export const getCompanyNameById = (
 };
 
 /**
- * หาชื่อบริษัทของผู้ใช้จาก user-company relationships
+ * หาชื่อบริษัทของผู้ใช้ (ใช้ primary company หรือบริษัทแรก)
  * @param userId - ID ของผู้ใช้
- * @param usersCompany - Array ของ user-company relationships
+ * @param usersCompany - Array ของ user-company relationships จาก userCompanyService
  * @param companies - Array ของบริษัททั้งหมด
- * @returns string ชื่อบริษัทหรือ 'ไม่ระบุ'
+ * @returns string ชื่อบริษัทของผู้ใช้หรือ 'ไม่ระบุ'
  */
 export const getUserCompanyNameById = (
   userId: number,
-  usersCompany: any[],
+  usersCompany: UserCompany[],
   companies: any[]
 ): string => {
-  const userCompanyRelation = usersCompany.find((uc) => uc.user_id === userId);
-  if (userCompanyRelation) {
-    return getCompanyNameById(userCompanyRelation.company_id, companies);
+  // หา primary company ก่อน
+  const primaryRelation = usersCompany.find(
+    (uc) => uc.user_id === userId && uc.is_primary === true
+  );
+
+  if (primaryRelation) {
+    return getCompanyNameById(primaryRelation.company_id, companies);
   }
+
+  // ถ้าไม่มี primary ใช้บริษัทแรกที่เจอ
+  const firstRelation = usersCompany.find((uc) => uc.user_id === userId);
+  if (firstRelation) {
+    return getCompanyNameById(firstRelation.company_id, companies);
+  }
+
   return 'ไม่ระบุ';
 };
 
@@ -278,12 +333,12 @@ export const filterUsersBySearch = (
 /**
  * หาบริษัทหลักของผู้ใช้ (is_primary = true)
  * @param userId - ID ของผู้ใช้
- * @param usersCompany - Array ของ user-company relationships
+ * @param usersCompany - Array ของ user-company relationships จาก userCompanyService
  * @returns number | null ID ของบริษัทหลักหรือ null
  */
 export const getPrimaryCompanyIdByUserId = (
   userId: number,
-  usersCompany: any[]
+  usersCompany: UserCompany[]
 ): number | null => {
   const primaryRelation = usersCompany.find(
     (uc) => uc.user_id === userId && uc.is_primary === true
@@ -294,12 +349,12 @@ export const getPrimaryCompanyIdByUserId = (
 /**
  * หาบริษัททั้งหมดของผู้ใช้
  * @param userId - ID ของผู้ใช้
- * @param usersCompany - Array ของ user-company relationships
+ * @param usersCompany - Array ของ user-company relationships จาก userCompanyService
  * @returns Array ของ company IDs
  */
 export const getAllCompanyIdsByUserId = (
   userId: number,
-  usersCompany: any[]
+  usersCompany: UserCompany[]
 ): number[] => {
   return usersCompany
     .filter((uc) => uc.user_id === userId)
@@ -309,12 +364,12 @@ export const getAllCompanyIdsByUserId = (
 /**
  * หาผู้ใช้ในบริษัทที่ระบุ
  * @param companyId - ID ของบริษัท
- * @param usersCompany - Array ของ user-company relationships
+ * @param usersCompany - Array ของ user-company relationships จาก userCompanyService
  * @returns Array ของ user IDs
  */
 export const getUserIdsByCompanyId = (
   companyId: number,
-  usersCompany: any[]
+  usersCompany: UserCompany[]
 ): number[] => {
   return usersCompany
     .filter((uc) => uc.company_id === companyId)
@@ -322,62 +377,121 @@ export const getUserIdsByCompanyId = (
 };
 
 // =============================================================================
-// PARTICIPANT UTILITIES
+// PARTICIPANT UTILITIES (NEW VERSIONS WITH auctionsService)
 // =============================================================================
+/*
+ * การเปลี่ยนแปลงสำคัญ:
+ * - เปลี่ยนจากการใช้ static data model (@/app/model/dataAuction_Participant)
+ *   เป็น auctionsService ที่เป็น API service
+ *
+ * ฟังก์ชันใหม่ที่แนะนำให้ใช้:
+ * - getActiveParticipantsFromArray() แทน getActiveParticipants()
+ * - getOnlineParticipantsFromArray() แทน getOnlineParticipants()
+ * - getActiveParticipantCountFromArray() แทน getActiveParticipantCount()
+ * - getOnlineParticipantCountFromArray() แทน getOnlineParticipantCount()
+ * - isUserParticipantFromArray() แทน isUserParticipant()
+ * - isUserOnlineFromArray() แทน isUserOnline()
+ * - getUserParticipationFromArray() แทน getUserParticipation()
+ * - getParticipantStatsFromArray() แทน getParticipantStats()
+ *
+ * วิธีใช้งาน:
+ * 1. เรียก auctionsService.getAuctionParticipants(auctionId)
+ * 2. ส่ง data.data (AuctionParticipant[]) ไปยังฟังก์ชันต่างๆ
+ *
+ * ตัวอย่าง:
+ * const response = await auctionsService.getAuctionParticipants(auctionId);
+ * if (response.success) {
+ *   const activeCount = getActiveParticipantCountFromArray(auctionId, response.data);
+ *   const isOnline = isUserOnlineFromArray(auctionId, userId, response.data);
+ * }
+ */
 
 /**
  * ดึงผู้เข้าร่วมประมูลที่ active ในตลาดประมูลที่ระบุ
+ * @param auctionId - ID ของตลาดประมูล
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns Array ของผู้เข้าร่วมที่ active
  */
-export const getActiveParticipants = (
-  auctionId: number
+export const getActiveParticipantsFromArray = (
+  auctionId: number,
+  participants: AuctionParticipant[]
 ): AuctionParticipant[] => {
-  return dataAuction_Participant.filter(
+  return participants.filter(
     (p) => p.auction_id === auctionId && p.status === 1
   );
 };
 
 /**
  * ดึงผู้เข้าร่วมประมูลที่ online ในตลาดประมูลที่ระบุ
+ * @param auctionId - ID ของตลาดประมูล
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns Array ของผู้เข้าร่วมที่ online
  */
-export const getOnlineParticipants = (
-  auctionId: number
+export const getOnlineParticipantsFromArray = (
+  auctionId: number,
+  participants: AuctionParticipant[]
 ): AuctionParticipant[] => {
-  return dataAuction_Participant.filter(
+  return participants.filter(
     (p) => p.auction_id === auctionId && p.status === 1 && p.is_connected
   );
 };
 
 /**
  * นับจำนวนผู้เข้าร่วมประมูลที่ active
+ * @param auctionId - ID ของตลาดประมูล
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns จำนวนผู้เข้าร่วมที่ active
  */
-export const getActiveParticipantCount = (auctionId: number): number => {
-  return getActiveParticipants(auctionId).length;
+export const getActiveParticipantCountFromArray = (
+  auctionId: number,
+  participants: AuctionParticipant[]
+): number => {
+  return getActiveParticipantsFromArray(auctionId, participants).length;
 };
 
 /**
  * นับจำนวนผู้เข้าร่วมประมูลที่ online
+ * @param auctionId - ID ของตลาดประมูล
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns จำนวนผู้เข้าร่วมที่ online
  */
-export const getOnlineParticipantCount = (auctionId: number): number => {
-  return getOnlineParticipants(auctionId).length;
+export const getOnlineParticipantCountFromArray = (
+  auctionId: number,
+  participants: AuctionParticipant[]
+): number => {
+  return getOnlineParticipantsFromArray(auctionId, participants).length;
 };
 
 /**
  * ตรวจสอบว่าผู้ใช้เข้าร่วมประมูลหรือไม่
+ * @param auctionId - ID ของตลาดประมูล
+ * @param userId - ID ของผู้ใช้
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns boolean - เข้าร่วมหรือไม่
  */
-export const isUserParticipant = (
+export const isUserParticipantFromArray = (
   auctionId: number,
-  userId: number
+  userId: number,
+  participants: AuctionParticipant[]
 ): boolean => {
-  return dataAuction_Participant.some(
+  return participants.some(
     (p) => p.auction_id === auctionId && p.user_id === userId && p.status === 1
   );
 };
 
 /**
  * ตรวจสอบว่าผู้ใช้ online หรือไม่
+ * @param auctionId - ID ของตลาดประมูล
+ * @param userId - ID ของผู้ใช้
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns boolean - online หรือไม่
  */
-export const isUserOnline = (auctionId: number, userId: number): boolean => {
-  const participant = dataAuction_Participant.find(
+export const isUserOnlineFromArray = (
+  auctionId: number,
+  userId: number,
+  participants: AuctionParticipant[]
+): boolean => {
+  const participant = participants.find(
     (p) => p.auction_id === auctionId && p.user_id === userId && p.status === 1
   );
   return participant?.is_connected || false;
@@ -385,24 +499,98 @@ export const isUserOnline = (auctionId: number, userId: number): boolean => {
 
 /**
  * ดึงข้อมูลผู้เข้าร่วมประมูลของผู้ใช้
+ * @param auctionId - ID ของตลาดประมูล
+ * @param userId - ID ของผู้ใช้
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns ข้อมูลผู้เข้าร่วมหรือ null
  */
-export const getUserParticipation = (
+export const getUserParticipationFromArray = (
   auctionId: number,
-  userId: number
+  userId: number,
+  participants: AuctionParticipant[]
 ): AuctionParticipant | null => {
   return (
-    dataAuction_Participant.find(
+    participants.find(
       (p) =>
         p.auction_id === auctionId && p.user_id === userId && p.status === 1
     ) || null
   );
 };
 
+// Legacy functions for backward compatibility (deprecated)
+export const getActiveParticipants = (
+  auctionId: number
+): AuctionParticipant[] => {
+  console.warn(
+    'getActiveParticipants is deprecated - use getActiveParticipantsFromArray with participants array'
+  );
+  return [];
+};
+
+export const getOnlineParticipants = (
+  auctionId: number
+): AuctionParticipant[] => {
+  console.warn(
+    'getOnlineParticipants is deprecated - use getOnlineParticipantsFromArray with participants array'
+  );
+  return [];
+};
+
+export const getActiveParticipantCount = (auctionId: number): number => {
+  console.warn(
+    'getActiveParticipantCount is deprecated - use getActiveParticipantCountFromArray with participants array'
+  );
+  return 0;
+};
+
+export const getOnlineParticipantCount = (auctionId: number): number => {
+  console.warn(
+    'getOnlineParticipantCount is deprecated - use getOnlineParticipantCountFromArray with participants array'
+  );
+  return 0;
+};
+
+export const isUserParticipant = (
+  auctionId: number,
+  userId: number
+): boolean => {
+  console.warn(
+    'isUserParticipant is deprecated - use isUserParticipantFromArray with participants array'
+  );
+  return false;
+};
+
+export const isUserOnline = (auctionId: number, userId: number): boolean => {
+  console.warn(
+    'isUserOnline is deprecated - use isUserOnlineFromArray with participants array'
+  );
+  return false;
+};
+
+export const getUserParticipation = (
+  auctionId: number,
+  userId: number
+): AuctionParticipant | null => {
+  console.warn(
+    'getUserParticipation is deprecated - use getUserParticipationFromArray with participants array'
+  );
+  return null;
+};
+
 /**
  * ดึงสถิติผู้เข้าร่วมประมูล
+ * @param auctionId - ID ของตลาดประมูล
+ * @param participants - Array ของ AuctionParticipant จาก auctionsService
+ * @returns สถิติผู้เข้าร่วม
  */
-export const getParticipantStats = (auctionId: number) => {
-  const activeParticipants = getActiveParticipants(auctionId);
+export const getParticipantStatsFromArray = (
+  auctionId: number,
+  participants: AuctionParticipant[]
+) => {
+  const activeParticipants = getActiveParticipantsFromArray(
+    auctionId,
+    participants
+  );
   const onlineCount = activeParticipants.filter((p) => p.is_connected).length;
   const offlineCount = activeParticipants.length - onlineCount;
 
@@ -411,6 +599,19 @@ export const getParticipantStats = (auctionId: number) => {
     online: onlineCount,
     offline: offlineCount,
     participants: activeParticipants,
+  };
+};
+
+// Legacy function for backward compatibility (deprecated)
+export const getParticipantStats = (auctionId: number) => {
+  console.warn(
+    'getParticipantStats is deprecated - use getParticipantStatsFromArray with participants array'
+  );
+  return {
+    total: 0,
+    online: 0,
+    offline: 0,
+    participants: [],
   };
 };
 
@@ -727,139 +928,136 @@ export const removeLocalStorage = (key: string): void => {
 /**
  * ดึงการเสนอราคาทั้งหมดในประมูล (เฉพาะที่ยอมรับแล้ว)
  */
-export const getAuctionBids = (auctionId: number): AuctionBid[] => {
-  return dataAuction_Bid
-    .filter((bid) => bid.auction_id === auctionId && bid.status === 'accept')
-    .sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+export const getAuctionBids = async (
+  auctionId: number
+): Promise<AuctionBid[]> => {
+  try {
+    const response = await auctionsService.getAcceptedBids(auctionId);
+    return response.success ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching auction bids:', error);
+    return [];
+  }
 };
 
 /**
  * ดึงการเสนอราคาทั้งหมดในประมูล (รวมทุกสถานะ)
  */
-export const getAllAuctionBids = (auctionId: number): AuctionBid[] => {
-  return dataAuction_Bid
-    .filter((bid) => bid.auction_id === auctionId)
-    .sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+export const getAllAuctionBids = async (
+  auctionId: number
+): Promise<AuctionBid[]> => {
+  try {
+    const response = await auctionsService.getAuctionBids(auctionId);
+    return response.success ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching all auction bids:', error);
+    return [];
+  }
 };
 
 /**
- * ดึงการเสนอราคาล่าสุดของแต่ละบริษัท (เฉพาะที่ยอมรับ)
+ * ดึงราคาเสนอล่าสุดของแต่ละบริษัท
  */
-export const getLatestBidByCompany = (auctionId: number): AuctionBid[] => {
-  const bids = getAuctionBids(auctionId);
-  const latestBids: { [companyId: number]: AuctionBid } = {};
-
-  bids.forEach((bid) => {
-    const companyId = getCompanyByUserId(bid.user_id);
-    if (companyId) {
-      if (
-        !latestBids[companyId] ||
-        new Date(bid.bid_time) > new Date(latestBids[companyId].bid_time)
-      ) {
-        latestBids[companyId] = bid;
-      }
-    }
-  });
-
-  return Object.values(latestBids).sort((a, b) => a.bid_amount - b.bid_amount);
+export const getLatestBidByCompany = async (
+  auctionId: number
+): Promise<AuctionBid[]> => {
+  return await auctionsService.getLatestBidByCompany(auctionId);
 };
 
 /**
- * ดึงราคาเสนอต่ำสุดในประมูล
+ * ดึงราคาเสนอต่ำสุด
  */
-export const getLowestBid = (auctionId: number): AuctionBid | null => {
-  const latestBids = getLatestBidByCompany(auctionId);
-  return latestBids.length > 0 ? latestBids[0] : null;
+export const getLowestBid = async (
+  auctionId: number
+): Promise<AuctionBid | null> => {
+  return await auctionsService.getLowestBid(auctionId);
 };
 
 /**
  * ดึงราคาเสนอที่ชนะ (is_winning = true)
  */
-export const getWinningBid = (auctionId: number): AuctionBid | null => {
-  const bids = dataAuction_Bid.filter(
-    (bid) => bid.auction_id === auctionId && bid.is_winning
-  );
-  return bids.length > 0 ? bids[0] : null;
+export const getWinningBid = async (
+  auctionId: number
+): Promise<AuctionBid | null> => {
+  return await auctionsService.getWinningBid(auctionId);
 };
 
 /**
  * ดึงจำนวนการเสนอราคาในประมูล (เฉพาะที่ยอมรับ)
  */
-export const getBidCount = (auctionId: number): number => {
-  return getAuctionBids(auctionId).length;
+export const getBidCount = async (auctionId: number): Promise<number> => {
+  const bids = await getAuctionBids(auctionId);
+  return bids.length;
 };
 
 /**
- * ดึงจำนวนการเสนอราคาทั้งหมด (รวมทุกสถานะ)
+ * ดึงจำนวนการเสนอราคาในประมูล (รวมทุกสถานะ)
  */
-export const getTotalBidCount = (auctionId: number): number => {
-  return getAllAuctionBids(auctionId).length;
+export const getTotalBidCount = async (auctionId: number): Promise<number> => {
+  const bids = await getAllAuctionBids(auctionId);
+  return bids.length;
 };
 
 /**
- * ดึงการเสนอราคาของผู้ใช้ในประมูล
+ * ดึงการเสนอราคาของผู้ใช้คนใดคนหนึ่ง
  */
-export const getUserBids = (
+export const getUserBids = async (
   auctionId: number,
   userId: number
-): AuctionBid[] => {
-  return dataAuction_Bid
-    .filter((bid) => bid.auction_id === auctionId && bid.user_id === userId)
-    .sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+): Promise<AuctionBid[]> => {
+  try {
+    const response = await auctionsService.getUserBids(auctionId, userId);
+    return response.success ? response.data : [];
+  } catch (error) {
+    console.error('Error fetching user bids:', error);
+    return [];
+  }
 };
 
 /**
  * ดึงการเสนอราคาล่าสุดของผู้ใช้
  */
-export const getLatestUserBid = (
+export const getLatestUserBid = async (
   auctionId: number,
   userId: number
-): AuctionBid | null => {
-  const bids = getUserBids(auctionId, userId);
+): Promise<AuctionBid | null> => {
+  const bids = await getUserBids(auctionId, userId);
   const acceptedBids = bids.filter((bid) => bid.status === 'accept');
   return acceptedBids.length > 0 ? acceptedBids[0] : null;
 };
 
 /**
- * ดึงการเสนอราคาของบริษัทในประมูล
+ * ดึงการเสนอราคาของบริษัท
  */
-export const getCompanyBids = (
+export const getCompanyBids = async (
   auctionId: number,
   companyId: number
-): AuctionBid[] => {
-  return dataAuction_Bid
-    .filter((bid) => {
-      const bidCompanyId = getCompanyByUserId(bid.user_id);
-      return (
-        bid.auction_id === auctionId &&
-        bidCompanyId === companyId &&
-        bid.status === 'accept'
-      );
-    })
-    .sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+): Promise<AuctionBid[]> => {
+  try {
+    const bids = await getAuctionBids(auctionId);
+    return bids.filter((bid) => {
+      const bidCompanyId = getCompanyByUserIdFromArray(bid.user_id, []);
+      return bidCompanyId === companyId;
+    });
+  } catch (error) {
+    console.error('Error fetching company bids:', error);
+    return [];
+  }
 };
 
 /**
  * ดึงการเสนอราคาล่าสุดของบริษัท
  */
-export const getLatestCompanyBid = (
+export const getLatestCompanyBid = async (
   auctionId: number,
   companyId: number
-): AuctionBid | null => {
-  const bids = getCompanyBids(auctionId, companyId);
+): Promise<AuctionBid | null> => {
+  const bids = await getCompanyBids(auctionId, companyId);
   return bids.length > 0 ? bids[0] : null;
 };
 
 /**
- * คำนวณความต่างจากราคาตั้งต้น
+ * คำนวณผลต่างราคาจากราคาประกัน
  */
 export const calculatePriceDifference = (
   reservePrice: number,
@@ -869,7 +1067,7 @@ export const calculatePriceDifference = (
 };
 
 /**
- * คำนวณเปอร์เซ็นต์ความต่างจากราคาตั้งต้น
+ * คำนวณเปอร์เซ็นต์ผลต่างราคาจากราคาประกัน
  */
 export const calculatePriceDifferencePercentage = (
   reservePrice: number,
@@ -880,184 +1078,220 @@ export const calculatePriceDifferencePercentage = (
 };
 
 /**
- * ตรวจสอบว่าบริษัทเสนอราคาในประมูลหรือไม่
+ * ตรวจสอบว่าบริษัทมีการเสนอราคาหรือไม่
  */
-export const hasCompanyBid = (
+export const hasCompanyBid = async (
   auctionId: number,
   companyId: number
-): boolean => {
-  return dataAuction_Bid.some((bid) => {
-    const bidCompanyId = getCompanyByUserId(bid.user_id);
-    return (
-      bid.auction_id === auctionId &&
-      bidCompanyId === companyId &&
-      bid.status === 'accept'
-    );
-  });
+): Promise<boolean> => {
+  try {
+    const bids = await getAuctionBids(auctionId);
+    return bids.some((bid) => {
+      const bidCompanyId = getCompanyByUserIdFromArray(bid.user_id, []);
+      return bidCompanyId === companyId;
+    });
+  } catch (error) {
+    console.error('Error checking company bid:', error);
+    return false;
+  }
 };
 
 /**
- * ตรวจสอบว่าผู้ใช้เสนอราคาในประมูลหรือไม่
+ * ตรวจสอบว่าผู้ใช้มีการเสนอราคาหรือไม่
  */
-export const hasUserBid = (auctionId: number, userId: number): boolean => {
-  return dataAuction_Bid.some(
-    (bid) =>
-      bid.auction_id === auctionId &&
-      bid.user_id === userId &&
-      bid.status === 'accept'
-  );
+export const hasUserBid = async (
+  auctionId: number,
+  userId: number
+): Promise<boolean> => {
+  return await auctionsService.hasUserBid(auctionId, userId);
 };
 
 /**
- * ดึงข้อมูลบริษัทจาก ID
+ * ดึงจำนวนครั้งที่ผู้ใช้เสนอราคา
  */
-export const getCompanyById = (companyId: number) => {
-  return initialCompanies.find((company) => company.id === companyId) || null;
+export const getUserBidAttempts = async (
+  auctionId: number,
+  userId: number
+): Promise<number> => {
+  const bids = await getUserBids(auctionId, userId);
+  return bids.length;
 };
 
 /**
- * ดึงชื่อบริษัทจาก ID
+ * ดึงข้อมูลบริษัทจาก ID (อัปเดตให้รับ companies array)
+ * @param companyId - ID ของบริษัท
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ข้อมูลบริษัทหรือ null
  */
-export const getCompanyName = (companyId: number): string => {
-  const company = getCompanyById(companyId);
+export const getCompanyById = (companyId: number, companies: any[]) => {
+  return companies.find((company) => company.id === companyId) || null;
+};
+
+/**
+ * ดึงชื่อบริษัทจาก ID (อัปเดตให้รับ companies array)
+ * @param companyId - ID ของบริษัท
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ชื่อบริษัทหรือ fallback string
+ */
+export const getCompanyName = (companyId: number, companies: any[]): string => {
+  const company = getCompanyById(companyId, companies);
   return company ? company.name : `บริษัท #${companyId}`;
 };
 
 /**
- * ดึงข้อมูลบริษัทจาก user_id
+ * ดึงข้อมูลบริษัทจาก user_id (อัปเดตให้รับ companies array)
+ * @param userId - ID ของผู้ใช้
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ข้อมูลบริษัทหรือ null
  */
-export const getCompanyByUser = (userId: number) => {
-  const companyId = getCompanyByUserId(userId);
-  return companyId ? getCompanyById(companyId) : null;
+export const getCompanyByUser = (userId: number, companies: any[]) => {
+  const companyId = getCompanyByUserIdFromArray(userId, []);
+  return companyId ? getCompanyById(companyId, companies) : null;
 };
 
 /**
- * ดึงชื่อบริษัทจาก user_id
+ * ดึงชื่อบริษัทจาก user_id (อัปเดตให้รับ companies array)
+ * @param userId - ID ของผู้ใช้
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ชื่อบริษัทหรือ fallback string
  */
-export const getCompanyNameByUser = (userId: number): string => {
-  const companyId = getCompanyByUserId(userId);
-  return companyId ? getCompanyName(companyId) : `ผู้ใช้ #${userId}`;
-};
-
-/**
- * ดึงจำนวนการพยายามเสนอราคาของผู้ใช้
- */
-export const getUserBidAttempts = (
-  auctionId: number,
-  userId: number
-): number => {
-  const bids = getUserBids(auctionId, userId);
-  return bids.length;
+export const getCompanyNameByUser = (
+  userId: number,
+  companies: any[]
+): string => {
+  const companyId = getCompanyByUserIdFromArray(userId, []);
+  return companyId ? getCompanyName(companyId, companies) : `ผู้ใช้ #${userId}`;
 };
 
 /**
  * ดึงสถิติการเสนอราคาตามสถานะ
  */
-export const getBidStatsByStatus = (auctionId: number) => {
-  const allBids = getAllAuctionBids(auctionId);
-
-  return {
-    accept: allBids.filter((bid) => bid.status === 'accept').length,
-    rejected: allBids.filter((bid) => bid.status === 'rejected').length,
-    canceled: allBids.filter((bid) => bid.status === 'canceled').length,
-    total: allBids.length,
-  };
+export const getBidStatsByStatus = async (auctionId: number) => {
+  return await auctionsService.getBidStatsByStatus(auctionId);
 };
 
 /**
  * ดึงการเสนอราคาตามสถานะ
  */
-export const getBidsByStatus = (
+export const getBidsByStatus = async (
   auctionId: number,
   status: string
-): AuctionBid[] => {
-  return dataAuction_Bid
-    .filter((bid) => bid.auction_id === auctionId && bid.status === status)
-    .sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+): Promise<AuctionBid[]> => {
+  try {
+    const allBids = await getAllAuctionBids(auctionId);
+    return allBids.filter((bid) => bid.status === status);
+  } catch (error) {
+    console.error('Error getting bids by status:', error);
+    return [];
+  }
 };
 
 /**
  * สร้างข้อมูลสำหรับตารางผู้เสนอราคา (อัปเดตสำหรับโครงสร้างใหม่)
+ * @param auctionId - ID ของการประมูล
+ * @param reservePrice - ราคาประกัน
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ข้อมูลตารางผู้เสนอราคา
  */
-export const getBidTableData = (auctionId: number, reservePrice: number) => {
-  const latestBids = getLatestBidByCompany(auctionId);
+export const getBidTableData = async (
+  auctionId: number,
+  reservePrice: number,
+  companies: any[] = []
+) => {
+  try {
+    const latestBids = await getLatestBidByCompany(auctionId);
 
-  return latestBids.map((bid, index) => {
-    const companyId = getCompanyByUserId(bid.user_id);
-    const company = companyId ? getCompanyById(companyId) : null;
-    const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
-    const percentageDiff = calculatePriceDifferencePercentage(
-      reservePrice,
-      bid.bid_amount
-    );
+    return latestBids.map((bid, index) => {
+      const companyId = getCompanyByUserIdFromArray(bid.user_id, []);
+      const company = companyId ? getCompanyById(companyId, companies) : null;
+      const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
+      const percentageDiff = calculatePriceDifferencePercentage(
+        reservePrice,
+        bid.bid_amount
+      );
 
-    return {
-      rank: index + 1,
-      userId: bid.user_id,
-      companyId: companyId || 0,
-      companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
-      companyShortName:
-        company?.name?.substring(0, 20) +
-          (company?.name && company.name.length > 20 ? '...' : '') ||
-        `ผู้ใช้ #${bid.user_id}`,
-      bidAmount: bid.bid_amount,
-      priceDifference: priceDiff,
-      percentageDifference: percentageDiff,
-      bidTime: bid.bid_time,
-      isLowest: index === 0,
-      isWinning: bid.is_winning,
-      status: bid.status,
-      attempt: bid.attempt,
-      statusText: getBidStatusText(bid.status),
-      statusColor: getBidStatusColor(bid.status),
-      userRole: getUserRole(bid.user_id) || 'unknown',
-      canBid: canUserBid(bid.user_id),
-      isConnected: isUserOnline(auctionId, bid.user_id),
-    };
-  });
+      return {
+        rank: index + 1,
+        userId: bid.user_id,
+        companyId: companyId || 0,
+        companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
+        companyShortName:
+          company?.name?.substring(0, 20) +
+            (company?.name && company.name.length > 20 ? '...' : '') ||
+          `ผู้ใช้ #${bid.user_id}`,
+        bidAmount: bid.bid_amount,
+        priceDifference: priceDiff,
+        percentageDifference: percentageDiff,
+        bidTime: bid.bid_time,
+        isLowest: index === 0,
+        isWinning: bid.is_winning,
+        status: bid.status,
+        attempt: bid.attempt,
+        statusText: getBidStatusText(bid.status),
+        statusColor: getBidStatusColor(bid.status),
+        userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
+        canBid: canUserBidFromArray(bid.user_id, []),
+        isConnected: isUserOnline(auctionId, bid.user_id),
+      };
+    });
+  } catch (error) {
+    console.error('Error getting bid table data:', error);
+    return [];
+  }
 };
 
 /**
  * สร้างข้อมูลประวัติการเสนอราคาทั้งหมด
+ * @param auctionId - ID ของการประมูล
+ * @param reservePrice - ราคาประกัน
+ * @param companies - Array ของบริษัททั้งหมด
+ * @returns ข้อมูลประวัติการเสนอราคา
  */
-export const getBidHistoryData = (auctionId: number, reservePrice: number) => {
-  const allBids = getAllAuctionBids(auctionId);
+export const getBidHistoryData = async (
+  auctionId: number,
+  reservePrice: number,
+  companies: any[] = []
+) => {
+  try {
+    const allBids = await getAllAuctionBids(auctionId);
 
-  // เรียงลำดับตามเวลาจากน้อยไปมาก (เก่าไปใหม่)
-  const sortedBids = allBids.sort((a, b) => {
-    const timeA = new Date(a.bid_time).getTime();
-    const timeB = new Date(b.bid_time).getTime();
-    return timeA - timeB; // เรียงจากน้อยไปมาก
-  });
+    // เรียงลำดับตามเวลาจากน้อยไปมาก (เก่าไปใหม่)
+    const sortedBids = allBids.sort((a, b) => {
+      const timeA = new Date(a.bid_time).getTime();
+      const timeB = new Date(b.bid_time).getTime();
+      return timeA - timeB; // เรียงจากน้อยไปมาก
+    });
 
-  return sortedBids.map((bid) => {
-    const companyId = getCompanyByUserId(bid.user_id);
-    const company = companyId ? getCompanyById(companyId) : null;
-    const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
-    const percentageDiff = calculatePriceDifferencePercentage(
-      reservePrice,
-      bid.bid_amount
-    );
+    return sortedBids.map((bid) => {
+      const companyId = getCompanyByUserIdFromArray(bid.user_id, []);
+      const company = companyId ? getCompanyById(companyId, companies) : null;
+      const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
+      const percentageDiff = calculatePriceDifferencePercentage(
+        reservePrice,
+        bid.bid_amount
+      );
 
-    return {
-      bidId: bid.bid_id,
-      userId: bid.user_id,
-      companyId: companyId || 0,
-      companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
-      bidAmount: bid.bid_amount,
-      priceDifference: priceDiff,
-      percentageDifference: percentageDiff,
-      bidTime: bid.bid_time,
-      status: bid.status,
-      attempt: bid.attempt,
-      isWinning: bid.is_winning,
-      statusText: getBidStatusText(bid.status),
-      statusColor: getBidStatusColor(bid.status),
-      userRole: getUserRole(bid.user_id) || 'unknown',
-    };
-  });
+      return {
+        bidId: bid.bid_id,
+        userId: bid.user_id,
+        companyId: companyId || 0,
+        companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
+        bidAmount: bid.bid_amount,
+        priceDifference: priceDiff,
+        percentageDifference: percentageDiff,
+        bidTime: bid.bid_time,
+        status: bid.status,
+        attempt: bid.attempt,
+        isWinning: bid.is_winning,
+        statusText: getBidStatusText(bid.status),
+        statusColor: getBidStatusColor(bid.status),
+        userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
+      };
+    });
+  } catch (error) {
+    console.error('Error getting bid history data:', error);
+    return [];
+  }
 };
 
 /**
@@ -1388,10 +1622,6 @@ export default {
   calculatePriceDifferencePercentage,
   hasCompanyBid,
   hasUserBid,
-  getCompanyById,
-  getCompanyName,
-  getCompanyByUser,
-  getCompanyNameByUser,
   getUserBidAttempts,
   getBidStatsByStatus,
   getBidsByStatus,
