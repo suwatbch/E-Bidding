@@ -1114,7 +1114,7 @@ export default function AuctionFormPage() {
             </div>
             <button
               onClick={handleCancel}
-              className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex text-sm font-medium items-center gap-1 text-blue-500 hover:text-blue-700 transition-colors"
             >
               <svg
                 className="w-5 h-5"
@@ -1129,7 +1129,7 @@ export default function AuctionFormPage() {
                   d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-              <span className="text-sm font-medium">ย้อนกลับ</span>
+              ย้อนกลับ
             </button>
           </div>
         </div>
