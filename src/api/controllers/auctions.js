@@ -593,7 +593,7 @@ router.post('/with-participants', async (req, res) => {
   }
 });
 
-// POST /api/auctions/delete/:id - ลบประมูล (soft delete)
+// POST /api/auctions/delete/:id - ลบประมูล (hard delete) - ลบทั้ง 3 ตาราง
 router.post('/delete/:id', async (req, res) => {
   try {
     const auctionId = parseInt(req.params.id);

@@ -158,15 +158,60 @@ async function updateAuction(auctionId, auctionData) {
   ]);
 }
 
-// ลบประมูล (soft delete)
+// ลบประมูล (hard delete) - ลบจากทั้ง 3 ตาราง
 async function deleteAuction(auctionId) {
-  const query = `
-    UPDATE auction 
-    SET is_deleted = 1
-    WHERE auction_id = ?
-  `;
+  let connection;
 
-  return await executeQuery(query, [auctionId]);
+  try {
+    // สร้าง connection สำหรับ transaction
+    connection = await getConnection();
+    await connection.beginTransaction();
+
+    // 1. ลบรายการประมูล (auction_item)
+    const deleteItemsQuery = `
+      DELETE FROM auction_item 
+      WHERE auction_id = ?
+    `;
+    await connection.execute(deleteItemsQuery, [auctionId]);
+
+    // 2. ลบผู้เข้าร่วมประมูล (auction_participant)
+    const deleteParticipantsQuery = `
+      DELETE FROM auction_participant 
+      WHERE auction_id = ?
+    `;
+    await connection.execute(deleteParticipantsQuery, [auctionId]);
+
+    // 3. ลบตลาดประมูล (auction)
+    const deleteAuctionQuery = `
+      DELETE FROM auction 
+      WHERE auction_id = ?
+    `;
+    await connection.execute(deleteAuctionQuery, [auctionId]);
+
+    // Commit transaction
+    await connection.commit();
+
+    return {
+      success: true,
+      message: null,
+    };
+  } catch (error) {
+    // Rollback transaction ถ้าเกิดข้อผิดพลาด
+    if (connection) {
+      await connection.rollback();
+    }
+
+    console.error('Transaction failed:', error);
+    return {
+      success: false,
+      error: error.message || 'เกิดข้อผิดพลาดในการลบประมูล',
+    };
+  } finally {
+    // ปิด connection
+    if (connection) {
+      await connection.release();
+    }
+  }
 }
 
 // ค้นหาประมูล

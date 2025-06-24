@@ -553,7 +553,7 @@ export const auctionsService = {
   },
 
   /**
-   * ลบประมูล (soft delete)
+   * ลบประมูล (hard delete) - ลบทั้ง 3 ตาราง
    */
   deleteAuction: async (id: number): Promise<ApiResponse> => {
     try {

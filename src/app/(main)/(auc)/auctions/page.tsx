@@ -260,6 +260,24 @@ export default function AuctionsPage() {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('คุณแน่ใจว่าต้องการลบตลาดนี้?')) return;
+
+    try {
+      const result = await auctionsService.deleteAuction(id);
+
+      if (result.success && result.message === null) {
+        await loadAuctions();
+        alert('ลบข้อมูลตลาดเรียบร้อยแล้ว');
+      } else {
+        alert(result.message);
+      }
+    } catch (error: any) {
+      console.error('Error deleting auction:', error);
+      alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+    }
+  };
+
   useEffect(() => {
     loadAuctions();
   }, []);
@@ -630,51 +648,51 @@ export default function AuctionsPage() {
             </div>
           </div>
 
-          <Table>
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[5%] text-center">
+                <TableHead className="w-[5%] min-w-[50px] max-w-[80px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     ลำดับ
                   </div>
                 </TableHead>
-                <TableHead className="min-w-[100px]">
+                <TableHead className="w-[25%] min-w-[200px] max-w-[400px]">
                   <div className="flex items-center gap-2">
                     <AucBiddingIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
-                <TableHead className="w-[15%]">
+                <TableHead className="w-[12%] min-w-[100px] max-w-[150px]">
                   <div className="flex items-center gap-2">
                     <AucCategoryIcon className="w-5 h-5 text-gray-500" />
                     ประเภท
                   </div>
                 </TableHead>
-                <TableHead className="w-[16%] text-center">
+                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucStartTimeIcon className="w-5 h-5 text-gray-500" />
                     เวลาเปิด
                   </div>
                 </TableHead>
-                <TableHead className="w-[16%] text-center">
+                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucEndTimeIcon className="w-5 h-5 text-gray-500" />
                     เวลาปิด
                   </div>
                 </TableHead>
-                <TableHead className="w-[10%] text-center">
+                <TableHead className="w-[10%] min-w-[80px] max-w-[100px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucUserIcon className="w-5 h-5 text-gray-500" />
                     เข้าร่วม
                   </div>
                 </TableHead>
-                <TableHead className="w-[8%] text-center">
+                <TableHead className="w-[10%] min-w-[80px] max-w-[120px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <AucOfferIcon className="w-5 h-5 text-gray-500" />
                     สถานะ
                   </div>
                 </TableHead>
-                <TableHead className="w-[8%] text-center">
+                <TableHead className="w-[10%] min-w-[90px] max-w-[130px] text-center">
                   <div className="flex items-center justify-center gap-2">
                     <svg
                       className="w-4 h-4"
@@ -713,21 +731,41 @@ export default function AuctionsPage() {
                         {(startIndex + index + 1).toLocaleString('th-TH')}
                       </TableCell>
                       <TableCell>
-                        <div className="relative">
+                        <div className="w-full overflow-hidden">
                           <Link
                             href={`/auction/${(item as any).auction_id || ''}`}
                             prefetch={false}
-                            className="text-sm font-medium truncate cursor-pointer text-blue-500 transition-colors block"
+                            className="text-sm font-medium cursor-pointer text-blue-500 transition-colors block w-full"
                             title={item.title}
                           >
-                            {item.title}
+                            <div className="font-medium text-blue-700 truncate w-full">
+                              {(auctions || []).find(
+                                (a) => a.auction_id === (item as any).auction_id
+                              )?.name || 'ไม่พบชื่อตลาด'}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1 truncate w-full">
+                              {`[${formatAuctionId({
+                                auction_id: (item as any).auction_id,
+                              })}] `}
+                              {(() => {
+                                const auction = (auctions || []).find(
+                                  (a) =>
+                                    a.auction_id === (item as any).auction_id
+                                );
+                                return auction?.remark
+                                  ? auction.remark
+                                  : `ราคาประกัน: ${formatPrice(
+                                      auction?.reserve_price || 0
+                                    )}`;
+                              })()}
+                            </div>
                           </Link>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="relative">
+                        <div className="w-full overflow-hidden">
                           <div
-                            className="text-sm truncate cursor-pointer"
+                            className="text-sm truncate w-full cursor-pointer"
                             title={item.category}
                           >
                             {item.category}
@@ -801,17 +839,12 @@ export default function AuctionsPage() {
                           {[1, 2, 6].includes(item.status) && (
                             <button
                               onClick={() => {
-                                const auction = (auctions || []).find(
-                                  (a) =>
-                                    a.auction_id === (item as any).auction_id
-                                );
-                                const auctionName = auction?.name || 'ตลาดนี้';
                                 if (
                                   confirm(
-                                    `คุณต้องการลบ "${auctionName}" หรือไม่?`
+                                    `คุณต้องการลบตลาด "${item.title}" หรือไม่?`
                                   )
                                 ) {
-                                  alert('ลบข้อมูลเรียบร้อยแล้ว');
+                                  handleDelete((item as any).auction_id);
                                 }
                               }}
                               className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
