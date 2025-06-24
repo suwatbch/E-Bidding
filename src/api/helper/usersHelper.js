@@ -1,4 +1,4 @@
-const { executeQuery } = require('../config/dataconfig');
+const { executeQuery, getConnection } = require('../config/dataconfig');
 const bcrypt = require('bcryptjs');
 
 // ดึงข้อมูลผู้ใช้งานทั้งหมด
@@ -450,7 +450,6 @@ async function createUserWithCompanies(userData, companies) {
 
   try {
     // สร้าง connection สำหรับ transaction
-    const { getConnection } = require('../config/dataconfig');
     connection = await getConnection();
     await connection.beginTransaction();
 
@@ -581,8 +580,6 @@ async function updateUserWithCompanies(userId, userData, companies) {
   let connection;
 
   try {
-    // สร้าง connection สำหรับ transaction
-    const { getConnection } = require('../config/dataconfig');
     connection = await getConnection();
     await connection.beginTransaction();
 
