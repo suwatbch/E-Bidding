@@ -38,7 +38,6 @@ export default function AuctionFormPage() {
   const auctionId = searchParams.get('id');
   const isEdit = auctionId !== '0' && !!auctionId;
 
-  const [isLoading, setIsLoading] = useState(false);
   const [hasPermission, setHasPermission] = useState(true);
   const [permissionError, setPermissionError] = useState('');
   const [formData, setFormData] = useState<Auction>({
@@ -259,7 +258,6 @@ export default function AuctionFormPage() {
 
   const loadAuctionData = async (id: number) => {
     try {
-      setIsLoading(true);
       // ดึงข้อมูลจาก API ตาม auction_id
       const response = await auctionsService.getAuctionById(id);
 
@@ -287,8 +285,6 @@ export default function AuctionFormPage() {
       console.error('Error loading auction data:', error);
       setHasPermission(false);
       setPermissionError('เกิดข้อผิดพลาดในการโหลดข้อมูล');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -664,8 +660,6 @@ export default function AuctionFormPage() {
     e.preventDefault();
 
     try {
-      setIsLoading(true);
-
       // Validation
       if (!formData.name.trim()) {
         alert('กรุณากรอกชื่อตลาด');
@@ -782,8 +776,6 @@ export default function AuctionFormPage() {
     } catch (error) {
       console.error('Error saving auction:', error);
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -1059,23 +1051,6 @@ export default function AuctionFormPage() {
                 สร้างตลาดใหม่
               </button>
             </div>
-          </div>
-        </div>
-      </Container>
-    );
-  }
-
-  if ((isLoading && isEdit) || loadingAuctionTypes) {
-    return (
-      <Container className="py-6">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">
-              {isEdit
-                ? 'กำลังตรวจสอบสิทธิ์และโหลดข้อมูล...'
-                : 'กำลังโหลดข้อมูลประเภทประมูล...'}
-            </p>
           </div>
         </div>
       </Container>
@@ -1973,36 +1948,30 @@ export default function AuctionFormPage() {
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
-                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center gap-2"
               >
-                {isLoading && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                )}
-                {!isLoading && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    {isEdit ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M16.5 3.75a1.125 1.125 0 011.125 1.125v8.252c0 .36-.148.7-.398.938l-5.057 4.786a2.25 2.25 0 01-3.084 0l-5.057-4.786a1.125 1.125 0 01-.398-.938V4.875A1.125 1.125 0 015.625 3.75h10.875z"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 4.5v15m7.5-7.5h-15"
-                      />
-                    )}
-                  </svg>
-                )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  {isEdit ? (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.5 3.75a1.125 1.125 0 011.125 1.125v8.252c0 .36-.148.7-.398.938l-5.057 4.786a2.25 2.25 0 01-3.084 0l-5.057-4.786a1.125 1.125 0 01-.398-.938V4.875A1.125 1.125 0 015.625 3.75h10.875z"
+                    />
+                  ) : (
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  )}
+                </svg>
                 {isEdit ? 'บันทึกการแก้ไข' : 'เพิ่มตลาด'}
               </button>
             </div>

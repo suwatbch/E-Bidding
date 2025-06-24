@@ -35,7 +35,10 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/eicon.svg" type="image/svg+xml" />
       </head>
-      <body className={`${inter.className} antialiased`}>
+      <body
+        className={`${inter.className} antialiased`}
+        suppressHydrationWarning={true}
+      >
         <AuthProvider>
           <LanguageProvider>{children}</LanguageProvider>
         </AuthProvider>
