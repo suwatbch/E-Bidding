@@ -146,3 +146,109 @@ const formatDateTime = (dateTimeStr: string) => {
 | `formatDateForDisplay` (มีเวลา)    | `new Date('2025-06-20T14:30:00')` | `"20/06/2025 14:30"`    |
 | `safeParseDate`                    | `"2025-06-20 14:30:00"`           | `Date object`           |
 | `getCurrentDateTime`               | -                                 | `"2025-06-20 14:30:00"` |
+
+# Global Functions Documentation
+
+## URL Encoding Functions
+
+### createSecureUrl()
+
+ฟังก์ชันสำหรับสร้าง URL พร้อมเข้ารหัส ID parameter เพื่อความปลอดภัย
+
+```typescript
+createSecureUrl(basePath: string, id: number | string, paramName?: string): string
+```
+
+**Parameters:**
+
+- `basePath` - path หลักของ URL (เช่น '/auctionform?id=', '/edituser?userId=', '/auctionform')
+- `id` - ID ที่ต้องการเข้ารหัส
+- `paramName` - ชื่อ parameter (default: 'id') - ใช้เฉพาะเมื่อ basePath ไม่มี query parameter
+
+**Examples:**
+
+```typescript
+// แบบที่ 1: ส่ง basePath พร้อม query parameter (แนะนำ)
+createSecureUrl('/auctionform?id=', 123);
+// Result: "/auctionform?id=enc_MTIzXzE3MzU2NDk4NzY1NDM=_end"
+
+createSecureUrl('/edituser?userId=', 456);
+// Result: "/edituser?userId=enc_NDU2XzE3MzU2NDk4NzY1NDM=_end"
+
+// แบบที่ 2: ส่ง basePath ธรรมดา (แบบเดิม)
+createSecureUrl('/editcompany', 789);
+// Result: "/editcompany?id=enc_Nzg5XzE3MzU2NDk4NzY1NDM=_end"
+
+// แบบที่ 3: ใช้ parameter name ที่กำหนดเอง
+createSecureUrl('/profile', 123, 'userId');
+// Result: "/profile?userId=enc_MTIzXzE3MzU2NDk4NzY1NDM=_end"
+```
+
+### encodeId() และ decodeId()
+
+ฟังก์ชันสำหรับเข้ารหัสและถอดรหัส ID
+
+```typescript
+// เข้ารหัส ID
+const encoded = encodeId(123);
+// Result: "enc_MTIzXzE3MzU2NDk4NzY1NDM=_end"
+
+// ถอดรหัส ID
+const decoded = decodeId('enc_MTIzXzE3MzU2NDk4NzY1NDM=_end');
+// Result: 123
+```
+
+## การใช้งานในหน้าต่างๆ
+
+### 1. หน้าตลาดประมูล (auctions)
+
+```typescript
+import { createSecureUrl } from '@/app/utils/globalFunction';
+
+// ปุ่มเพิ่มตลาดใหม่ (แบบใหม่ - แนะนำ)
+<Link href={createSecureUrl('/auctionform?id=', 0)}>เพิ่มตลาด</Link>
+
+// ปุ่มแก้ไข (แบบใหม่ - แนะนำ)
+<Link href={createSecureUrl('/auctionform?id=', auction.id)}>แก้ไข</Link>
+```
+
+### 2. หน้าจัดการผู้ใช้ (สมมติ)
+
+```typescript
+import { createSecureUrl } from '@/app/utils/globalFunction';
+
+// ปุ่มแก้ไขผู้ใช้
+<Link href={createSecureUrl('/userform', user.id)}>แก้ไข</Link>
+
+// ปุ่มดูโปรไฟล์
+<Link href={createSecureUrl('/profile', user.id, 'userId')}>ดูโปรไฟล์</Link>
+```
+
+### 3. หน้าจัดการบริษัท (สมมติ)
+
+```typescript
+import { createSecureUrl } from '@/app/utils/globalFunction';
+
+// ปุ่มแก้ไขบริษัท
+<Link href={createSecureUrl('/companyform', company.id)}>แก้ไข</Link>;
+```
+
+### 4. การถอดรหัสในหน้าปลายทาง
+
+```typescript
+import { decodeId } from '@/app/utils/globalFunction';
+
+export default function EditPage() {
+  const searchParams = useSearchParams();
+  const encodedId = searchParams.get('id');
+
+  // ถอดรหัส ID
+  const realId = encodedId ? decodeId(encodedId) : null;
+  const isEdit = realId !== null && realId !== 0;
+
+  // ใช้ realId ในการดึงข้อมูล
+  if (isEdit && realId) {
+    loadData(realId);
+  }
+}
+```

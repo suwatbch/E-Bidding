@@ -30,13 +30,19 @@ import {
   handlePriceFocus,
   handlePriceBlur,
   handlePriceChange,
+  decodeId,
+  createAuctionFormUrl,
+  formatAuctionId,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionFormPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const auctionId = searchParams.get('id');
-  const isEdit = auctionId !== '0' && !!auctionId;
+  const encodedId = searchParams.get('id');
+
+  // ถอดรหัส ID
+  const auctionId = encodedId ? decodeId(encodedId) : null;
+  const isEdit = auctionId !== null && auctionId !== 0;
 
   const [hasPermission, setHasPermission] = useState(true);
   const [permissionError, setPermissionError] = useState('');
@@ -185,9 +191,9 @@ export default function AuctionFormPage() {
         loadAllUsers(),
       ]);
 
-      if (isEdit && auctionId && auctionId !== '0') {
+      if (isEdit && auctionId !== null && auctionId !== 0) {
         // ตรวจสอบ ID ที่ส่งมา
-        const validatedId = await validateAuctionId(auctionId);
+        const validatedId = await validateAuctionId(auctionId.toString());
 
         if (validatedId === null) {
           setHasPermission(false);
@@ -1052,7 +1058,7 @@ export default function AuctionFormPage() {
                 กลับไปหน้ารายการตลาด
               </button>
               <button
-                onClick={() => router.push('/auctionform?id=0')}
+                onClick={() => router.push(createAuctionFormUrl(0))}
                 className="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               >
                 สร้างตลาดใหม่
@@ -1099,7 +1105,9 @@ export default function AuctionFormPage() {
                 </h1>
                 <p className="text-gray-600 mt-1">
                   {isEdit
-                    ? `แก้ไขข้อมูลตลาดประมูล ID: ${formData.auction_id}`
+                    ? `แก้ไขข้อมูลตลาดประมูล: [${formatAuctionId(
+                        formData.auction_id
+                      )}]`
                     : 'กรอกข้อมูลเพื่อสร้างตลาดประมูลใหม่'}
                 </p>
               </div>

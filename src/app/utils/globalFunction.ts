@@ -734,15 +734,12 @@ export const formatPrice = (price: number): string => {
 
 /**
  * จัดรูปแบบ Auction ID
- * @param auction - ข้อมูลประมูล (ต้องมี auction_id และ created_dt)
+ * @param auction_id - ข้อมูลประมูล (ต้องมี auction_id)
  * @returns string ในรูปแบบ AUC + auction_id (เช่น AUC0001)
  */
-export const formatAuctionId = (auction: {
-  auction_id: number;
-  created_dt: string;
-}): string => {
+export const formatAuctionId = (auction_id: number): string => {
   // เติม 0 ข้างหน้าให้ครบอย่างน้อย 4 หลัก หากเกินก็ยาวตามจำนวนหลักจริง
-  const paddedId = auction.auction_id.toString().padStart(4, '0');
+  const paddedId = auction_id.toString().padStart(4, '0');
 
   return `AUC${paddedId}`;
 };
@@ -1569,6 +1566,99 @@ export const formChangeConfig = {
 } satisfies FormChangeConfig;
 
 // =============================================================================
+// URL ENCODING UTILITIES
+// =============================================================================
+
+/**
+ * เข้ารหัส ID สำหรับส่งใน URL
+ * @param id - ID ที่ต้องการเข้ารหัส
+ * @returns string - ID ที่เข้ารหัสแล้ว
+ */
+export const encodeId = (id: number | string): string => {
+  const numId = typeof id === 'string' ? parseInt(id) : id;
+
+  // เข้ารหัสทุก ID รวมถึง 0 เพื่อความสม่ำเสมอ
+  const timestamp = Date.now().toString();
+  const combined = `${numId}_${timestamp}`;
+  const encoded = btoa(combined);
+
+  // เพิ่ม prefix และ suffix เพื่อความปลอดภัย
+  return `enc_${encoded}_end`;
+};
+
+/**
+ * ถอดรหัส ID จาก URL
+ * @param encodedId - ID ที่เข้ารหัสแล้ว
+ * @returns number | null - ID ที่ถอดรหัสแล้วหรือ null หากไม่สามารถถอดรหัสได้
+ */
+export const decodeId = (encodedId: string): number | null => {
+  try {
+    // ตรวจสอบรูปแบบ prefix และ suffix
+    if (!encodedId.startsWith('enc_') || !encodedId.endsWith('_end')) {
+      return null;
+    }
+
+    // ตัด prefix และ suffix ออก
+    const base64Part = encodedId.slice(4, -4);
+
+    // ถอดรหัส Base64
+    const decoded = atob(base64Part);
+
+    // แยก ID จาก timestamp
+    const parts = decoded.split('_');
+    if (parts.length !== 2) {
+      return null;
+    }
+
+    const id = parseInt(parts[0]);
+    if (isNaN(id) || id < 0) {
+      return null;
+    }
+
+    return id;
+  } catch (error) {
+    console.error('Error decoding ID:', error);
+    return null;
+  }
+};
+
+/**
+ * สร้าง URL พร้อมเข้ารหัส ID parameter
+ * @param basePath - path หลักของ URL (เช่น '/auctionform?id=', '/editform?userId=', '/auctionform')
+ * @param id - ID ที่ต้องการเข้ารหัส
+ * @param paramName - ชื่อ parameter (default: 'id') - ใช้เฉพาะเมื่อ basePath ไม่มี query parameter
+ * @returns string - URL ที่มี ID เข้ารหัสแล้ว
+ */
+export const createSecureUrl = (
+  basePath: string,
+  id: number | string,
+  paramName: string = 'id'
+): string => {
+  const encodedId = encodeId(id);
+
+  // ตรวจสอบว่า basePath มี query parameter อยู่แล้วหรือไม่
+  if (basePath.includes('?') && basePath.endsWith('=')) {
+    // กรณีที่ส่งมาแบบ '/auctionform?id=' หรือ '/edituser?userId='
+    return `${basePath}${encodedId}`;
+  } else if (basePath.includes('?')) {
+    // กรณีที่มี query parameter อยู่แล้วแต่ไม่ได้ลงท้ายด้วย =
+    return `${basePath}&${paramName}=${encodedId}`;
+  } else {
+    // กรณีปกติที่ไม่มี query parameter
+    return `${basePath}?${paramName}=${encodedId}`;
+  }
+};
+
+/**
+ * สร้าง URL สำหรับ auctionform พร้อมเข้ารหัส ID (backward compatibility)
+ * @param id - ID ของ auction
+ * @returns string - URL ที่มี ID เข้ารหัสแล้ว
+ */
+export const createAuctionFormUrl = (id: number | string): string => {
+  return createSecureUrl('/auctionform', id);
+};
+
+// =============================================================================
 // EXPORT ALL UTILITIES
 // =============================================================================
 
@@ -1654,4 +1744,10 @@ export default {
   // Form Handling
   handleFormChange,
   formChangeConfig,
+
+  // URL Encoding
+  encodeId,
+  decodeId,
+  createSecureUrl,
+  createAuctionFormUrl,
 };

@@ -37,6 +37,8 @@ import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import {
   formatDateForDisplay,
   safeParseDate,
+  createSecureUrl,
+  formatAuctionId,
 } from '@/app/utils/globalFunction';
 import Link from 'next/link';
 
@@ -89,13 +91,6 @@ export default function AuctionsPage() {
     return formatDateForDisplay(safeParseDate(dateTimeStr), true);
   };
 
-  const formatAuctionId = (auction: any) => {
-    // เติม 0 ข้างหน้าให้ครบอย่างน้อย 4 หลัก หากเกินก็ยาวตามจำนวนหลักจริง
-    const paddedId = auction.auction_id.toString().padStart(4, '0');
-
-    return `AUC${paddedId}`;
-  };
-
   // สร้างข้อมูลสำหรับแสดงผล
   const auctionTable = (auctions || []).map((auction, idx) => {
     const auctionType = auctionTypes?.find(
@@ -115,7 +110,7 @@ export default function AuctionsPage() {
     return {
       no: idx,
       auction_id: auction.auction_id, // เพิ่มฟิลด์นี้เพื่อให้ง่ายต่อการเข้าถึง
-      title: `${auction.name} [${formatAuctionId(auction)}]`,
+      title: `${auction.name} [${formatAuctionId(auction.auction_id)}]`,
       category: auctionType?.name || '-',
       startTime: auction.start_dt,
       endTime: auction.end_dt,
@@ -495,7 +490,7 @@ export default function AuctionsPage() {
         <div className="flex justify-between items-center m-4">
           <div className="flex"></div>
           <Link
-            href="/auctionform?id=0"
+            href={createSecureUrl('/auctionform?id=', 0)}
             prefetch={false}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
           >
@@ -705,9 +700,9 @@ export default function AuctionsPage() {
                               )?.name || 'ไม่พบชื่อตลาด'}
                             </div>
                             <div className="text-xs text-gray-400 mt-1 truncate w-full">
-                              {`[${formatAuctionId({
-                                auction_id: (item as any).auction_id,
-                              })}] `}
+                              {`[${formatAuctionId(
+                                (item as any).auction_id
+                              )}] `}
                               {(() => {
                                 const auction = (auctions || []).find(
                                   (a) =>
@@ -774,9 +769,10 @@ export default function AuctionsPage() {
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
                           <Link
-                            href={`/auctionform?id=${
-                              (item as any).auction_id || ''
-                            }`}
+                            href={createSecureUrl(
+                              '/auctionform?id=',
+                              (item as any).auction_id || 0
+                            )}
                             prefetch={false}
                             className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
                             title="แก้ไข"
