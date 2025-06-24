@@ -36,29 +36,6 @@ export const getStatusById = (id: number) => {
   return statusConfig[id as keyof typeof statusConfig];
 };
 
-export const getStatusByCode = (code: string) => {
-  return Object.values(statusConfig).find((status) => status.code === code);
-};
-
-export const getAllStatuses = () => {
-  return Object.values(statusConfig);
-};
-
-export const getActiveStatuses = () => {
-  return Object.values(statusConfig).filter((status) => status.id !== 0);
-};
-
-// Convert functions
-export const getStatusDescription = (id: number): string => {
-  return (
-    statusConfig[id as keyof typeof statusConfig]?.description || 'ไม่ทราบสถานะ'
-  );
-};
-
-export const getStatusCode = (id: number): string => {
-  return statusConfig[id as keyof typeof statusConfig]?.code || 'unknown';
-};
-
 export const currencyConfig = {
   1: {
     id: 1,

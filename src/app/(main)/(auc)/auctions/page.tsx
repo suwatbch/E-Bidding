@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, FC, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -10,11 +10,6 @@ import {
   TableRow,
 } from '@/app/components/ui/AucTable';
 import {
-  StatusPendingIcon,
-  StatusBiddingIcon,
-  StatusEndingSoonIcon,
-  StatusEndedIcon,
-  StatusCancelledIcon,
   AucCategoryIcon,
   AucStartTimeIcon,
   AucEndTimeIcon,
@@ -42,7 +37,6 @@ import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import {
   formatDateForDisplay,
   safeParseDate,
-  getCurrentDateTime,
 } from '@/app/utils/globalFunction';
 import Link from 'next/link';
 
@@ -89,39 +83,6 @@ export default function AuctionsPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <StatusPendingIcon />;
-      case 'bidding':
-        return <StatusBiddingIcon />;
-      case 'ending_soon':
-        return <StatusEndingSoonIcon />;
-      case 'ended':
-        return <StatusEndedIcon />;
-      case 'cancelled':
-        return <StatusCancelledIcon />;
-      default:
-        return null;
-    }
-  };
-
-  const getTimeRemaining = (endTime: string) => {
-    const end = safeParseDate(endTime);
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-    if (days > 0) {
-      return `${days} วัน ${hours} ชั่วโมง`;
-    } else {
-      return `${hours} ชั่วโมง ${minutes} นาที`;
-    }
   };
 
   const formatDateTime = (dateTimeStr: string) => {

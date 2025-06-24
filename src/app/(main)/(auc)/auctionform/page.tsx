@@ -21,12 +21,7 @@ import {
   auctionTypeService,
   AuctionType as ServiceAuctionType,
 } from '@/app/services/auctionTypeService';
-import {
-  auctionsService,
-  Auction,
-  CreateAuctionRequest,
-  UpdateAuctionRequest,
-} from '@/app/services/auctionsService';
+import { auctionsService, Auction } from '@/app/services/auctionsService';
 import {
   safeParseDate,
   getCurrentDateTime,
@@ -63,7 +58,7 @@ export default function AuctionFormPage() {
 
   // States for participant selection
   interface SelectedParticipant {
-    id?: number; // มี id = UPDATE, ไม่มี id หรือ id = 0 = INSERT
+    id?: number;
     user_id: number;
     company_id: number;
     status: number;
@@ -74,7 +69,6 @@ export default function AuctionFormPage() {
     SelectedParticipant[]
   >([]);
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [companyUsers, setCompanyUsers] = useState<User[]>([]);
   const [usersCompany, setUsersCompany] = useState<UserCompany[]>([]);
@@ -84,7 +78,6 @@ export default function AuctionFormPage() {
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [userSearchTerm, setUserSearchTerm] = useState('');
@@ -150,15 +143,6 @@ export default function AuctionFormPage() {
       setPermissionError('ไม่สามารถแก้ไขตลาดที่เริ่มต้นแล้ว');
       return false;
     }
-
-    // TODO: เพิ่มการตรวจสอบสิทธิ์ของ user
-    // เช่น ตรวจสอบว่า user เป็นเจ้าของตลาดหรือมี role ที่เหมาะสม
-    // const currentUser = getCurrentUser();
-    // if (auctionData.created_by !== currentUser.id && !currentUser.isAdmin) {
-    //   setHasPermission(false);
-    //   setPermissionError('คุณไม่มีสิทธิ์แก้ไขตลาดนี้');
-    //   return false;
-    // }
 
     return true;
   };
@@ -238,7 +222,6 @@ export default function AuctionFormPage() {
       // รีเซ็ต flag หลังจากประมวลผลเสร็จ
       isAutoSelectingRef.current = false;
     } else {
-      setAvailableUsers([]);
       setSelectedUserId(null);
       setUserSearchTerm('');
     }
@@ -311,7 +294,6 @@ export default function AuctionFormPage() {
 
   const loadAuctionParticipants = async (auctionId: number) => {
     try {
-      setLoadingParticipants(true);
       // ดึงข้อมูลผู้เข้าร่วมประมูลจาก auctionsService
       const response = await auctionsService.getAuctionParticipants(auctionId);
 
@@ -320,11 +302,11 @@ export default function AuctionFormPage() {
         const participants = response.data
           .filter((p) => p.status === 1)
           .map((p) => ({
-            id: p.id, // เก็บ id สำหรับ UPDATE
+            id: p.id,
             user_id: p.user_id,
             company_id: p.company_id,
             status: p.status,
-            is_connected: p.is_connected ? 1 : 0, // แปลง boolean เป็น number
+            is_connected: p.is_connected ? 1 : 0,
           }));
 
         setSelectedParticipants(participants);
@@ -335,8 +317,6 @@ export default function AuctionFormPage() {
     } catch (error) {
       console.error('Error loading auction participants:', error);
       setSelectedParticipants([]);
-    } finally {
-      setLoadingParticipants(false);
     }
   };
 
@@ -441,16 +421,13 @@ export default function AuctionFormPage() {
           (user: User) => user.status === 1 && !user.is_locked
         );
         setAllUsers(activeUsers);
-        setAvailableUsers(activeUsers); // ใช้เป็นค่าเริ่มต้นสำหรับ dropdown
       } else {
         alert(response.message);
         setAllUsers([]);
-        setAvailableUsers([]);
       }
     } catch (error) {
       console.error('Error loading all users:', error);
       setAllUsers([]);
-      setAvailableUsers([]);
     }
   };
 
@@ -661,7 +638,7 @@ export default function AuctionFormPage() {
 
   // ฟังก์ชันล้างการเลือกบริษัทและผู้ใช้
   const handleClearSelection = () => {
-    isAutoSelectingRef.current = false; // ล้าง flag
+    isAutoSelectingRef.current = false;
     setSelectedCompanyId(null);
     setSelectedUserId(null);
     setCompanySearchTerm('');
@@ -706,6 +683,22 @@ export default function AuctionFormPage() {
       if (formData.reserve_price < 0) {
         alert('ราคาประกันต้องมากกว่าหรือเท่ากับ 0');
         return;
+      }
+
+      // ตรวจสอบผู้เข้าร่วมประมูลตามสถานะ
+      // สถานะที่ต้องมีผู้เข้าร่วม: รอการประมูล, กำลังประมูล, ใกล้สิ้นสุด, สิ้นสุดประมูล
+      // สถานะที่ไม่ต้องมี: ดราฟ, ยกเลิกประมูล
+      const statusRequireParticipants = [2, 3, 4, 5]; // pending, bidding, endingsoon, ended
+      if (statusRequireParticipants.includes(formData.status)) {
+        if (selectedParticipants.length === 0) {
+          const currentStatusName =
+            statusConfig[formData.status as keyof typeof statusConfig]
+              ?.description || 'ไม่ทราบสถานะ';
+          alert(
+            `สถานะ "${currentStatusName}" ต้องมีผู้เข้าร่วมประมูลอย่างน้อย 1 คน กรุณาเพิ่มผู้เข้าร่วมประมูลก่อนบันทึก`
+          );
+          return;
+        }
       }
 
       // เตรียมข้อมูลสำหรับบันทึก
