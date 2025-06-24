@@ -460,8 +460,8 @@ export default function UserPage() {
       }
 
       if (editUser) {
-        // แก้ไขผู้ใช้
-        const result = await userService.updateUser(editUser.user_id, {
+        // แก้ไขผู้ใช้ - ใช้ transaction function
+        const userData = {
           username: form.username,
           password: form.password || undefined,
           fullname: form.fullname,
@@ -470,15 +470,33 @@ export default function UserPage() {
           address: form.address,
           tax_id: form.tax_id,
           type: form.type,
-          status: form.status ? 1 : 0,
+          status: (form.status ? 1 : 0) as 0 | 1,
           is_locked: form.is_locked,
           language_code: form.language_code,
           image: form.image,
-        });
+        };
+
+        // เตรียมข้อมูลบริษัทสำหรับ Smart Update
+        const companiesData = validCompanies.map((uc) => ({
+          id:
+            currentUserCompanies.find(
+              (cuc) =>
+                cuc.company_id === uc.company_id &&
+                cuc.role_in_company === uc.role_in_company
+            )?.id || 0, // ถ้าหาไม่เจอ ให้เป็น 0 (INSERT)
+          company_id: uc.company_id,
+          role_in_company: uc.role_in_company,
+          is_primary: uc.is_primary,
+          status: uc.status,
+        }));
+
+        const result = await userService.updateUserWithCompanies(
+          editUser.user_id,
+          userData,
+          companiesData
+        );
 
         if (result.success && result.message === null) {
-          // จัดการบริษัทของผู้ใช้
-          await updateUserCompanies(editUser.user_id, validCompanies);
           await Promise.all([loadUsers(), loadAllUserCompanies()]);
           closeModal();
           alert('อัปเดทข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
@@ -486,8 +504,8 @@ export default function UserPage() {
           alert(result.message);
         }
       } else {
-        // เพิ่มผู้ใช้ใหม่
-        const result = await userService.createUser({
+        // เพิ่มผู้ใช้ใหม่ - ใช้ transaction function
+        const userData = {
           username: form.username,
           password: form.password,
           fullname: form.fullname,
@@ -496,15 +514,25 @@ export default function UserPage() {
           address: form.address,
           tax_id: form.tax_id,
           type: form.type,
-          status: form.status ? 1 : 0,
+          status: (form.status ? 1 : 0) as 0 | 1,
           language_code: form.language_code,
           image: form.image,
-        });
+        };
 
-        if (result.success && result.message === null && result.data) {
-          // เพิ่มบริษัทให้ผู้ใช้ใหม่
-          const newUserId = result.data.user_id;
-          await updateUserCompanies(newUserId, validCompanies);
+        // เตรียมข้อมูลบริษัท (ทั้งหมดเป็น INSERT)
+        const companiesData = validCompanies.map((uc) => ({
+          company_id: uc.company_id,
+          role_in_company: uc.role_in_company,
+          is_primary: uc.is_primary,
+          status: uc.status,
+        }));
+
+        const result = await userService.createUserWithCompanies(
+          userData,
+          companiesData
+        );
+
+        if (result.success && result.message === null) {
           await Promise.all([loadUsers(), loadAllUserCompanies()]);
           closeModal();
           alert('เพิ่มข้อมูลผู้ใช้งานเรียบร้อยแล้ว');
@@ -514,35 +542,9 @@ export default function UserPage() {
       }
     } catch (error: any) {
       console.error('Error saving user:', error);
-      alert(error);
+      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const updateUserCompanies = async (
-    userId: number,
-    companies: UserCompanyForm[]
-  ) => {
-    try {
-      // ลบบริษัทเดิมทั้งหมดของผู้ใช้
-      for (const currentUC of currentUserCompanies) {
-        await userCompanyService.removeUserFromCompany(currentUC.id);
-      }
-
-      // เพิ่มบริษัทใหม่
-      for (const company of companies) {
-        await userCompanyService.addUserToCompany({
-          user_id: userId,
-          company_id: company.company_id,
-          role_in_company: company.role_in_company,
-          is_primary: company.is_primary,
-          status: company.status,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error updating user companies:', error);
-      throw new Error('เกิดข้อผิดพลาดในการจัดการข้อมูลบริษัท');
     }
   };
 

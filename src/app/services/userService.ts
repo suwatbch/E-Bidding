@@ -403,6 +403,67 @@ export const userService = {
       };
     }
   },
+
+  /**
+   * สร้างผู้ใช้งานใหม่พร้อมบริษัท (Transaction)
+   */
+  createUserWithCompanies: async (
+    userData: CreateUserRequest,
+    companies: any[]
+  ): Promise<ApiResponse> => {
+    try {
+      const requestData = {
+        createDataUser: userData,
+        createDataUser_Company: companies,
+      };
+
+      const response: AxiosResponse<ApiResponse> = await userApi.post(
+        '/with-companies',
+        requestData
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error creating user with companies:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการสร้างผู้ใช้งานพร้อมบริษัท',
+      };
+    }
+  },
+
+  /**
+   * อัปเดตผู้ใช้งานพร้อมบริษัท (Smart Update Transaction)
+   */
+  updateUserWithCompanies: async (
+    userId: number,
+    userData: UpdateUserRequest,
+    companies: any[]
+  ): Promise<ApiResponse> => {
+    try {
+      const requestData = {
+        createDataUser: userData,
+        createDataUser_Company: companies,
+      };
+
+      const response: AxiosResponse<ApiResponse> = await userApi.post(
+        `/update-with-companies/${userId}`,
+        requestData
+      );
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating user with companies:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการอัปเดตผู้ใช้งานพร้อมบริษัท',
+      };
+    }
+  },
 };
 
 export default userService;
