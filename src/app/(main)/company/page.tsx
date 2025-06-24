@@ -26,7 +26,6 @@ export default function CompanyPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [mounted, setMounted] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [form, setForm] = useState<FormData>({
@@ -59,11 +58,6 @@ export default function CompanyPage() {
       console.error('Error loading companies:', error);
     }
   }, []);
-
-  const handleRetry = async () => {
-    setRetryCount((prev) => prev + 1);
-    await loadCompanies();
-  };
 
   // === EFFECTS ===
   useEffect(() => {
