@@ -7,7 +7,7 @@ const API_BASE_URL =
 // Create axios instance for auctions API
 const auctionsApi = axios.create({
   baseURL: `${API_BASE_URL}/api/auctions`,
-  timeout: 30000,
+  timeout: 50000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -200,14 +200,14 @@ export interface CreateAuctionWithParticipantsRequest {
 export interface UpdateAuctionWithParticipantsRequest {
   createDataAuction: UpdateAuctionRequest;
   createDataAuction_Participant?: {
-    id?: number; // 0 หรือไม่มี = INSERT ใหม่, มีค่า = UPDATE
+    id?: number;
     user_id: number;
     company_id?: number;
     status?: number;
     is_connected?: number;
   }[];
   createDataAuction_Item?: {
-    item_id?: number; // 0 หรือไม่มี = INSERT ใหม่, มีค่า = UPDATE
+    item_id?: number;
     item_name: string;
     description?: string;
     quantity: number;

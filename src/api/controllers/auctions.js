@@ -323,6 +323,7 @@ router.post('/update-with-participants/:id', async (req, res) => {
       }
 
       participantsData = createDataAuction_Participant.map((p) => ({
+        id: p.id,
         user_id: p.user_id,
         company_id: p.company_id || 0,
         status: p.status || 1,
@@ -352,6 +353,7 @@ router.post('/update-with-participants/:id', async (req, res) => {
       }
 
       itemsData = createDataAuction_Item.map((item) => ({
+        item_id: item.item_id,
         item_name: item.item_name,
         description: item.description || '',
         quantity: item.quantity,

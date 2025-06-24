@@ -478,7 +478,7 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
   } finally {
     // ปิด connection
     if (connection) {
-      await connection.end();
+      await connection.release(); // ใช้ release() แทน end() สำหรับ pooled connection
     }
   }
 }
@@ -536,54 +536,120 @@ async function updateAuctionWithParticipants(
       auctionId,
     ]);
 
-    // 2. Smart Update: Participants (ป้องกันข้อมูลซ้ำ)
+    // 2. Smart Update: Participants
     if (participants && participants.length > 0) {
-      // ลบผู้เข้าร่วมเดิมทั้งหมดก่อน (ง่ายกว่าการจัดการ UPDATE/INSERT)
-      const deleteParticipantsQuery = `
-        UPDATE auction_participant 
-        SET status = 0
+      // เก็บ ID ของ participants ที่ส่งมา (สำหรับ UPDATE)
+      const participantIdsToKeep = participants
+        .filter((p) => p.id && p.id > 0)
+        .map((p) => p.id);
+
+      // ลบ participants เดิมที่ไม่อยู่ในรายการใหม่
+      if (participantIdsToKeep.length > 0) {
+        const deleteOldParticipantsQuery = `
+          DELETE FROM auction_participant 
+          WHERE auction_id = ? AND id NOT IN (${participantIdsToKeep
+            .map(() => '?')
+            .join(', ')})
+        `;
+        await connection.execute(deleteOldParticipantsQuery, [
+          auctionId,
+          ...participantIdsToKeep,
+        ]);
+      } else {
+        // ถ้าไม่มี participants เดิม ให้ลบทั้งหมด
+        const deleteAllParticipantsQuery = `
+          DELETE FROM auction_participant 
+          WHERE auction_id = ?
+        `;
+        await connection.execute(deleteAllParticipantsQuery, [auctionId]);
+      }
+
+      // ประมวลผล participants แต่ละคน
+      for (const participant of participants) {
+        if (participant.id && participant.id > 0) {
+          // UPDATE existing participant
+          const updateParticipantQuery = `
+            UPDATE auction_participant 
+            SET 
+              user_id = ?,
+              company_id = ?,
+              status = ?,
+              is_connected = ?
+            WHERE id = ? AND auction_id = ?
+          `;
+
+          await connection.execute(updateParticipantQuery, [
+            participant.user_id,
+            participant.company_id || 0,
+            participant.status || 1,
+            participant.is_connected || 0,
+            participant.id,
+            auctionId,
+          ]);
+        } else {
+          // INSERT new participant
+          const insertParticipantQuery = `
+            INSERT INTO auction_participant (
+              auction_id,
+              user_id,
+              company_id,
+              status,
+              is_connected,
+              joined_dt
+            )
+            VALUES (?, ?, ?, ?, ?, NOW())
+          `;
+
+          await connection.execute(insertParticipantQuery, [
+            auctionId,
+            participant.user_id,
+            participant.company_id || 0,
+            participant.status || 1,
+            participant.is_connected || 0,
+          ]);
+        }
+      }
+    } else {
+      // ถ้าไม่มี participants ส่งมา ให้ลบทั้งหมด
+      const deleteAllParticipantsQuery = `
+        DELETE FROM auction_participant 
         WHERE auction_id = ?
       `;
-      await connection.execute(deleteParticipantsQuery, [auctionId]);
-
-      // INSERT ผู้เข้าร่วมใหม่ทั้งหมด
-      for (const participant of participants) {
-        const insertParticipantQuery = `
-          INSERT INTO auction_participant (
-            auction_id,
-            user_id,
-            company_id,
-            status,
-            is_connected,
-            joined_dt
-          )
-          VALUES (?, ?, ?, ?, ?, NOW())
-        `;
-
-        await connection.execute(insertParticipantQuery, [
-          auctionId,
-          participant.user_id,
-          participant.company_id || 0,
-          participant.status || 1,
-          participant.is_connected || 0,
-        ]);
-      }
+      await connection.execute(deleteAllParticipantsQuery, [auctionId]);
     }
 
-    // 3. Smart Update: Items (ปรับปรุงใหม่)
+    // 3. Smart Update: Items (เหมือนกับ Participants)
     if (items && items.length > 0) {
-      console.log('Smart Update Items - Processing items:', items.length);
+      // เก็บ ID ของ items ที่ส่งมา (สำหรับ UPDATE)
+      const itemIdsToKeep = items
+        .filter((item) => item.item_id && item.item_id > 0)
+        .map((item) => item.item_id);
 
+      // ลบ items เดิมที่ไม่อยู่ในรายการใหม่
+      if (itemIdsToKeep.length > 0) {
+        const deleteOldItemsQuery = `
+          DELETE FROM auction_item 
+          WHERE auction_id = ? AND item_id NOT IN (${itemIdsToKeep
+            .map(() => '?')
+            .join(', ')})
+        `;
+        await connection.execute(deleteOldItemsQuery, [
+          auctionId,
+          ...itemIdsToKeep,
+        ]);
+      } else {
+        // ถ้าไม่มี items เดิม ให้ลบทั้งหมด
+        const deleteAllItemsQuery = `
+          DELETE FROM auction_item 
+          WHERE auction_id = ?
+        `;
+        await connection.execute(deleteAllItemsQuery, [auctionId]);
+      }
+
+      // ประมวลผล items แต่ละรายการ
       for (const item of items) {
-        console.log('Processing item:', {
-          item_id: item.item_id,
-          item_name: item.item_name,
-        });
-
         if (item.item_id && item.item_id > 0) {
           // UPDATE existing item
-          console.log('Updating existing item with item_id:', item.item_id);
-
           const updateItemQuery = `
             UPDATE auction_item 
             SET 
@@ -596,7 +662,7 @@ async function updateAuctionWithParticipants(
             WHERE item_id = ? AND auction_id = ?
           `;
 
-          const updateResult = await connection.execute(updateItemQuery, [
+          await connection.execute(updateItemQuery, [
             item.item_name,
             item.description || '',
             item.quantity,
@@ -606,43 +672,8 @@ async function updateAuctionWithParticipants(
             item.item_id,
             auctionId,
           ]);
-
-          console.log('Update result:', updateResult[0]);
-
-          // ตรวจสอบว่า UPDATE สำเร็จหรือไม่
-          if (updateResult[0].affectedRows === 0) {
-            console.log(
-              'No rows updated, item might not exist. Inserting new item...'
-            );
-
-            // ถ้า UPDATE ไม่สำเร็จ ให้ INSERT ใหม่
-            const insertItemQuery = `
-              INSERT INTO auction_item (
-                auction_id,
-                item_name,
-                description,
-                quantity,
-                unit,
-                base_price,
-                status
-              )
-              VALUES (?, ?, ?, ?, ?, ?, ?)
-            `;
-
-            await connection.execute(insertItemQuery, [
-              auctionId,
-              item.item_name,
-              item.description || '',
-              item.quantity,
-              item.unit || '',
-              item.base_price,
-              item.status || 1,
-            ]);
-          }
         } else {
           // INSERT new item
-          console.log('Inserting new item:', item.item_name);
-
           const insertItemQuery = `
             INSERT INTO auction_item (
               auction_id,
@@ -667,6 +698,13 @@ async function updateAuctionWithParticipants(
           ]);
         }
       }
+    } else {
+      // ถ้าไม่มี items ส่งมา ให้ลบทั้งหมด
+      const deleteAllItemsQuery = `
+        DELETE FROM auction_item 
+        WHERE auction_id = ?
+      `;
+      await connection.execute(deleteAllItemsQuery, [auctionId]);
     }
 
     // Commit transaction
@@ -691,7 +729,7 @@ async function updateAuctionWithParticipants(
   } finally {
     // ปิด connection
     if (connection) {
-      await connection.end();
+      await connection.release(); // ใช้ release() แทน end() สำหรับ pooled connection
     }
   }
 }

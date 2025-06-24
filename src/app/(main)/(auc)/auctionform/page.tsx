@@ -62,9 +62,17 @@ export default function AuctionFormPage() {
   });
 
   // States for participant selection
-  const [selectedParticipants, setSelectedParticipants] = useState<number[]>(
-    []
-  );
+  interface SelectedParticipant {
+    id?: number; // มี id = UPDATE, ไม่มี id หรือ id = 0 = INSERT
+    user_id: number;
+    company_id: number;
+    status: number;
+    is_connected: number;
+  }
+
+  const [selectedParticipants, setSelectedParticipants] = useState<
+    SelectedParticipant[]
+  >([]);
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
@@ -205,6 +213,8 @@ export default function AuctionFormPage() {
         await loadAuctionData(validatedId);
         // โหลดข้อมูลผู้เข้าร่วมประมูล
         await loadAuctionParticipants(validatedId);
+        // โหลดข้อมูลรายการประมูล
+        await loadAuctionItems(validatedId);
       }
     };
 
@@ -306,10 +316,16 @@ export default function AuctionFormPage() {
       const response = await auctionsService.getAuctionParticipants(auctionId);
 
       if (response.success && response.message === null) {
-        // กรองเฉพาะผู้เข้าร่วมที่ active และเอาเฉพาะ user_id
+        // เก็บข้อมูล participants พร้อม id สำหรับการ UPDATE/DELETE
         const participants = response.data
           .filter((p) => p.status === 1)
-          .map((p) => p.user_id);
+          .map((p) => ({
+            id: p.id, // เก็บ id สำหรับ UPDATE
+            user_id: p.user_id,
+            company_id: p.company_id,
+            status: p.status,
+            is_connected: p.is_connected ? 1 : 0, // แปลง boolean เป็น number
+          }));
 
         setSelectedParticipants(participants);
       } else {
@@ -321,6 +337,36 @@ export default function AuctionFormPage() {
       setSelectedParticipants([]);
     } finally {
       setLoadingParticipants(false);
+    }
+  };
+
+  const loadAuctionItems = async (auctionId: number) => {
+    try {
+      // ดึงข้อมูลรายการประมูลจาก auctionsService
+      const response = await auctionsService.getAuctionItems(auctionId);
+
+      if (response.success && response.message === null) {
+        // เก็บข้อมูล items พร้อม item_id สำหรับการ UPDATE/DELETE
+        const items = response.data
+          .filter((item: any) => item.status === 1)
+          .map((item: any) => ({
+            item_id: item.item_id,
+            item_name: item.item_name,
+            description: item.description || '',
+            quantity: item.quantity,
+            unit: item.unit || '',
+            base_price: item.base_price,
+            status: item.status,
+          }));
+
+        setAuctionItems(items);
+      } else {
+        console.warn('Failed to load auction items:', response.message);
+        setAuctionItems([]);
+      }
+    } catch (error) {
+      console.error('Error loading auction items:', error);
+      setAuctionItems([]);
     }
   };
 
@@ -665,26 +711,20 @@ export default function AuctionFormPage() {
       // เตรียมข้อมูลสำหรับบันทึก
       let response;
 
-      // เตรียมข้อมูลผู้เข้าร่วม
-      const participantsData = selectedParticipants.map((userId) => {
-        // หา company_id ของ user นี้
-        const userCompanyData =
-          usersCompany.find(
-            (uc) =>
-              uc.user_id === userId && uc.status === 1 && uc.is_primary === true
-          ) ||
-          usersCompany.find((uc) => uc.user_id === userId && uc.status === 1);
-
+      // เตรียมข้อมูลผู้เข้าร่วม - รวม id สำหรับ Smart Update
+      const participantsData = selectedParticipants.map((participant) => {
         return {
-          user_id: userId,
-          company_id: userCompanyData?.company_id || 0,
-          status: 1,
-          is_connected: 0,
+          id: participant.id || 0,
+          user_id: participant.user_id,
+          company_id: participant.company_id,
+          status: participant.status,
+          is_connected: participant.is_connected,
         };
       });
 
       // เตรียมข้อมูลรายการประมูล
       const itemsData = auctionItems.map((item) => ({
+        item_id: item.item_id || 0,
         item_name: item.item_name,
         description: item.description || '',
         quantity: item.quantity,
@@ -945,6 +985,10 @@ export default function AuctionFormPage() {
       }
 
       const newItem = {
+        item_id:
+          editingItemIndex !== null
+            ? auctionItems[editingItemIndex]?.item_id || 0
+            : 0, // เก็บ item_id เดิมเมื่อแก้ไข, 0 เมื่อเพิ่มใหม่
         item_name: auctionItemForm.item_name.trim(),
         description: auctionItemForm.description.trim(),
         quantity: auctionItemForm.quantity,
@@ -1587,11 +1631,35 @@ export default function AuctionFormPage() {
                       if (
                         selectedUserId &&
                         selectedCompanyId &&
-                        !selectedParticipants.includes(selectedUserId)
+                        !selectedParticipants.some(
+                          (p) => p.user_id === selectedUserId
+                        )
                       ) {
+                        // หา company_id ของ user นี้
+                        const userCompanyData =
+                          usersCompany.find(
+                            (uc) =>
+                              uc.user_id === selectedUserId &&
+                              uc.status === 1 &&
+                              uc.is_primary === true
+                          ) ||
+                          usersCompany.find(
+                            (uc) =>
+                              uc.user_id === selectedUserId && uc.status === 1
+                          );
+
+                        const newParticipant: SelectedParticipant = {
+                          id: 0, // ใหม่ = INSERT
+                          user_id: selectedUserId,
+                          company_id:
+                            userCompanyData?.company_id || selectedCompanyId,
+                          status: 1,
+                          is_connected: 0,
+                        };
+
                         setSelectedParticipants((prev) => [
                           ...prev,
-                          selectedUserId,
+                          newParticipant,
                         ]);
 
                         // เรียกฟังก์ชันล้างการเลือกหลังจากเพิ่มผู้เข้าร่วมเสร็จ
@@ -1601,7 +1669,9 @@ export default function AuctionFormPage() {
                     disabled={
                       !selectedUserId ||
                       !selectedCompanyId ||
-                      selectedParticipants.includes(selectedUserId)
+                      selectedParticipants.some(
+                        (p) => p.user_id === selectedUserId
+                      )
                     }
                     className="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                   >
@@ -1617,9 +1687,9 @@ export default function AuctionFormPage() {
                     ผู้เข้าร่วมที่เลือก ({selectedParticipants.length} คน)
                   </h3>
                   <div className="space-y-2">
-                    {selectedParticipants.map((userId) => (
+                    {selectedParticipants.map((participant, index) => (
                       <div
-                        key={userId}
+                        key={`${participant.user_id}-${index}`}
                         className="flex items-center justify-between bg-white border border-blue-200 rounded-lg p-3"
                       >
                         <div className="flex items-center gap-3">
@@ -1628,10 +1698,20 @@ export default function AuctionFormPage() {
                           </div>
                           <div>
                             <div className="text-sm font-medium text-gray-900">
-                              {getUserName(userId)}
+                              {getUserName(participant.user_id)}
+                              {participant.id && participant.id > 0 && (
+                                <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                  แก้ไข
+                                </span>
+                              )}
+                              {(!participant.id || participant.id === 0) && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                  ใหม่
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs text-gray-500">
-                              {getUserCompanyName(userId)}
+                              {getCompanyName(participant.company_id)}
                             </div>
                           </div>
                         </div>
@@ -1639,7 +1719,9 @@ export default function AuctionFormPage() {
                           type="button"
                           onClick={() => {
                             setSelectedParticipants((prev) =>
-                              prev.filter((id) => id !== userId)
+                              prev.filter(
+                                (p) => p.user_id !== participant.user_id
+                              )
                             );
                           }}
                           className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
