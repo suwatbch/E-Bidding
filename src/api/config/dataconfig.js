@@ -1,18 +1,27 @@
 const mysql = require('mysql2/promise');
 
-// Database configuration
+// Database configuration with environment variable support
 const dbConfig = {
-  host: '115.178.63.11',
-  port: 3306,
-  user: 'swmaxnet_admin',
-  password: '%2Y2il5c0',
-  database: 'swmaxnet_ebidding',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'admin_ebidding',
+  password: process.env.DB_PASSWORD || 'admin231',
+  database: process.env.DB_NAME || 'ebidding',
   charset: 'utf8mb4',
   timezone: '+07:00',
   acquireTimeout: 60000,
   timeout: 60000,
   reconnect: true,
 };
+
+// Log database configuration (without password)
+console.log('🔗 Database Configuration:', {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  database: dbConfig.database,
+  environment: process.env.NODE_ENV || 'development',
+});
 
 // Create connection pool for better performance
 const pool = mysql.createPool({
@@ -22,17 +31,29 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// Test database connection
-async function testConnection() {
-  try {
-    const connection = await pool.getConnection();
-    console.log('✅ Database connected successfully');
-    connection.release();
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection failed:', error.message);
-    return false;
+// Test database connection with retry logic
+async function testConnection(maxRetries = 5, retryDelay = 5000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const connection = await pool.getConnection();
+      console.log('✅ Database connected successfully');
+      connection.release();
+      return true;
+    } catch (error) {
+      console.error(
+        `❌ Database connection attempt ${attempt}/${maxRetries} failed:`,
+        error.message
+      );
+
+      if (attempt < maxRetries) {
+        console.log(`⏳ Retrying in ${retryDelay / 1000} seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+    }
   }
+
+  console.error('💥 Failed to connect to database after all retry attempts');
+  return false;
 }
 
 // Execute query with error handling
