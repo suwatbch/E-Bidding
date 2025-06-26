@@ -168,22 +168,25 @@ export class LanguageService {
   // โหลดข้อมูลภาษาจาก API (ไม่ต้อง token)
   async loadLanguagesFromAPI(): Promise<Language[]> {
     try {
-      const response = await axios.get(`${API_URL}/api/languages`, {
+      const response = await axios.get(`${API_URL}/api/language`, {
         headers: getHeaders(false), // ไม่ต้อง token
+        timeout: 10000, // 10 วินาที timeout
       });
 
       return response.data.data || [];
     } catch (error) {
       console.error('Error loading languages from API:', error);
-      throw error;
+      // Return empty array แทนการ throw error เพื่อไม่ให้ระบบค้าง
+      return [];
     }
   }
 
   // โหลดข้อมูลข้อความภาษาจาก API (ไม่ต้อง token)
   async loadLanguageTextsFromAPI(): Promise<LanguageText[]> {
     try {
-      const response = await axios.get(`${API_URL}/api/languages/texts/all`, {
+      const response = await axios.get(`${API_URL}/api/language/texts/all`, {
         headers: getHeaders(false), // ไม่ต้อง token
+        timeout: 10000, // 10 วินาที timeout
       });
 
       // แปลงข้อมูลจาก API format เป็น LanguageText format
@@ -198,7 +201,8 @@ export class LanguageService {
       return languageTexts;
     } catch (error) {
       console.error('Error loading language texts from API:', error);
-      throw error;
+      // Return empty array แทนการ throw error เพื่อไม่ให้ระบบค้าง
+      return [];
     }
   }
 
@@ -307,7 +311,7 @@ export class LanguageService {
   ): Promise<ApiResponse> {
     try {
       const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${API_URL}/api/languages/update/${languageCode}`,
+        `${API_URL}/api/language/update/${languageCode}`,
         data,
         {
           headers: getHeaders(true), // ต้อง token
@@ -369,7 +373,7 @@ export class LanguageService {
   async deleteLanguage(languageCode: string): Promise<ApiResponse> {
     try {
       const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${API_URL}/api/languages/delete/${languageCode}`,
+        `${API_URL}/api/language/delete/${languageCode}`,
         {},
         {
           headers: getHeaders(true),
@@ -405,7 +409,7 @@ export class LanguageService {
       };
 
       const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${API_URL}/api/languages/texts/update/${textId}`,
+        `${API_URL}/api/language/texts/update/${textId}`,
         apiData,
         { headers: getHeaders(true) }
       );
@@ -428,7 +432,7 @@ export class LanguageService {
   async deleteLanguageText(textId: number): Promise<ApiResponse> {
     try {
       const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${API_URL}/api/languages/texts/delete/${textId}`,
+        `${API_URL}/api/language/texts/delete/${textId}`,
         {},
         {
           headers: getHeaders(true), // ต้อง token
@@ -462,7 +466,7 @@ export class LanguageService {
       };
 
       const response: AxiosResponse<ApiResponse> = await axios.post(
-        `${API_URL}/api/languages/texts`,
+        `${API_URL}/api/language/texts`,
         apiData,
         {
           headers: getHeaders(true),

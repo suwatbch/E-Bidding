@@ -12,7 +12,7 @@ const {
 } = require('../helper/languageHelper');
 
 // Routes for Languages
-// GET /api/languages - ดึงข้อมูลภาษาทั้งหมด
+// GET /api/language - ดึงข้อมูลภาษาทั้งหมด
 router.get('/', async (req, res) => {
   try {
     const result = await getAllLanguages();
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/languages/:languageCode - ดึงข้อมูลภาษาตาม language_code
+// GET /api/language/:languageCode - ดึงข้อมูลภาษาตาม language_code
 router.get('/:languageCode', async (req, res) => {
   try {
     const { languageCode } = req.params;
@@ -80,7 +80,7 @@ router.get('/:languageCode', async (req, res) => {
   }
 });
 
-// POST /api/languages/update/:languageCode - อัปเดตข้อมูลภาษา
+// POST /api/language/update/:languageCode - อัปเดตข้อมูลภาษา
 router.post('/update/:languageCode', async (req, res) => {
   try {
     const { languageCode } = req.params;
@@ -129,7 +129,7 @@ router.post('/update/:languageCode', async (req, res) => {
   }
 });
 
-// POST /api/languages/delete/:languageCode - ลบภาษา
+// POST /api/language/delete/:languageCode - ลบภาษา
 router.post('/delete/:languageCode', async (req, res) => {
   try {
     const { languageCode } = req.params;
@@ -164,7 +164,7 @@ router.post('/delete/:languageCode', async (req, res) => {
 });
 
 // Routes for Language Texts
-// GET /api/languages/texts/all - ดึงข้อความแปลทั้งหมด
+// GET /api/language/texts/all - ดึงข้อความแปลทั้งหมด
 router.get('/texts/all', async (req, res) => {
   try {
     const result = await getAllLanguageTexts();
@@ -190,7 +190,7 @@ router.get('/texts/all', async (req, res) => {
   }
 });
 
-// POST /api/languages/texts - เพิ่มข้อความแปลใหม่
+// POST /api/language/texts - เพิ่มข้อความแปลใหม่
 router.post('/texts', async (req, res) => {
   try {
     const { keyname, language_code, text } = req.body;
@@ -228,7 +228,7 @@ router.post('/texts', async (req, res) => {
   }
 });
 
-// POST /api/languages/texts/update/:id - อัปเดตข้อความแปล
+// POST /api/language/texts/update/:id - อัปเดตข้อความแปล
 router.post('/texts/update/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -274,7 +274,7 @@ router.post('/texts/update/:id', async (req, res) => {
   }
 });
 
-// POST /api/languages/texts/delete/:id - ลบข้อความแปล
+// POST /api/language/texts/delete/:id - ลบข้อความแปล
 router.post('/texts/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;

@@ -43,7 +43,7 @@ const io = new Server(httpServer, {
 
 // API Routes
 app.use('/api/auth', authRouter);
-app.use('/api/languages', languageRouter);
+app.use('/api/language', languageRouter);
 app.use('/api/company', companyRouter);
 app.use('/api/users', userRouter);
 app.use('/api/user-company', userCompanyRouter);

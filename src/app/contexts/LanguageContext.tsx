@@ -345,8 +345,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 
   // แสดงหน้า loading เฉพาะเมื่อ:
   // 1. ยังไม่ hydrated หรือ
-  // 2. กำลังโหลดและไม่มีข้อมูลเลย (ไม่มี cache)
-  if (!isHydrated || (isLoading && languageTexts.length === 0)) {
+  // 2. กำลังโหลดและไม่มีข้อมูลเลย (ไม่มี cache) และ user ได้ login แล้ว
+  if (
+    !isHydrated ||
+    (isLoading && languageTexts.length === 0 && isAuthenticated && !authLoading)
+  ) {
     return <LoadingState message="Loading..." error={error} />;
   }
 
