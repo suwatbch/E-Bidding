@@ -1,30 +1,8 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
-
-// ฟังก์ชันแปลง datetime สำหรับ MySQL (Thailand timezone)
-function formatDateTimeForMySQL(dateTime) {
-  if (!dateTime) return null;
-
-  try {
-    const date = new Date(dateTime);
-    if (isNaN(date.getTime())) return null;
-
-    // ปรับเป็นเวลาไทย (UTC+7)
-    const thailandTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-
-    // แปลงเป็น MySQL datetime format: YYYY-MM-DD HH:mm:ss
-    const year = thailandTime.getUTCFullYear();
-    const month = String(thailandTime.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(thailandTime.getUTCDate()).padStart(2, '0');
-    const hours = String(thailandTime.getUTCHours()).padStart(2, '0');
-    const minutes = String(thailandTime.getUTCMinutes()).padStart(2, '0');
-    const seconds = String(thailandTime.getUTCSeconds()).padStart(2, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  } catch (error) {
-    console.error('Error formatting datetime:', error);
-    return null;
-  }
-}
+const {
+  formatDateTimeForMySQL,
+  getCurrentDateTimeForMySQL,
+} = require('../globalFunction');
 
 // ดึงข้อมูลประมูลทั้งหมด
 async function getAllAuctions() {
@@ -120,11 +98,14 @@ async function createAuction(auctionData) {
       currency, 
       status, 
       is_deleted,
-      remark
+      remark,
+      created_dt,
+      updated_dt
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
   `;
 
+  const currentDateTime = getCurrentDateTimeForMySQL();
   const result = await executeQuery(query, [
     name,
     auction_type_id,
@@ -134,6 +115,8 @@ async function createAuction(auctionData) {
     currency,
     status,
     remark,
+    currentDateTime,
+    currentDateTime,
   ]);
 
   // เพิ่ม auction_id ใน response data
@@ -167,7 +150,8 @@ async function updateAuction(auctionId, auctionData) {
       reserve_price = ?, 
       currency = ?, 
       status = ?,
-      remark = ?
+      remark = ?,
+      updated_dt = ?
     WHERE auction_id = ? AND is_deleted = 0
   `;
 
@@ -180,6 +164,7 @@ async function updateAuction(auctionId, auctionData) {
     currency,
     status,
     remark,
+    getCurrentDateTimeForMySQL(),
     auctionId,
   ]);
 }
@@ -341,7 +326,7 @@ async function createAuctionParticipant(participantData) {
       is_connected,
       joined_dt
     )
-    VALUES (?, ?, ?, ?, ?, NOW())
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
 
   return await executeQuery(query, [
@@ -350,6 +335,7 @@ async function createAuctionParticipant(participantData) {
     company_id,
     status,
     is_connected,
+    getCurrentDateTimeForMySQL(),
   ]);
 }
 
@@ -393,11 +379,10 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
     p.company_id || 0,
     p.status || 1,
     p.is_connected || 0,
+    getCurrentDateTimeForMySQL(),
   ]);
 
-  const placeholders = participants
-    .map(() => '(?, ?, ?, ?, ?, NOW())')
-    .join(', ');
+  const placeholders = participants.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
   const flatValues = values.flat();
 
   const query = `
@@ -446,20 +431,24 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
         currency, 
         status, 
         is_deleted,
-        remark
+        remark,
+        created_dt,
+        updated_dt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
     `;
-
+    const currentDateTime = getCurrentDateTimeForMySQL();
     const [auctionResult] = await connection.execute(auctionQuery, [
       name,
       auction_type_id,
-      start_dt,
-      end_dt,
+      formatDateTimeForMySQL(start_dt),
+      formatDateTimeForMySQL(end_dt),
       reserve_price,
       currency,
       status,
       remark,
+      currentDateTime,
+      currentDateTime,
     ]);
 
     const auctionId = auctionResult.insertId;
@@ -472,10 +461,11 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
         p.company_id || 0,
         p.status || 1,
         p.is_connected || 0,
+        getCurrentDateTimeForMySQL(),
       ]);
 
       const placeholders = participants
-        .map(() => '(?, ?, ?, ?, ?, NOW())')
+        .map(() => '(?, ?, ?, ?, ?, ?)')
         .join(', ');
       const flatValues = values.flat();
 
@@ -604,7 +594,7 @@ async function updateAuctionWithParticipants(
       currency,
       status,
       remark,
-      formatDateTimeForMySQL(new Date()),
+      getCurrentDateTimeForMySQL(),
       auctionId,
     ]);
 
@@ -669,7 +659,7 @@ async function updateAuctionWithParticipants(
               is_connected,
               joined_dt
             )
-            VALUES (?, ?, ?, ?, ?, NOW())
+            VALUES (?, ?, ?, ?, ?, ?)
           `;
 
           await connection.execute(insertParticipantQuery, [
@@ -678,6 +668,7 @@ async function updateAuctionWithParticipants(
             participant.company_id || 0,
             participant.status || 1,
             participant.is_connected || 0,
+            getCurrentDateTimeForMySQL(),
           ]);
         }
       }

@@ -1,4 +1,8 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
+const {
+  formatDateTimeForMySQL,
+  getCurrentDateTimeForMySQL,
+} = require('../globalFunction');
 const bcrypt = require('bcryptjs');
 
 // ดึงข้อมูลผู้ใช้งานทั้งหมด
@@ -180,9 +184,10 @@ async function createUser(userData) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, ?)
     `;
 
+    const currentDateTime = getCurrentDateTimeForMySQL();
     const result = await executeQuery(query, [
       username,
       hashedPassword,
@@ -195,6 +200,8 @@ async function createUser(userData) {
       type || 'user',
       image === undefined ? null : image,
       status !== undefined ? (status ? 1 : 0) : 1,
+      currentDateTime,
+      currentDateTime,
     ]);
 
     if (result.success && result.data.insertId) {
@@ -320,7 +327,8 @@ async function updateUser(userId, userData) {
       };
     }
 
-    updateFields.push('updated_dt = NOW()');
+    updateFields.push('updated_dt = ?');
+    params.push(getCurrentDateTimeForMySQL());
     params.push(userId);
 
     const query = `
@@ -356,11 +364,11 @@ async function deleteUser(userId) {
     // Soft delete - เปลี่ยน status เป็น 0
     const query = `
       UPDATE users 
-      SET status = 0, updated_dt = NOW()
+      SET status = 0, updated_dt = ?
       WHERE user_id = ?
     `;
 
-    return await executeQuery(query, [userId]);
+    return await executeQuery(query, [getCurrentDateTimeForMySQL(), userId]);
   } catch (error) {
     console.error('Error in deleteUser:', error);
     return {
@@ -413,11 +421,15 @@ async function updateUserLanguage(userId, languageCode) {
     // อัปเดตเฉพาะ language_code
     const query = `
       UPDATE users 
-      SET language_code = ?, updated_dt = NOW()
+      SET language_code = ?, updated_dt = ?
       WHERE user_id = ?
     `;
 
-    const result = await executeQuery(query, [languageCode, userId]);
+    const result = await executeQuery(query, [
+      languageCode,
+      getCurrentDateTimeForMySQL(),
+      userId,
+    ]);
 
     if (result.success) {
       return {
@@ -426,7 +438,7 @@ async function updateUserLanguage(userId, languageCode) {
         data: {
           user_id: userId,
           language_code: languageCode,
-          updated_dt: new Date(),
+          updated_dt: getCurrentDateTimeForMySQL(),
         },
       };
     } else {
@@ -505,9 +517,10 @@ async function createUserWithCompanies(userData, companies) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, ?)
     `;
 
+    const currentDateTime = getCurrentDateTimeForMySQL();
     const [userResult] = await connection.execute(userQuery, [
       username,
       hashedPassword,
@@ -520,6 +533,8 @@ async function createUserWithCompanies(userData, companies) {
       type || 'user',
       image === undefined ? null : image,
       status !== undefined ? (status ? 1 : 0) : 1,
+      currentDateTime,
+      currentDateTime,
     ]);
 
     const userId = userResult.insertId;
@@ -664,7 +679,8 @@ async function updateUserWithCompanies(userId, userData, companies) {
     }
 
     if (updateFields.length > 0) {
-      updateFields.push('updated_dt = NOW()');
+      updateFields.push('updated_dt = ?');
+      params.push(getCurrentDateTimeForMySQL());
       params.push(userId);
 
       const userQuery = `
