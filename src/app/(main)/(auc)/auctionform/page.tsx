@@ -34,6 +34,8 @@ import {
   decodeId,
   createAuctionFormUrl,
   formatAuctionId,
+  convertToISO,
+  convertISOToLocal,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionFormPage() {
@@ -743,8 +745,8 @@ export default function AuctionFormPage() {
             auction_id: formData.auction_id,
             name: formData.name,
             auction_type_id: formData.auction_type_id,
-            start_dt: formData.start_dt,
-            end_dt: formData.end_dt,
+            start_dt: convertToISO(formData.start_dt),
+            end_dt: convertToISO(formData.end_dt),
             reserve_price: formData.reserve_price,
             currency: formData.currency,
             status: formData.status,
@@ -764,8 +766,8 @@ export default function AuctionFormPage() {
           createDataAuction: {
             name: formData.name,
             auction_type_id: formData.auction_type_id,
-            start_dt: formData.start_dt,
-            end_dt: formData.end_dt,
+            start_dt: convertToISO(formData.start_dt),
+            end_dt: convertToISO(formData.end_dt),
             reserve_price: formData.reserve_price,
             currency: formData.currency,
             status: formData.status,
