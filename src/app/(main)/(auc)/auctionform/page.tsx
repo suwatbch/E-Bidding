@@ -26,6 +26,7 @@ import {
   safeParseDate,
   getCurrentDateTime,
   createDateChangeHandler,
+  formatDateForData,
   formatPriceForDisplay,
   handlePriceFocus,
   handlePriceBlur,
@@ -285,6 +286,10 @@ export default function AuctionFormPage() {
 
       setFormData({
         ...auction,
+        // แปลง datetime จาก ISO format เป็น MySQL format
+        start_dt: formatDateForData(safeParseDate(auction.start_dt)),
+        end_dt: formatDateForData(safeParseDate(auction.end_dt)),
+        created_dt: formatDateForData(safeParseDate(auction.created_dt)),
         // อัพเดท updated_dt เมื่อแก้ไข
         updated_dt: getCurrentDateTime(),
       });

@@ -1,5 +1,31 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
 
+// ฟังก์ชันแปลง datetime สำหรับ MySQL (Thailand timezone)
+function formatDateTimeForMySQL(dateTime) {
+  if (!dateTime) return null;
+
+  try {
+    const date = new Date(dateTime);
+    if (isNaN(date.getTime())) return null;
+
+    // ปรับเป็นเวลาไทย (UTC+7)
+    const thailandTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+
+    // แปลงเป็น MySQL datetime format: YYYY-MM-DD HH:mm:ss
+    const year = thailandTime.getUTCFullYear();
+    const month = String(thailandTime.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(thailandTime.getUTCDate()).padStart(2, '0');
+    const hours = String(thailandTime.getUTCHours()).padStart(2, '0');
+    const minutes = String(thailandTime.getUTCMinutes()).padStart(2, '0');
+    const seconds = String(thailandTime.getUTCSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  } catch (error) {
+    console.error('Error formatting datetime:', error);
+    return null;
+  }
+}
+
 // ดึงข้อมูลประมูลทั้งหมด
 async function getAllAuctions() {
   const query = `
@@ -102,8 +128,8 @@ async function createAuction(auctionData) {
   const result = await executeQuery(query, [
     name,
     auction_type_id,
-    start_dt,
-    end_dt,
+    formatDateTimeForMySQL(start_dt),
+    formatDateTimeForMySQL(end_dt),
     reserve_price,
     currency,
     status,
@@ -148,8 +174,8 @@ async function updateAuction(auctionId, auctionData) {
   return await executeQuery(query, [
     name,
     auction_type_id,
-    start_dt,
-    end_dt,
+    formatDateTimeForMySQL(start_dt),
+    formatDateTimeForMySQL(end_dt),
     reserve_price,
     currency,
     status,
@@ -555,29 +581,30 @@ async function updateAuctionWithParticipants(
     } = auctionData;
 
     const auctionQuery = `
-      UPDATE auction 
-      SET 
-        name = ?, 
-        auction_type_id = ?, 
-        start_dt = ?, 
-        end_dt = ?, 
-        reserve_price = ?, 
-        currency = ?, 
-        status = ?,
-        remark = ?,
-        updated_dt = NOW()
-      WHERE auction_id = ? AND is_deleted = 0
-    `;
+    UPDATE auction 
+    SET 
+      name = ?, 
+      auction_type_id = ?, 
+      start_dt = ?, 
+      end_dt = ?, 
+      reserve_price = ?, 
+      currency = ?, 
+      status = ?,
+      remark = ?,
+      updated_dt = ?
+    WHERE auction_id = ? AND is_deleted = 0
+  `;
 
     await connection.execute(auctionQuery, [
       name,
       auction_type_id,
-      start_dt,
-      end_dt,
+      formatDateTimeForMySQL(start_dt),
+      formatDateTimeForMySQL(end_dt),
       reserve_price,
       currency,
       status,
       remark,
+      formatDateTimeForMySQL(new Date()),
       auctionId,
     ]);
 
