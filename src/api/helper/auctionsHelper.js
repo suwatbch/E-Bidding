@@ -1,8 +1,5 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
-const {
-  getDateTimeUTCNow,
-  formatDateTimeUTCToDb,
-} = require('../globalFunction');
+const { formatDateTimeUTCToDb } = require('../globalFunction');
 
 // ดึงข้อมูลประมูลทั้งหมด
 async function getAllAuctions() {
@@ -102,10 +99,9 @@ async function createAuction(auctionData) {
       created_dt,
       updated_dt
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, now(), now())
   `;
 
-  const currentDateTime = getDateTimeUTCNow();
   const result = await executeQuery(query, [
     name,
     auction_type_id,
@@ -115,8 +111,6 @@ async function createAuction(auctionData) {
     currency,
     status,
     remark,
-    currentDateTime,
-    currentDateTime,
   ]);
 
   // เพิ่ม auction_id ใน response data
@@ -157,8 +151,8 @@ async function updateAuction(auctionId, auctionData) {
   return await executeQuery(query, [
     name,
     auction_type_id,
-    start_dt,
-    end_dt,
+    formatDateTimeUTCToDb(start_dt),
+    formatDateTimeUTCToDb(end_dt),
     reserve_price,
     currency,
     status,
@@ -324,7 +318,7 @@ async function createAuctionParticipant(participantData) {
       is_connected,
       joined_dt
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, now())
   `;
 
   return await executeQuery(query, [
@@ -333,7 +327,6 @@ async function createAuctionParticipant(participantData) {
     company_id,
     status,
     is_connected,
-    joined_dt,
   ]);
 }
 
@@ -377,10 +370,11 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
     p.company_id || 0,
     p.status || 1,
     p.is_connected || 0,
-    p.joined_dt,
   ]);
 
-  const placeholders = participants.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
+  const placeholders = participants
+    .map(() => '(?, ?, ?, ?, ?, now())')
+    .join(', ');
   const flatValues = values.flat();
 
   const query = `
@@ -399,12 +393,7 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
 }
 
 // สร้างประมูลใหม่พร้อมผู้เข้าร่วม (Transaction)
-async function createAuctionWithParticipants(
-  auctionData,
-  participants,
-  items,
-  timezone
-) {
+async function createAuctionWithParticipants(auctionData, participants, items) {
   let connection;
 
   try {
@@ -438,7 +427,7 @@ async function createAuctionWithParticipants(
         created_dt,
         updated_dt
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, now(), now())
     `;
     const [auctionResult] = await connection.execute(auctionQuery, [
       name,
@@ -449,8 +438,6 @@ async function createAuctionWithParticipants(
       currency,
       status,
       remark,
-      getDateTimeUTCNow(),
-      getDateTimeUTCNow(),
     ]);
 
     const auctionId = auctionResult.insertId;
@@ -463,11 +450,10 @@ async function createAuctionWithParticipants(
         p.company_id || 0,
         p.status || 1,
         p.is_connected || 0,
-        new Date().toISOString().slice(0, 19).replace('T', ' '), // UTC time สำหรับ joined_dt
       ]);
 
       const placeholders = participants
-        .map(() => '(?, ?, ?, ?, ?, ?)')
+        .map(() => '(?, ?, ?, ?, ?, now())')
         .join(', ');
       const flatValues = values.flat();
 
@@ -583,20 +569,19 @@ async function updateAuctionWithParticipants(
       currency = ?, 
       status = ?,
       remark = ?,
-      updated_dt = ?
+      updated_dt = now()
     WHERE auction_id = ? AND is_deleted = 0
   `;
 
     await connection.execute(auctionQuery, [
       name,
       auction_type_id,
-      start_dt,
-      end_dt,
+      formatDateTimeUTCToDb(start_dt),
+      formatDateTimeUTCToDb(end_dt),
       reserve_price,
       currency,
       status,
       remark,
-      updated_dt,
       auctionId,
     ]);
 
@@ -661,7 +646,7 @@ async function updateAuctionWithParticipants(
               is_connected,
               joined_dt
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, now())
           `;
 
           await connection.execute(insertParticipantQuery, [
@@ -670,7 +655,6 @@ async function updateAuctionWithParticipants(
             participant.company_id || 0,
             participant.status || 1,
             participant.is_connected || 0,
-            new Date().toISOString().slice(0, 19).replace('T', ' '), // UTC time
           ]);
         }
       }

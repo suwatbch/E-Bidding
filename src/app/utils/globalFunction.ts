@@ -197,6 +197,61 @@ export const getUserTimezoneOffset = (): number => {
 };
 
 /**
+ * แปลงวันที่เวลาให้เป็นรูปแบบ MySQL datetime string (YYYY-MM-DD HH:mm:ss) ในเวลาท้องถิ่น
+ * รองรับหลายรูปแบบ input: UTC string, local string, Date object
+ * @param dateTime - วันที่เวลาในรูปแบบต่างๆ (string, Date object)
+ * @returns string ในรูปแบบ "YYYY-MM-DD HH:mm:ss" ในเวลาท้องถิ่น
+ */
+export const convertToLocalDateTimeString = (
+  dateTime: string | Date
+): string => {
+  try {
+    if (!dateTime) {
+      return '';
+    }
+
+    let date: Date;
+
+    if (dateTime instanceof Date) {
+      // ถ้าเป็น Date object ใช้ตรงๆ
+      date = dateTime;
+    } else if (typeof dateTime === 'string') {
+      // ถ้าเป็น string ต้องตรวจสอบรูปแบบ
+      if (dateTime.includes('T') && dateTime.endsWith('Z')) {
+        // รูปแบบ ISO UTC: "2025-06-27T05:00:00.000Z"
+        date = new Date(dateTime);
+      } else if (dateTime.includes('T') && !dateTime.endsWith('Z')) {
+        // รูปแบบ ISO local: "2025-06-27T05:00:00"
+        date = new Date(dateTime);
+      } else if (dateTime.includes(' ')) {
+        // รูปแบบ MySQL: "2025-06-27 05:00:00"
+        // ใช้ safeParseDate เพื่อให้ถือว่าเป็น local time
+        date = safeParseDate(dateTime);
+      } else {
+        // รูปแบบอื่นๆ
+        date = new Date(dateTime);
+      }
+    } else {
+      console.warn(
+        'Invalid dateTime format provided to convertToLocalDateTimeString'
+      );
+      return '';
+    }
+
+    if (!isValidDate(date)) {
+      console.warn('Invalid date provided to convertToLocalDateTimeString');
+      return '';
+    }
+
+    // แปลงเป็นเวลาท้องถิ่นในรูปแบบ MySQL
+    return formatDateForData(date);
+  } catch (error) {
+    console.error('Error converting to local datetime string:', error);
+    return '';
+  }
+};
+
+/**
  * สร้าง handler function สำหรับการเปลี่ยนแปลงวันที่
  * @param setFormData - function สำหรับอัพเดท form data
  * @param updateTimestampField - field ที่ต้องการอัพเดท timestamp (default: 'updated_dt')
@@ -1723,6 +1778,7 @@ export default {
   isValidDate,
   getCurrentDateTime,
   safeParseDate,
+  convertToLocalDateTimeString,
   createDateChangeHandler,
   calculateTimeRemaining,
   formatTimeRemaining,

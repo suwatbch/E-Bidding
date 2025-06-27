@@ -26,7 +26,6 @@ import {
   safeParseDate,
   getCurrentDateTime,
   createDateChangeHandler,
-  formatDateForData,
   formatPriceForDisplay,
   handlePriceFocus,
   handlePriceBlur,
@@ -34,6 +33,8 @@ import {
   decodeId,
   createAuctionFormUrl,
   formatAuctionId,
+  formatDateForDisplay,
+  convertToLocalDateTimeString,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionFormPage() {
@@ -735,8 +736,8 @@ export default function AuctionFormPage() {
             auction_id: formData.auction_id,
             name: formData.name,
             auction_type_id: formData.auction_type_id,
-            start_dt: formData.start_dt,
-            end_dt: formData.end_dt,
+            start_dt: convertToLocalDateTimeString(formData.start_dt),
+            end_dt: convertToLocalDateTimeString(formData.end_dt),
             reserve_price: formData.reserve_price,
             currency: formData.currency,
             status: formData.status,
@@ -822,25 +823,6 @@ export default function AuctionFormPage() {
       ...prev,
       base_price: finalValue,
     }));
-  };
-
-  const formatDateTime = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        return 'วันที่ไม่ถูกต้อง';
-      }
-
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      const hours = date.getHours().toString().padStart(2, '0');
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-
-      return `${day}-${month}-${year} ${hours}:${minutes}`;
-    } catch (error) {
-      return 'วันที่ไม่ถูกต้อง';
-    }
   };
 
   // Auction Type Modal Functions

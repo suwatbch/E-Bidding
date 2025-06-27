@@ -181,10 +181,9 @@ async function createUser(userData) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, now(), now())
     `;
 
-    const currentDateTime = getDateTimeUTCNow();
     const result = await executeQuery(query, [
       username,
       hashedPassword,
@@ -197,8 +196,6 @@ async function createUser(userData) {
       type || 'user',
       image === undefined ? null : image,
       status !== undefined ? (status ? 1 : 0) : 1,
-      currentDateTime,
-      currentDateTime,
     ]);
 
     if (result.success && result.data.insertId) {
@@ -324,8 +321,7 @@ async function updateUser(userId, userData) {
       };
     }
 
-    updateFields.push('updated_dt = ?');
-    params.push(getDateTimeUTCNow());
+    updateFields.push('updated_dt = now()');
     params.push(userId);
 
     const query = `
@@ -361,11 +357,11 @@ async function deleteUser(userId) {
     // Soft delete - เปลี่ยน status เป็น 0
     const query = `
       UPDATE users 
-      SET status = 0, updated_dt = ?
+      SET status = 0, updated_dt = now()
       WHERE user_id = ?
     `;
 
-    return await executeQuery(query, [getDateTimeUTCNow(), userId]);
+    return await executeQuery(query, userId);
   } catch (error) {
     console.error('Error in deleteUser:', error);
     return {
@@ -418,15 +414,11 @@ async function updateUserLanguage(userId, languageCode) {
     // อัปเดตเฉพาะ language_code
     const query = `
       UPDATE users 
-      SET language_code = ?, updated_dt = ?
+      SET language_code = ?, updated_dt = now()
       WHERE user_id = ?
     `;
 
-    const result = await executeQuery(query, [
-      languageCode,
-      getDateTimeUTCNow(),
-      userId,
-    ]);
+    const result = await executeQuery(query, [languageCode, userId]);
 
     if (result.success) {
       return {
@@ -514,10 +506,9 @@ async function createUserWithCompanies(userData, companies) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, now(), now())
     `;
 
-    const currentDateTime = getDateTimeUTCNow();
     const [userResult] = await connection.execute(userQuery, [
       username,
       hashedPassword,
@@ -530,8 +521,6 @@ async function createUserWithCompanies(userData, companies) {
       type || 'user',
       image === undefined ? null : image,
       status !== undefined ? (status ? 1 : 0) : 1,
-      currentDateTime,
-      currentDateTime,
     ]);
 
     const userId = userResult.insertId;
@@ -676,8 +665,7 @@ async function updateUserWithCompanies(userId, userData, companies) {
     }
 
     if (updateFields.length > 0) {
-      updateFields.push('updated_dt = ?');
-      params.push(getDateTimeUTCNow());
+      updateFields.push('updated_dt = now()');
       params.push(userId);
 
       const userQuery = `

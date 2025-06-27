@@ -1,5 +1,4 @@
 const { executeQuery } = require('../config/dataconfig');
-const { getDateTimeUTCNow } = require('../globalFunction');
 
 // ดึงข้อมูลบริษัททั้งหมด
 async function getAllCompanies() {
@@ -68,10 +67,9 @@ async function createCompany(companyData) {
 
   const query = `
     INSERT INTO company (name, tax_id, address, email, phone, status, created_dt, updated_dt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, now(), now())
   `;
 
-  const currentDateTime = getDateTimeUTCNow();
   return await executeQuery(query, [
     name,
     tax_id,
@@ -79,8 +77,6 @@ async function createCompany(companyData) {
     email,
     phone,
     status,
-    currentDateTime,
-    currentDateTime,
   ]);
 }
 
@@ -110,7 +106,7 @@ async function updateCompany(companyId, companyData) {
 
   const query = `
     UPDATE company 
-    SET name = ?, tax_id = ?, address = ?, email = ?, phone = ?, status = ?, updated_dt = ?
+    SET name = ?, tax_id = ?, address = ?, email = ?, phone = ?, status = ?, updated_dt = now()
     WHERE company_id = ?
   `;
 
@@ -121,7 +117,6 @@ async function updateCompany(companyId, companyData) {
     email,
     phone,
     status,
-    getDateTimeUTCNow(),
     companyId,
   ]);
 }
@@ -162,11 +157,11 @@ async function deleteCompany(companyId) {
     // ถ้าไม่มีผู้ใช้งาน ให้ทำการลบ (soft delete)
     const query = `
       UPDATE company 
-      SET status = 0, updated_dt = ?
+      SET status = 0, updated_dt = now()
       WHERE company_id = ?
     `;
 
-    return await executeQuery(query, [getDateTimeUTCNow(), companyId]);
+    return await executeQuery(query, companyId);
   } catch (error) {
     return {
       success: false,

@@ -1,7 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../config/dataconfig');
-const { getDateTimeUTCNow } = require('../globalFunction');
 
 // JWT Secret (ในการใช้งานจริงควรเก็บใน environment variable)
 const JWT_SECRET =
@@ -51,14 +50,13 @@ async function incrementLoginCount(username) {
       UPDATE users 
       SET login_count = ?, 
           is_locked = ?, 
-          updated_dt = ?
+          updated_dt = now()
       WHERE username = ?
     `;
 
     const result = await executeQuery(updateQuery, [
       newLoginCount,
       shouldLock,
-      getDateTimeUTCNow(),
       username,
     ]);
 
@@ -85,11 +83,11 @@ async function resetLoginCount(username) {
     UPDATE users 
     SET login_count = 0, 
         is_locked = false, 
-        updated_dt = ?
+        updated_dt = now()
     WHERE username = ?
   `;
 
-  return await executeQuery(query, [getDateTimeUTCNow(), username]);
+  return await executeQuery(query, username);
 }
 
 // เข้าสู่ระบบ
@@ -277,25 +275,23 @@ async function requestOtp(username) {
       // สร้าง OTP ใหม่
       const insertOtpQuery = `
         INSERT INTO otp (otp, user_id, username, start_time, end_time, is_used)
-        VALUES (?, ?, ?, ?, ?, FALSE)
+        VALUES (?, ?, ?, now(), ?, FALSE)
       `;
       insertResult = await executeQuery(insertOtpQuery, [
         otp,
         user.user_id,
         user.username,
-        startTime,
         endTime,
       ]);
     } else if (existingOtpResult.data.length === 1) {
       // ถ้ามี OTP เพียง 1 แถว → อัปเดตแถวเดิม
       const updateOtpQuery = `
         UPDATE otp 
-        SET otp = ?, start_time = ?, end_time = ?, is_used = FALSE
+        SET otp = ?, start_time = now(), end_time = ?, is_used = FALSE
         WHERE user_id = ?
       `;
       insertResult = await executeQuery(updateOtpQuery, [
         otp,
-        startTime,
         endTime,
         user.user_id,
       ]);
@@ -303,13 +299,12 @@ async function requestOtp(username) {
       // ถ้าไม่มี OTP เลย → สร้างใหม่
       const insertOtpQuery = `
         INSERT INTO otp (otp, user_id, username, start_time, end_time, is_used)
-        VALUES (?, ?, ?, ?, ?, FALSE)
+        VALUES (?, ?, ?, now(), ?, FALSE)
       `;
       insertResult = await executeQuery(insertOtpQuery, [
         otp,
         user.user_id,
         user.username,
-        startTime,
         endTime,
       ]);
     }
