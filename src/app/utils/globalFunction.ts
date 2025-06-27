@@ -84,31 +84,23 @@ export interface DateChangeHandlerConfig {
 }
 
 /**
- * แปลง Date object เป็น string format สำหรับเก็บข้อมูล (Thailand timezone)
+ * แปลง Date object เป็น string format สำหรับเก็บข้อมูล (Local timezone)
  * @param date - Date object ที่ต้องการแปลง
- * @returns string ในรูปแบบ "YYYY-MM-DD HH:mm:ss" ในเวลาไทย
+ * @returns string ในรูปแบบ "YYYY-MM-DD HH:mm:ss" ในเวลาท้องถิ่น
  */
 export const formatDateForData = (date: Date): string => {
   if (!date || isNaN(date.getTime())) {
     return '';
   }
 
-  // ใช้ toLocaleString เพื่อแปลงเป็นเวลาไทย
-  const options: Intl.DateTimeFormatOptions = {
-    timeZone: 'Asia/Bangkok',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  };
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
 
-  const thailandTime = date.toLocaleString('en-CA', options);
-  // toLocaleString จะให้ format: "2025-06-26, 11:46:46"
-  // เราต้องแปลงเป็น "2025-06-26 11:46:46"
-  return thailandTime.replace(', ', ' ');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
 /**
@@ -161,8 +153,8 @@ export const isValidDate = (date: Date): boolean => {
 };
 
 /**
- * สร้าง current date/time string สำหรับ timestamp (Thailand timezone)
- * @returns string ในรูปแบบ "YYYY-MM-DD HH:mm:ss" ในเวลาไทย
+ * สร้าง current date/time string สำหรับ timestamp (Local timezone)
+ * @returns string ในรูปแบบ "YYYY-MM-DD HH:mm:ss" ในเวลาท้องถิ่น
  */
 export const getCurrentDateTime = (): string => {
   return formatDateForData(new Date());

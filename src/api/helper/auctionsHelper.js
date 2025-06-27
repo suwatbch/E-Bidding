@@ -98,20 +98,25 @@ async function createAuction(auctionData) {
       currency, 
       status, 
       is_deleted,
-      remark
+      remark,
+      created_dt,
+      updated_dt
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
   `;
 
+  const currentDateTime = getDateTimeUTCNow();
   const result = await executeQuery(query, [
     name,
     auction_type_id,
-    start_dt,
-    end_dt,
+    formatDateTimeUTCToDb(start_dt),
+    formatDateTimeUTCToDb(end_dt),
     reserve_price,
     currency,
     status,
     remark,
+    currentDateTime,
+    currentDateTime,
   ]);
 
   // เพิ่ม auction_id ใน response data

@@ -1,8 +1,5 @@
 const { executeQuery } = require('../config/dataconfig');
-const {
-  formatDateTimeForMySQL,
-  getCurrentDateTimeForMySQL,
-} = require('../globalFunction');
+const { getDateTimeUTCNow } = require('../globalFunction');
 
 // ดึงข้อมูลบริษัททั้งหมด
 async function getAllCompanies() {
@@ -74,7 +71,7 @@ async function createCompany(companyData) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  const currentDateTime = getCurrentDateTimeForMySQL();
+  const currentDateTime = getDateTimeUTCNow();
   return await executeQuery(query, [
     name,
     tax_id,
@@ -124,7 +121,7 @@ async function updateCompany(companyId, companyData) {
     email,
     phone,
     status,
-    getCurrentDateTimeForMySQL(),
+    getDateTimeUTCNow(),
     companyId,
   ]);
 }
@@ -169,7 +166,7 @@ async function deleteCompany(companyId) {
       WHERE company_id = ?
     `;
 
-    return await executeQuery(query, [getCurrentDateTimeForMySQL(), companyId]);
+    return await executeQuery(query, [getDateTimeUTCNow(), companyId]);
   } catch (error) {
     return {
       success: false,

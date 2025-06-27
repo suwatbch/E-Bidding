@@ -1,10 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../config/dataconfig');
-const {
-  formatDateTimeForMySQL,
-  getCurrentDateTimeForMySQL,
-} = require('../globalFunction');
+const { getDateTimeUTCNow } = require('../globalFunction');
 
 // JWT Secret (ในการใช้งานจริงควรเก็บใน environment variable)
 const JWT_SECRET =
@@ -61,7 +58,7 @@ async function incrementLoginCount(username) {
     const result = await executeQuery(updateQuery, [
       newLoginCount,
       shouldLock,
-      getCurrentDateTimeForMySQL(),
+      getDateTimeUTCNow(),
       username,
     ]);
 
@@ -92,7 +89,7 @@ async function resetLoginCount(username) {
     WHERE username = ?
   `;
 
-  return await executeQuery(query, [getCurrentDateTimeForMySQL(), username]);
+  return await executeQuery(query, [getDateTimeUTCNow(), username]);
 }
 
 // เข้าสู่ระบบ
@@ -244,11 +241,12 @@ async function requestOtp(username) {
     // สร้างรหัส OTP 6 หลักแบบสุ่ม
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // กำหนดเวลาเริ่มต้นและสิ้นสุด (5 นาที) ในเวลาไทย
-    const startTime = getCurrentDateTimeForMySQL();
-    const endTime = formatDateTimeForMySQL(
-      new Date(Date.now() + 5 * 60 * 1000)
-    ); // เพิ่ม 5 นาที
+    // กำหนดเวลาเริ่มต้นและสิ้นสุด (5 นาที) ในเวลา UTC
+    const startTime = getDateTimeUTCNow();
+    const endTime = new Date(Date.now() + 5 * 60 * 1000)
+      .toISOString()
+      .slice(0, 19)
+      .replace('T', ' '); // เพิ่ม 5 นาที
 
     // ตรวจสอบ OTP ที่มีอยู่แล้วของ user นี้
     const checkExistingOtpQuery = `
@@ -285,8 +283,8 @@ async function requestOtp(username) {
         otp,
         user.user_id,
         user.username,
-        formatDateTimeForMySQL(startTime),
-        formatDateTimeForMySQL(endTime),
+        startTime,
+        endTime,
       ]);
     } else if (existingOtpResult.data.length === 1) {
       // ถ้ามี OTP เพียง 1 แถว → อัปเดตแถวเดิม
@@ -311,8 +309,8 @@ async function requestOtp(username) {
         otp,
         user.user_id,
         user.username,
-        formatDateTimeForMySQL(startTime),
-        formatDateTimeForMySQL(endTime),
+        startTime,
+        endTime,
       ]);
     }
 
@@ -394,7 +392,7 @@ async function resetPassword(username, otp, newPassword) {
     // อัปเดตรหัสผ่าน
     const updateResult = await executeQuery(
       'UPDATE users SET password = ?, updated_dt = ? WHERE user_id = ?',
-      [hashedPassword, getCurrentDateTimeForMySQL(), userId]
+      [hashedPassword, getDateTimeUTCNow(), userId]
     );
 
     if (!updateResult.success) {

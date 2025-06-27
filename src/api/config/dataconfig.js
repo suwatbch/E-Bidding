@@ -8,7 +8,7 @@ const dbConfig = {
   password: process.env.DB_PASSWORD || 'admin231',
   database: process.env.DB_NAME || 'ebidding',
   charset: 'utf8mb4',
-  timezone: '+07:00',
+  timezone: '+00:00',
   acquireTimeout: 60000,
   timeout: 60000,
   reconnect: true,
