@@ -460,6 +460,7 @@ router.post('/with-participants', async (req, res) => {
       createDataAuction,
       createDataAuction_Participant,
       createDataAuction_Item,
+      timezone,
     } = req.body;
 
     // ตรวจสอบข้อมูลตลาดประมูลที่จำเป็น
@@ -569,7 +570,8 @@ router.post('/with-participants', async (req, res) => {
     const result = await createAuctionWithParticipants(
       auctionData,
       participantsData,
-      itemsData
+      itemsData,
+      timezone
     );
 
     if (result.success) {

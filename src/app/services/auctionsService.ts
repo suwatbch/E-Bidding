@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { getUserTimezoneOffset } from '@/app/utils/globalFunction';
 
 // Base URL configuration
 const API_BASE_URL =
@@ -491,7 +492,10 @@ export const auctionsService = {
     try {
       const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
         '/with-participants',
-        auctionData
+        {
+          ...auctionData,
+          timezone: getUserTimezoneOffset(),
+        }
       );
       return response.data;
     } catch (error: any) {

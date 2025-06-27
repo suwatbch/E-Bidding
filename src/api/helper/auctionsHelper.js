@@ -1,7 +1,7 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
 const {
-  formatDateTimeForMySQL,
-  getCurrentDateTimeForMySQL,
+  getDateTimeUTCNow,
+  formatDateTimeUTCToDb,
 } = require('../globalFunction');
 
 // ดึงข้อมูลประมูลทั้งหมด
@@ -98,25 +98,20 @@ async function createAuction(auctionData) {
       currency, 
       status, 
       is_deleted,
-      remark,
-      created_dt,
-      updated_dt
+      remark
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
   `;
 
-  const currentDateTime = getCurrentDateTimeForMySQL();
   const result = await executeQuery(query, [
     name,
     auction_type_id,
-    formatDateTimeForMySQL(start_dt),
-    formatDateTimeForMySQL(end_dt),
+    start_dt,
+    end_dt,
     reserve_price,
     currency,
     status,
     remark,
-    currentDateTime,
-    currentDateTime,
   ]);
 
   // เพิ่ม auction_id ใน response data
@@ -151,20 +146,18 @@ async function updateAuction(auctionId, auctionData) {
       currency = ?, 
       status = ?,
       remark = ?,
-      updated_dt = ?
     WHERE auction_id = ? AND is_deleted = 0
   `;
 
   return await executeQuery(query, [
     name,
     auction_type_id,
-    formatDateTimeForMySQL(start_dt),
-    formatDateTimeForMySQL(end_dt),
+    start_dt,
+    end_dt,
     reserve_price,
     currency,
     status,
     remark,
-    getCurrentDateTimeForMySQL(),
     auctionId,
   ]);
 }
@@ -335,7 +328,7 @@ async function createAuctionParticipant(participantData) {
     company_id,
     status,
     is_connected,
-    getCurrentDateTimeForMySQL(),
+    joined_dt,
   ]);
 }
 
@@ -379,7 +372,7 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
     p.company_id || 0,
     p.status || 1,
     p.is_connected || 0,
-    getCurrentDateTimeForMySQL(),
+    p.joined_dt,
   ]);
 
   const placeholders = participants.map(() => '(?, ?, ?, ?, ?, ?)').join(', ');
@@ -401,7 +394,12 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
 }
 
 // สร้างประมูลใหม่พร้อมผู้เข้าร่วม (Transaction)
-async function createAuctionWithParticipants(auctionData, participants, items) {
+async function createAuctionWithParticipants(
+  auctionData,
+  participants,
+  items,
+  timezone
+) {
   let connection;
 
   try {
@@ -437,18 +435,17 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?)
     `;
-    const currentDateTime = getCurrentDateTimeForMySQL();
     const [auctionResult] = await connection.execute(auctionQuery, [
       name,
       auction_type_id,
-      formatDateTimeForMySQL(start_dt),
-      formatDateTimeForMySQL(end_dt),
+      formatDateTimeUTCToDb(start_dt),
+      formatDateTimeUTCToDb(end_dt),
       reserve_price,
       currency,
       status,
       remark,
-      currentDateTime,
-      currentDateTime,
+      getDateTimeUTCNow(),
+      getDateTimeUTCNow(),
     ]);
 
     const auctionId = auctionResult.insertId;
@@ -461,7 +458,7 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
         p.company_id || 0,
         p.status || 1,
         p.is_connected || 0,
-        getCurrentDateTimeForMySQL(),
+        new Date().toISOString().slice(0, 19).replace('T', ' '), // UTC time สำหรับ joined_dt
       ]);
 
       const placeholders = participants
@@ -588,13 +585,13 @@ async function updateAuctionWithParticipants(
     await connection.execute(auctionQuery, [
       name,
       auction_type_id,
-      formatDateTimeForMySQL(start_dt),
-      formatDateTimeForMySQL(end_dt),
+      start_dt,
+      end_dt,
       reserve_price,
       currency,
       status,
       remark,
-      getCurrentDateTimeForMySQL(),
+      updated_dt,
       auctionId,
     ]);
 
@@ -668,7 +665,7 @@ async function updateAuctionWithParticipants(
             participant.company_id || 0,
             participant.status || 1,
             participant.is_connected || 0,
-            getCurrentDateTimeForMySQL(),
+            new Date().toISOString().slice(0, 19).replace('T', ' '), // UTC time
           ]);
         }
       }

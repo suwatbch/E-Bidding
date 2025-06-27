@@ -205,119 +205,6 @@ export const getUserTimezoneOffset = (): number => {
 };
 
 /**
- * แปลงวันที่เป็น ISO string format พร้อม timezone offset
- * @param date - Date object, string วันที่, หรือ undefined/null
- * @param timezone - timezone offset เป็นชั่วโมง (default: auto-detect จาก user)
- * @returns string ในรูปแบบ ISO format (YYYY-MM-DDTHH:mm:ss+HH:MM)
- */
-export const convertToISO = (
-  date?: Date | string | null,
-  timezone?: number
-): string => {
-  try {
-    // ใช้ timezone ที่ระบุ หรือดึงอัตโนมัติจากผู้ใช้
-    const userTimezone = timezone ?? getUserTimezoneOffset();
-
-    if (!date) {
-      const now = new Date();
-      return formatDateWithTimezone(now, userTimezone);
-    }
-
-    let dateObj: Date;
-
-    if (typeof date === 'string') {
-      dateObj = safeParseDate(date);
-    } else {
-      dateObj = date;
-    }
-
-    if (!isValidDate(dateObj)) {
-      console.warn('Invalid date provided to convertToISO, using current time');
-      const now = new Date();
-      return formatDateWithTimezone(now, userTimezone);
-    }
-
-    return formatDateWithTimezone(dateObj, userTimezone);
-  } catch (error) {
-    console.error('Error converting to ISO:', error);
-    const now = new Date();
-    const userTimezone = timezone ?? getUserTimezoneOffset();
-    return formatDateWithTimezone(now, userTimezone);
-  }
-};
-
-/**
- * จัดรูปแบบวันที่เป็น ISO พร้อม timezone offset
- * @param date - Date object
- * @param timezoneOffset - timezone offset เป็นชั่วโมง
- * @returns string ในรูปแบบ YYYY-MM-DDTHH:mm:ss+HH:MM
- */
-const formatDateWithTimezone = (date: Date, timezoneOffset: number): string => {
-  // ใช้วันที่เวลาตามที่ได้รับมา ไม่ต้องปรับ timezone
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  // สร้าง timezone offset string
-  const offsetHours = Math.abs(timezoneOffset);
-  const offsetSign = timezoneOffset >= 0 ? '+' : '-';
-  const offsetString = `${offsetSign}${String(Math.floor(offsetHours)).padStart(
-    2,
-    '0'
-  )}:${String((offsetHours % 1) * 60).padStart(2, '0')}`;
-
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${offsetString}`;
-};
-
-/**
- * แปลง ISO string format กลับเป็นเวลาท้องถิ่นสำหรับแสดงผล
- * @param isoDateTime - string ในรูปแบบ ISO format เช่น "2025-06-26T21:30:00+07:00"
- * @param format - รูปแบบการแสดงผล: 'datetime', 'date', 'time' (default: 'datetime')
- * @returns string เวลาท้องถิ่นสำหรับแสดงผล
- */
-export const convertISOToLocal = (
-  isoDateTime: string,
-  format: 'datetime' | 'date' | 'time' = 'datetime'
-): string => {
-  try {
-    if (!isoDateTime || typeof isoDateTime !== 'string') {
-      console.warn('Invalid ISO date time provided');
-      return '';
-    }
-
-    // สร้าง Date object จาก ISO string
-    const date = new Date(isoDateTime.trim());
-
-    if (!isValidDate(date)) {
-      console.warn('Invalid ISO date provided to convertISOToLocal');
-      return '';
-    }
-
-    // แปลงเป็นเวลาท้องถิ่นตามรูปแบบที่ต้องการ
-    switch (format) {
-      case 'date':
-        return formatDateForDisplay(date, false); // แค่วันที่
-      case 'time':
-        return date.toLocaleTimeString('th-TH', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: false,
-        }); // แค่เวลา
-      case 'datetime':
-      default:
-        return formatDateForDisplay(date, true); // วันที่และเวลา
-    }
-  } catch (error) {
-    console.error('Error converting ISO to local time:', error);
-    return '';
-  }
-};
-
-/**
  * สร้าง handler function สำหรับการเปลี่ยนแปลงวันที่
  * @param setFormData - function สำหรับอัพเดท form data
  * @param updateTimestampField - field ที่ต้องการอัพเดท timestamp (default: 'updated_dt')
@@ -352,7 +239,7 @@ export const formatTimeRemaining = (
   if (timeRemaining.days > 0) {
     return `${timeRemaining.days} วัน ${timeRemaining.hours} ชม.`;
   } else if (timeRemaining.hours > 0) {
-    return `${timeRemaining.hours} ชม. ${timeRemaining.minutes} นาที`;
+    return `${timeRemaining.hours} ชั่วโมง ${timeRemaining.minutes} นาที`;
   } else if (timeRemaining.minutes > 0) {
     return `${timeRemaining.minutes} นาที`;
   } else {
@@ -1787,6 +1674,51 @@ export const createAuctionFormUrl = (id: number | string): string => {
   return createSecureUrl('/auctionform', id);
 };
 
+/**
+ * แปลง UTC MySQL datetime เป็น local time สำหรับแสดงผล
+ * @param utcDateTime - UTC datetime string จากฐานข้อมูล เช่น "2025-06-26 08:46:49"
+ * @param format - รูปแบบการแสดงผล: 'datetime', 'date', 'time' (default: 'datetime')
+ * @returns string เวลาท้องถิ่นสำหรับแสดงผล
+ */
+export const convertUTCToLocal = (
+  utcDateTime: string,
+  format: 'datetime' | 'date' | 'time' = 'datetime'
+): string => {
+  try {
+    if (!utcDateTime || typeof utcDateTime !== 'string') {
+      console.warn('Invalid UTC date time provided');
+      return '';
+    }
+
+    // แปลง UTC string เป็น Date object
+    const utcDate = new Date(utcDateTime + 'Z'); // เพิ่ม Z เพื่อบอกว่าเป็น UTC
+
+    if (!isValidDate(utcDate)) {
+      console.warn('Invalid UTC date provided to convertUTCToLocal');
+      return '';
+    }
+
+    // แปลงเป็นเวลาท้องถิ่นตามรูปแบบที่ต้องการ
+    switch (format) {
+      case 'date':
+        return formatDateForDisplay(utcDate, false); // แค่วันที่
+      case 'time':
+        return utcDate.toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }); // แค่เวลา
+      case 'datetime':
+      default:
+        return formatDateForDisplay(utcDate, true); // วันที่และเวลา
+    }
+  } catch (error) {
+    console.error('Error converting UTC to local time:', error);
+    return '';
+  }
+};
+
 // =============================================================================
 // EXPORT ALL UTILITIES
 // =============================================================================
@@ -1879,4 +1811,5 @@ export default {
   decodeId,
   createSecureUrl,
   createAuctionFormUrl,
+  convertUTCToLocal,
 };
