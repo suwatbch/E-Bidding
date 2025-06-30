@@ -3,6 +3,15 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Container from '@/app/components/ui/Container';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/app/components/ui/AucTable';
+import EmptyState from '@/app/components/ui/EmptyState';
 import BidHistory from '@/app/components/history/BidHistory';
 import {
   AucCategoryIcon,
@@ -10,6 +19,7 @@ import {
   AucEndTimeIcon,
   AucOfferIcon,
   AucUserIcon,
+  AucBalanceIcon,
   StatusBiddingIcon,
   StatusEndingSoonIcon,
   StatusEndedIcon,
@@ -25,8 +35,22 @@ import {
   type AuctionBid,
 } from '@/app/services/auctionsService';
 import {
+  auctionTypeService,
+  type AuctionType,
+} from '@/app/services/auctionTypeService';
+import {
+  statusConfig,
+  getStatusById,
+  currencyConfig,
+} from '@/app/model/config';
+import {
   getCurrentDateTime,
   decodeAuctionId,
+  formatAuctionId,
+  formatPrice,
+  formatPriceForDisplay,
+  calculateTimeRemaining,
+  formatTimeRemaining,
 } from '@/app/utils/globalFunction';
 
 export default function AuctionDetailPage() {
@@ -41,6 +65,7 @@ export default function AuctionDetailPage() {
   const [participants, setParticipants] = useState<AuctionParticipant[]>([]);
   const [items, setItems] = useState<AuctionItem[]>([]);
   const [bids, setBids] = useState<AuctionBid[]>([]);
+  const [auctionTypes, setAuctionTypes] = useState<AuctionType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState('');
@@ -51,7 +76,11 @@ export default function AuctionDetailPage() {
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
 
   useEffect(() => {
-    loadAuctionData();
+    const initializeData = async () => {
+      await Promise.all([loadAuctionTypes(), loadAuctionData()]);
+    };
+
+    initializeData();
   }, [auctionId]);
 
   useEffect(() => {
@@ -64,6 +93,21 @@ export default function AuctionDetailPage() {
     }
   }, [auction]);
 
+  const loadAuctionTypes = async () => {
+    try {
+      const response = await auctionTypeService.getActiveAuctionTypes();
+      if (response.success && response.message === null) {
+        setAuctionTypes(response.data);
+      } else {
+        console.error('Error loading auction types:', response.message);
+        setAuctionTypes([]);
+      }
+    } catch (error) {
+      console.error('Error loading auction types:', error);
+      setAuctionTypes([]);
+    }
+  };
+
   const loadAuctionData = async () => {
     try {
       setIsLoading(true);
@@ -74,8 +118,18 @@ export default function AuctionDetailPage() {
         return;
       }
 
-      // ดึงข้อมูลตลาดประมูล
-      const auctionResponse = await auctionsService.getAuctionById(auctionId);
+      // ดึงข้อมูลทั้งหมดพร้อมกัน
+      const [
+        auctionResponse,
+        participantsResponse,
+        itemsResponse,
+        bidsResponse,
+      ] = await Promise.all([
+        auctionsService.getAuctionById(auctionId),
+        auctionsService.getAuctionParticipantsWithDetails(auctionId),
+        auctionsService.getAuctionItems(auctionId),
+        auctionsService.getAuctionBids(auctionId),
+      ]);
 
       if (!auctionResponse.success || !auctionResponse.data) {
         setError('ไม่พบข้อมูลตลาดประมูลที่ต้องการ');
@@ -92,21 +146,15 @@ export default function AuctionDetailPage() {
 
       setAuction(auctionData);
 
-      // ดึงข้อมูลผู้เข้าร่วม
-      const participantsResponse =
-        await auctionsService.getAuctionParticipantsWithDetails(auctionId);
+      // ตั้งค่าข้อมูลอื่นๆ
       if (participantsResponse.success) {
         setParticipants(participantsResponse.data);
       }
 
-      // ดึงข้อมูลรายการสินค้า
-      const itemsResponse = await auctionsService.getAuctionItems(auctionId);
       if (itemsResponse.success) {
         setItems(itemsResponse.data);
       }
 
-      // ดึงข้อมูลการเสนอราคา
-      const bidsResponse = await auctionsService.getAuctionBids(auctionId);
       if (bidsResponse.success) {
         setBids(bidsResponse.data);
       }
@@ -123,31 +171,82 @@ export default function AuctionDetailPage() {
   const updateTimeRemaining = () => {
     if (!auction) return;
 
-    const now = new Date();
-    const endTime = new Date(auction.end_dt);
-    const timeDiff = endTime.getTime() - now.getTime();
+    const timeData = calculateTimeRemaining(auction.end_dt);
 
-    if (timeDiff <= 0) {
+    if (timeData.isExpired) {
       setTimeRemaining('หมดเวลา');
       return;
     }
 
-    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    setTimeRemaining(formatTimeRemaining(timeData));
+  };
 
-    if (days > 0) {
-      setTimeRemaining(`${days} วัน ${hours} ชั่วโมง ${minutes} นาที`);
-    } else if (hours > 0) {
-      setTimeRemaining(`${hours} ชั่วโมง ${minutes} นาที ${seconds} วินาที`);
-    } else if (minutes > 0) {
-      setTimeRemaining(`${minutes} นาที ${seconds} วินาที`);
-    } else {
-      setTimeRemaining(`${seconds} วินาที`);
+  // ใช้ statusConfig แทน getStatusInfo function เดิม
+  const getStatusDisplay = (statusId: number) => {
+    const statusInfo = getStatusById(statusId);
+    if (!statusInfo) {
+      return {
+        text: 'ไม่ทราบสถานะ',
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-50',
+      };
     }
+
+    // แปลง statusConfig เป็น format ที่ UI ต้องการ
+    switch (statusId) {
+      case 1:
+        return {
+          text: statusInfo.description,
+          color: 'text-amber-600',
+          bgColor: 'bg-amber-50',
+        };
+      case 2:
+        return {
+          text: statusInfo.description,
+          color: 'text-orange-600',
+          bgColor: 'bg-orange-50',
+        };
+      case 3:
+        return {
+          text: statusInfo.description,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+        };
+      case 4:
+        return {
+          text: statusInfo.description,
+          color: 'text-cyan-600',
+          bgColor: 'bg-cyan-50',
+        };
+      case 5:
+        return {
+          text: statusInfo.description,
+          color: 'text-green-600',
+          bgColor: 'bg-green-50',
+        };
+      case 6:
+        return {
+          text: statusInfo.description,
+          color: 'text-red-600',
+          bgColor: 'bg-red-50',
+        };
+      default:
+        return {
+          text: statusInfo.description,
+          color: 'text-gray-600',
+          bgColor: 'bg-gray-50',
+        };
+    }
+  };
+
+  const getAuctionTypeName = (auctionTypeId: number): string => {
+    const auctionType = auctionTypes.find((type) => type.id === auctionTypeId);
+    return auctionType ? auctionType.name : `ประเภท ${auctionTypeId}`;
+  };
+
+  const getCurrencyName = (currencyId: number): string => {
+    const currency = currencyConfig[currencyId as keyof typeof currencyConfig];
+    return currency ? currency.code : '';
   };
 
   const getStatusIcon = (status: number) => {
@@ -169,58 +268,7 @@ export default function AuctionDetailPage() {
     }
   };
 
-  const getStatusColor = (status: number) => {
-    switch (status) {
-      case 1:
-        return 'text-gray-500 bg-gray-100';
-      case 2:
-        return 'text-blue-600 bg-blue-100';
-      case 3:
-        return 'text-green-600 bg-green-100';
-      case 4:
-        return 'text-yellow-600 bg-yellow-100';
-      case 5:
-        return 'text-red-600 bg-red-100';
-      case 6:
-        return 'text-gray-600 bg-gray-200';
-      default:
-        return 'text-gray-500 bg-gray-100';
-    }
-  };
-
-  const getStatusText = (status: number) => {
-    switch (status) {
-      case 1:
-        return 'รอดำเนินการ';
-      case 2:
-        return 'เปิดรับสมัคร';
-      case 3:
-        return 'กำลังประมูล';
-      case 4:
-        return 'ใกล้สิ้นสุด';
-      case 5:
-        return 'สิ้นสุดแล้ว';
-      case 6:
-        return 'ยกเลิก';
-      default:
-        return 'ไม่ทราบสถานะ';
-    }
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB',
-      minimumFractionDigits: 2,
-    }).format(price);
-  };
-
-  const formatAuctionId = (auctionData: Auction) => {
-    if (!auctionData) return '';
-    const year = new Date(auctionData.created_dt).getFullYear();
-    const paddedId = auctionData.auction_id.toString().padStart(4, '0');
-    return `AUC${year}${paddedId}`;
-  };
+  // ใช้ formatPrice จาก globalFunction.ts แทน
 
   const getLowestBid = () => {
     if (bids.length === 0) return null;
@@ -388,48 +436,28 @@ export default function AuctionDetailPage() {
     <Container className="py-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 rounded-full p-3">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="bg-blue-50 p-3 rounded-xl">
+                <AucBalanceIcon className="text-blue-600" />
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="flex flex-col justify-between">
+                <h1 className="text-2xl font-semibold text-gray-900">
                   {auction.name}
                 </h1>
-                <p className="text-gray-600">
-                  รหัสตลาด: {formatAuctionId(auction)}
+                <p className="text-gray-600 mt-1">
+                  รหัสตลาด: {formatAuctionId(auction.auction_id)}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-                  auction.status
-                )}`}
-              >
-                {getStatusIcon(auction.status)}
-                <span className="ml-2">{getStatusText(auction.status)}</span>
-              </span>
+            <div className="flex flex-col items-end gap-2">
               <button
                 onClick={() => router.back()}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                className="flex text-sm font-medium items-center gap-1 text-blue-500 hover:text-blue-700 transition-colors"
               >
                 <svg
-                  className="w-4 h-4"
+                  className="w-5 h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -441,8 +469,18 @@ export default function AuctionDetailPage() {
                     d="M10 19l-7-7m0 0l7-7m-7 7h18"
                   />
                 </svg>
-                <span>ย้อนกลับ</span>
+                ย้อนกลับ
               </button>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  getStatusDisplay(auction.status).color
+                } ${getStatusDisplay(auction.status).bgColor}`}
+              >
+                {getStatusIcon(auction.status)}
+                <span className="ml-2">
+                  {getStatusDisplay(auction.status).text}
+                </span>
+              </span>
             </div>
           </div>
         </div>
@@ -477,18 +515,19 @@ export default function AuctionDetailPage() {
                 <div className="flex items-center space-x-3">
                   <AucOfferIcon className="w-5 h-5 text-blue-600" />
                   <div>
-                    <p className="text-sm text-gray-500">ราคาเริ่มต้น</p>
-                    <p className="font-medium text-blue-600">
-                      {formatPrice(auction.reserve_price)}
+                    <p className="text-sm text-gray-500">ราคาประกัน</p>
+                    <p className="font-medium">
+                      {formatPriceForDisplay(auction.reserve_price)}{' '}
+                      {getCurrencyName(auction.currency)}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <AucCategoryIcon className="w-5 h-5 text-purple-600" />
                   <div>
-                    <p className="text-sm text-gray-500">ประเภทประมูล</p>
+                    <p className="text-sm text-gray-500">ประเภท</p>
                     <p className="font-medium">
-                      ประเภท {auction.auction_type_id}
+                      {getAuctionTypeName(auction.auction_type_id)}
                     </p>
                   </div>
                 </div>
@@ -523,7 +562,11 @@ export default function AuctionDetailPage() {
                             <span>
                               จำนวน: {item.quantity} {item.unit}
                             </span>
-                            <span>ราคาฐาน: {formatPrice(item.base_price)}</span>
+                            <span>
+                              ราคา/หน่วย:{' '}
+                              {formatPriceForDisplay(item.base_price)}{' '}
+                              {getCurrencyName(auction.currency)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -532,96 +575,6 @@ export default function AuctionDetailPage() {
                 </div>
               </div>
             )}
-
-            {/* Bidding Results Table */}
-            <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-              <div className="bg-blue-600 px-6 py-4">
-                <h2 className="text-xl font-semibold text-white">
-                  ผลการเสนอราคา
-                </h2>
-              </div>
-              <div className="p-6">
-                {bids.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">
-                            ลำดับ
-                          </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">
-                            บริษัท
-                          </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">
-                            ราคาเสนอ
-                          </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">
-                            เวลา
-                          </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-900">
-                            สถานะ
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {bids
-                          .filter((bid) => bid.status === 'accept')
-                          .sort((a, b) => a.bid_amount - b.bid_amount)
-                          .map((bid, index) => (
-                            <tr
-                              key={bid.bid_id}
-                              className={index === 0 ? 'bg-yellow-50' : ''}
-                            >
-                              <td className="py-3 px-4">
-                                <div className="flex items-center">
-                                  {index === 0 && (
-                                    <span className="text-yellow-500 mr-2">
-                                      ⭐
-                                    </span>
-                                  )}
-                                  {index + 1}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <div className="font-medium text-gray-900">
-                                  บริษัท {bid.company_id}
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  ผู้ใช้ {bid.user_id}
-                                </div>
-                              </td>
-                              <td className="py-3 px-4">
-                                <span
-                                  className={`font-medium ${
-                                    index === 0
-                                      ? 'text-green-600'
-                                      : 'text-gray-900'
-                                  }`}
-                                >
-                                  {formatPrice(bid.bid_amount)}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-gray-600">
-                                {new Date(bid.bid_time).toLocaleString('th-TH')}
-                              </td>
-                              <td className="py-3 px-4">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  ยอมรับ
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-gray-400 text-4xl mb-2">📊</div>
-                    <p className="text-gray-500">ยังไม่มีการเสนอราคา</p>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
 
           {/* Sidebar */}
@@ -663,27 +616,6 @@ export default function AuctionDetailPage() {
               </div>
             </div>
 
-            {/* Current Bid Status */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                สถานะการเสนอราคา
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ราคาต่ำสุดปัจจุบัน:</span>
-                  <span className="font-medium text-green-600">
-                    {getLowestBid()
-                      ? formatPrice(getLowestBid()!.bid_amount)
-                      : 'ยังไม่มี'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">จำนวนการเสนอราคา:</span>
-                  <span className="font-medium">{getBidCount()} ครั้ง</span>
-                </div>
-              </div>
-            </div>
-
             {/* Bid Form */}
             {canPlaceBid() && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -714,6 +646,142 @@ export default function AuctionDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Bidding Results Table */}
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden mt-6">
+          <Table className="table-fixed w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[5%] min-w-[50px] max-w-[80px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    ...
+                  </div>
+                </TableHead>
+                <TableHead className="w-[5%] min-w-[200px] max-w-[400px]">
+                  <div className="flex items-center justify-center gap-2">
+                    ...
+                  </div>
+                </TableHead>
+                <TableHead className="w-[25%] min-w-[100px] max-w-[150px]">
+                  <div className="flex items-center gap-2">บริษัท</div>
+                </TableHead>
+                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    ราคา
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    ประหยัด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] min-w-[80px] max-w-[100px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    อัตราประหยัด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] min-w-[80px] max-w-[120px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    สถานะ
+                  </div>
+                </TableHead>
+                <TableHead className="w-[15%] min-w-[90px] max-w-[130px] text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    เวลา
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bids.length === 0 ? (
+                <EmptyState
+                  title="ไม่พบข้อมูล"
+                  description="ไม่พบข้อมูลบริษัทที่เสนอราคา"
+                  colSpan={8}
+                />
+              ) : (
+                bids
+                  .filter((bid) => bid.status === 'accept')
+                  .sort((a, b) => a.bid_amount - b.bid_amount)
+                  .map((bid, index) => {
+                    const saving = auction.reserve_price - bid.bid_amount;
+                    const savingRate = (
+                      (saving / auction.reserve_price) *
+                      100
+                    ).toFixed(2);
+                    const isWinning = index === 0;
+
+                    return (
+                      <TableRow
+                        key={bid.bid_id}
+                        className={
+                          isWinning ? 'bg-yellow-100' : 'hover:bg-gray-50'
+                        }
+                      >
+                        <TableCell className="py-3 px-4">
+                          <div className="flex items-center">
+                            {isWinning && (
+                              <span className="text-yellow-500 mr-2">🏆</span>
+                            )}
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                บริษัท {bid.company_id}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                ผู้ใช้ {bid.user_id}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-right">
+                          <span className="font-medium">
+                            {formatPriceForDisplay(bid.bid_amount)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-right">
+                          <span
+                            className={
+                              saving >= 0 ? 'text-green-600' : 'text-red-600'
+                            }
+                          >
+                            {saving >= 0 ? '' : '-'}
+                            {formatPriceForDisplay(Math.abs(saving))}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-right">
+                          <span
+                            className={
+                              saving >= 0 ? 'text-green-600' : 'text-red-600'
+                            }
+                          >
+                            {saving >= 0 ? '' : '-'}
+                            {savingRate}%
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Accept
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-right text-sm text-gray-600">
+                          {new Date(bid.bid_time).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit',
+                          })}{' '}
+                          {new Date(bid.bid_time).toLocaleTimeString('en-GB', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                          })}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
 

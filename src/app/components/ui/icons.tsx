@@ -21,10 +21,10 @@ import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
 import LanguageIcon from '@mui/icons-material/Language';
-import StorefrontIcon from '@mui/icons-material/Storefront';
 import {
   Home,
   Gavel,
+  Balance,
   LocalOffer,
   Notifications,
   AccountCircle,
@@ -194,6 +194,10 @@ export const AucPendingIcon: React.FC<IconProps> = ({ className }) => (
 
 export const AucBiddingIcon: React.FC<IconProps> = ({ className }) => (
   <Gavel style={{ width: '16px', height: '16px' }} className={className} />
+);
+
+export const AucBalanceIcon: React.FC<IconProps> = ({ className }) => (
+  <Balance style={{ width: '35px', height: '35px' }} className={className} />
 );
 
 export const AucEndingSoonIcon: React.FC<IconProps> = ({ className }) => (

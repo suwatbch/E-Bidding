@@ -720,10 +720,12 @@ export const formatPriceForInput = (value: number): string => {
  */
 export const formatPriceForDisplay = (value: number): string => {
   if (value === 0) return '0.00';
+  // ตัดทศนิยมส่วนเกินทิ้งไป (ไม่ปัดเศษ) แล้วคงไว้แค่ 2 ตำแหน่ง
+  const truncatedValue = Math.floor(value * 100) / 100;
   return new Intl.NumberFormat('th-TH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value);
+  }).format(truncatedValue);
 };
 
 /**
@@ -1798,6 +1800,99 @@ export const convertUTCToLocal = (
     console.error('Error converting UTC to local time:', error);
     return '';
   }
+};
+
+// =============================================================================
+// BID UTILITIES (ARRAY VERSIONS)
+// =============================================================================
+
+/**
+ * หาการเสนอราคาต่ำสุดจาก bid array
+ * @param bids - Array ของ AuctionBid
+ * @returns AuctionBid | null - การเสนอราคาต่ำสุดหรือ null
+ */
+export const getLowestBidFromArray = (
+  bids: AuctionBid[]
+): AuctionBid | null => {
+  if (bids.length === 0) return null;
+  const acceptedBids = bids.filter((bid) => bid.status === 'accept');
+  if (acceptedBids.length === 0) return null;
+  return acceptedBids.reduce((lowest, current) =>
+    current.bid_amount < lowest.bid_amount ? current : lowest
+  );
+};
+
+/**
+ * นับจำนวนการเสนอราคาที่ยอมรับจาก bid array
+ * @param bids - Array ของ AuctionBid
+ * @returns number - จำนวนการเสนอราคาที่ยอมรับ
+ */
+export const getBidCountFromArray = (bids: AuctionBid[]): number => {
+  return bids.filter((bid) => bid.status === 'accept').length;
+};
+
+/**
+ * หาการเสนอราคาที่ชนะจาก bid array (ราคาต่ำสุด)
+ * @param bids - Array ของ AuctionBid
+ * @returns AuctionBid | null - การเสนอราคาที่ชนะหรือ null
+ */
+export const getWinningBidFromArray = (
+  bids: AuctionBid[]
+): AuctionBid | null => {
+  return getLowestBidFromArray(bids);
+};
+
+/**
+ * กรองการเสนอราคาตามสถานะจาก bid array
+ * @param bids - Array ของ AuctionBid
+ * @param status - สถานะที่ต้องการกรอง
+ * @returns AuctionBid[] - Array ของการเสนอราคาที่ตรงตามสถานะ
+ */
+export const getBidsByStatusFromArray = (
+  bids: AuctionBid[],
+  status: string
+): AuctionBid[] => {
+  return bids.filter((bid) => bid.status === status);
+};
+
+/**
+ * หาการเสนอราคาล่าสุดของบริษัทจาก bid array
+ * @param bids - Array ของ AuctionBid
+ * @param companyId - ID ของบริษัท
+ * @returns AuctionBid | null - การเสนอราคาล่าสุดของบริษัทหรือ null
+ */
+export const getLatestCompanyBidFromArray = (
+  bids: AuctionBid[],
+  companyId: number
+): AuctionBid | null => {
+  const companyBids = bids.filter((bid) => bid.company_id === companyId);
+  if (companyBids.length === 0) return null;
+
+  return companyBids.reduce((latest, current) => {
+    const latestTime = new Date(latest.bid_time).getTime();
+    const currentTime = new Date(current.bid_time).getTime();
+    return currentTime > latestTime ? current : latest;
+  });
+};
+
+/**
+ * หาการเสนอราคาล่าสุดของผู้ใช้จาก bid array
+ * @param bids - Array ของ AuctionBid
+ * @param userId - ID ของผู้ใช้
+ * @returns AuctionBid | null - การเสนอราคาล่าสุดของผู้ใช้หรือ null
+ */
+export const getLatestUserBidFromArray = (
+  bids: AuctionBid[],
+  userId: number
+): AuctionBid | null => {
+  const userBids = bids.filter((bid) => bid.user_id === userId);
+  if (userBids.length === 0) return null;
+
+  return userBids.reduce((latest, current) => {
+    const latestTime = new Date(latest.bid_time).getTime();
+    const currentTime = new Date(current.bid_time).getTime();
+    return currentTime > latestTime ? current : latest;
+  });
 };
 
 // =============================================================================
