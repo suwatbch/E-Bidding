@@ -808,6 +808,40 @@ export const formatAuctionId = (auction_id: number): string => {
 };
 
 /**
+ * ถอดรหัสชื่อตลาดประมูล (AUC0001) เป็น auction ID
+ * @param auctionName - ชื่อตลาดในรูปแบบ AUC + หมายเลข (เช่น AUC0001)
+ * @returns number | null - auction ID หรือ null หากรูปแบบไม่ถูกต้อง
+ */
+export const decodeAuctionId = (auctionName: string): number | null => {
+  try {
+    // ตรวจสอบว่าขึ้นต้นด้วย AUC หรือไม่
+    if (!auctionName || !auctionName.startsWith('AUC')) {
+      return null;
+    }
+
+    // ดึงส่วนตัวเลขออกมา
+    const numberPart = auctionName.substring(3); // ตัดคำว่า 'AUC' ออก
+
+    // ตรวจสอบว่าเป็นตัวเลขหรือไม่
+    if (!/^\d+$/.test(numberPart)) {
+      return null;
+    }
+
+    const auctionId = parseInt(numberPart, 10);
+
+    // ตรวจสอบว่าเป็นตัวเลขที่ถูกต้องหรือไม่
+    if (isNaN(auctionId) || auctionId < 0) {
+      return null;
+    }
+
+    return auctionId;
+  } catch (error) {
+    console.error('Error decoding auction name:', error);
+    return null;
+  }
+};
+
+/**
  * คำนวณเวลาที่เหลือของประมูล
  * @param endTime - เวลาสิ้นสุดของประมูล
  * @returns string เวลาที่เหลือ

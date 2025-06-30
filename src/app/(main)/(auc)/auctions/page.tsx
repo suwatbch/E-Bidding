@@ -689,7 +689,9 @@ export default function AuctionsPage() {
                       <TableCell>
                         <div className="w-full overflow-hidden">
                           <Link
-                            href={`/auction/${(item as any).auction_id || ''}`}
+                            href={`/auction/${formatAuctionId(
+                              (item as any).auction_id
+                            )}`}
                             prefetch={false}
                             className="text-sm font-medium cursor-pointer text-blue-500 transition-colors block w-full"
                             title={item.title}
