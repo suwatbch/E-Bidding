@@ -348,6 +348,11 @@ export default function AuctionDetailPage() {
     return realTimeOnlineCount;
   };
 
+  // เช็คว่า participant แต่ละคนออนไลน์หรือไม่
+  const isParticipantOnline = (participantUserId: number): boolean => {
+    return onlineUsers.some((user) => user.userId === participantUserId);
+  };
+
   const openBidPopup = () => {
     if (!canPlaceBid()) {
       alert('ไม่สามารถเสนอราคาได้ในขณะนี้');
@@ -794,9 +799,17 @@ export default function AuctionDetailPage() {
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center">
-                          {participant.is_connected ? (
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                          ) : null}
+                          {isParticipantOnline(participant.user_id) ? (
+                            <div
+                              className="w-3 h-3 bg-green-500 rounded-full"
+                              title="ออนไลน์"
+                            ></div>
+                          ) : (
+                            <div
+                              className="w-3 h-3 bg-gray-300 rounded-full"
+                              title="ออฟไลน์"
+                            ></div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
