@@ -104,7 +104,6 @@ export interface AuctionParticipant {
   user_id: number;
   company_id: number;
   status: number;
-  is_connected: boolean;
   joined_dt: string;
   // ข้อมูลเพิ่มเติมจาก getAuctionParticipantsWithDetails
   user_name?: string;
@@ -189,7 +188,6 @@ export interface CreateAuctionWithParticipantsRequest {
     user_id: number;
     company_id?: number;
     status?: number;
-    is_connected?: number;
   }[];
   createDataAuction_Item?: {
     item_name: string;
@@ -208,7 +206,6 @@ export interface UpdateAuctionWithParticipantsRequest {
     user_id: number;
     company_id?: number;
     status?: number;
-    is_connected?: number;
   }[];
   createDataAuction_Item?: {
     item_id?: number;
@@ -613,7 +610,6 @@ export const auctionsService = {
       user_id: number;
       company_id?: number;
       status?: number;
-      is_connected?: number;
     }[]
   ): Promise<ApiResponse> => {
     try {

@@ -494,8 +494,13 @@ export const getOnlineParticipantsFromArray = (
   auctionId: number,
   participants: AuctionParticipant[]
 ): AuctionParticipant[] => {
+  // หมายเหตุ: ฟังก์ชันนี้จะถูกยกเลิกการใช้งาน
+  // ใช้ Socket real-time data
+  console.warn(
+    'getOnlineParticipantsFromArray is deprecated - use Socket real-time data instead'
+  );
   return participants.filter(
-    (p) => p.auction_id === auctionId && p.status === 1 && p.is_connected
+    (p) => p.auction_id === auctionId && p.status === 1
   );
 };
 
@@ -554,10 +559,15 @@ export const isUserOnlineFromArray = (
   userId: number,
   participants: AuctionParticipant[]
 ): boolean => {
+  // หมายเหตุ: ฟังก์ชันนี้จะถูกยกเลิกการใช้งาน
+  // ใช้ Socket real-time data
+  console.warn(
+    'isUserOnlineFromArray is deprecated - use Socket real-time data instead'
+  );
   const participant = participants.find(
     (p) => p.auction_id === auctionId && p.user_id === userId && p.status === 1
   );
-  return participant?.is_connected || false;
+  return false; // ส่งคืน false
 };
 
 /**
@@ -654,7 +664,8 @@ export const getParticipantStatsFromArray = (
     auctionId,
     participants
   );
-  const onlineCount = activeParticipants.filter((p) => p.is_connected).length;
+  // หมายเหตุ: ใช้ Socket real-time data
+  const onlineCount = 0; // ส่งคืน 0 เสมอเพราะใช้ Socket real-time
   const offlineCount = activeParticipants.length - onlineCount;
 
   return {

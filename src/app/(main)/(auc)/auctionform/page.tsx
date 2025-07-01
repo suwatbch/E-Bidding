@@ -69,7 +69,6 @@ export default function AuctionFormPage() {
     user_id: number;
     company_id: number;
     status: number;
-    is_connected: number;
   }
 
   const [selectedParticipants, setSelectedParticipants] = useState<
@@ -309,7 +308,6 @@ export default function AuctionFormPage() {
             user_id: p.user_id,
             company_id: p.company_id,
             status: p.status,
-            is_connected: p.is_connected ? 1 : 0,
           }));
 
         setSelectedParticipants(participants);
@@ -714,7 +712,6 @@ export default function AuctionFormPage() {
           user_id: participant.user_id,
           company_id: participant.company_id,
           status: participant.status,
-          is_connected: participant.is_connected,
         };
       });
 
@@ -1616,7 +1613,6 @@ export default function AuctionFormPage() {
                           company_id:
                             userCompanyData?.company_id || selectedCompanyId,
                           status: 1,
-                          is_connected: 0,
                         };
 
                         setSelectedParticipants((prev) => [

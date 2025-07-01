@@ -270,7 +270,6 @@ async function getAllAuctionParticipants() {
       user_id,
       company_id,
       status,
-      is_connected,
       joined_dt
     FROM auction_participant 
     WHERE status = 1
@@ -289,7 +288,6 @@ async function getAuctionParticipantsByAuctionId(auctionId) {
       user_id,
       company_id,
       status,
-      is_connected,
       joined_dt
     FROM auction_participant 
     WHERE auction_id = ? AND status = 1
@@ -301,13 +299,7 @@ async function getAuctionParticipantsByAuctionId(auctionId) {
 
 // เพิ่มผู้เข้าร่วมประมูล
 async function createAuctionParticipant(participantData) {
-  const {
-    auction_id,
-    user_id,
-    company_id = 0,
-    status = 1,
-    is_connected = 0,
-  } = participantData;
+  const { auction_id, user_id, company_id = 0, status = 1 } = participantData;
 
   const query = `
     INSERT INTO auction_participant (
@@ -315,40 +307,27 @@ async function createAuctionParticipant(participantData) {
       user_id,
       company_id,
       status,
-      is_connected,
       joined_dt
     )
-    VALUES (?, ?, ?, ?, ?, now())
+    VALUES (?, ?, ?, ?, now())
   `;
 
-  return await executeQuery(query, [
-    auction_id,
-    user_id,
-    company_id,
-    status,
-    is_connected,
-  ]);
+  return await executeQuery(query, [auction_id, user_id, company_id, status]);
 }
 
 // อัพเดทข้อมูลผู้เข้าร่วมประมูล
 async function updateAuctionParticipant(participantId, participantData) {
-  const { company_id, status, is_connected } = participantData;
+  const { company_id, status } = participantData;
 
   const query = `
     UPDATE auction_participant 
     SET 
       company_id = ?,
-      status = ?,
-      is_connected = ?
+      status = ?
     WHERE id = ?
   `;
 
-  return await executeQuery(query, [
-    company_id,
-    status,
-    is_connected,
-    participantId,
-  ]);
+  return await executeQuery(query, [company_id, status, participantId]);
 }
 
 // ลบผู้เข้าร่วมประมูล (soft delete)
@@ -369,12 +348,9 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
     p.user_id,
     p.company_id || 0,
     p.status || 1,
-    p.is_connected || 0,
   ]);
 
-  const placeholders = participants
-    .map(() => '(?, ?, ?, ?, ?, now())')
-    .join(', ');
+  const placeholders = participants.map(() => '(?, ?, ?, ?, now())').join(', ');
   const flatValues = values.flat();
 
   const query = `
@@ -383,7 +359,6 @@ async function createMultipleAuctionParticipants(auctionId, participants) {
       user_id,
       company_id,
       status,
-      is_connected,
       joined_dt
     )
     VALUES ${placeholders}
@@ -449,11 +424,10 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
         p.user_id,
         p.company_id || 0,
         p.status || 1,
-        p.is_connected || 0,
       ]);
 
       const placeholders = participants
-        .map(() => '(?, ?, ?, ?, ?, now())')
+        .map(() => '(?, ?, ?, ?, now())')
         .join(', ');
       const flatValues = values.flat();
 
@@ -463,7 +437,6 @@ async function createAuctionWithParticipants(auctionData, participants, items) {
           user_id,
           company_id,
           status,
-          is_connected,
           joined_dt
         )
         VALUES ${placeholders}
@@ -622,8 +595,7 @@ async function updateAuctionWithParticipants(
             SET 
               user_id = ?,
               company_id = ?,
-              status = ?,
-              is_connected = ?
+              status = ?
             WHERE id = ? AND auction_id = ?
           `;
 
@@ -631,7 +603,6 @@ async function updateAuctionWithParticipants(
             participant.user_id,
             participant.company_id || 0,
             participant.status || 1,
-            participant.is_connected || 0,
             participant.id,
             auctionId,
           ]);
@@ -643,10 +614,9 @@ async function updateAuctionWithParticipants(
               user_id,
               company_id,
               status,
-              is_connected,
               joined_dt
             )
-            VALUES (?, ?, ?, ?, ?, now())
+            VALUES (?, ?, ?, ?, now())
           `;
 
           await connection.execute(insertParticipantQuery, [
@@ -654,7 +624,6 @@ async function updateAuctionWithParticipants(
             participant.user_id,
             participant.company_id || 0,
             participant.status || 1,
-            participant.is_connected || 0,
           ]);
         }
       }

@@ -327,7 +327,6 @@ router.post('/update-with-participants/:id', async (req, res) => {
         user_id: p.user_id,
         company_id: p.company_id || 0,
         status: p.status || 1,
-        is_connected: p.is_connected || 0,
       }));
     }
 
@@ -530,7 +529,6 @@ router.post('/with-participants', async (req, res) => {
         user_id: p.user_id,
         company_id: p.company_id || 0,
         status: p.status || 1,
-        is_connected: p.is_connected || 0,
       }));
     }
 
@@ -630,7 +628,7 @@ router.post('/delete/:id', async (req, res) => {
 // POST /api/auctions/participants - เพิ่มผู้เข้าร่วมประมูล
 router.post('/participants', async (req, res) => {
   try {
-    const { auction_id, user_id, company_id, status, is_connected } = req.body;
+    const { auction_id, user_id, company_id, status } = req.body;
 
     // ตรวจสอบข้อมูลที่จำเป็น
     if (!auction_id || !user_id) {
@@ -645,7 +643,6 @@ router.post('/participants', async (req, res) => {
       user_id,
       company_id: company_id || 0,
       status: status !== undefined ? status : 1,
-      is_connected: is_connected || 0,
     });
 
     if (result.success) {
@@ -735,12 +732,11 @@ router.post('/participants/update/:id', async (req, res) => {
       });
     }
 
-    const { company_id, status, is_connected } = req.body;
+    const { company_id, status } = req.body;
 
     const result = await updateAuctionParticipant(participantId, {
       company_id: company_id !== undefined ? company_id : 0,
       status: status !== undefined ? status : 1,
-      is_connected: is_connected !== undefined ? is_connected : 0,
     });
 
     if (result.success) {
