@@ -52,6 +52,16 @@ import {
   calculateTimeRemaining,
   formatTimeRemaining,
 } from '@/app/utils/globalFunction';
+import {
+  connectSocket,
+  joinAuction,
+  leaveAuction,
+  subscribeToAuctionUpdates,
+  subscribeToAuctionJoined,
+  unsubscribeFromAuctionUpdates,
+  unsubscribeFromAuctionJoined,
+} from '@/app/services/socketService';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 export default function AuctionDetailPage() {
   const router = useRouter();
@@ -75,6 +85,11 @@ export default function AuctionDetailPage() {
   const [bidError, setBidError] = useState<string>('');
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
 
+  // Socket states
+  const [realTimeOnlineCount, setRealTimeOnlineCount] = useState(0);
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
+
   useEffect(() => {
     const initializeData = async () => {
       await Promise.all([loadAuctionTypes(), loadAuctionData()]);
@@ -92,6 +107,47 @@ export default function AuctionDetailPage() {
       return () => clearInterval(timer);
     }
   }, [auction]);
+
+  // Socket useEffect
+  useEffect(() => {
+    if (auction && auctionId) {
+      // Connect socket
+      connectSocket();
+      setIsSocketConnected(true);
+
+      // Subscribe to auction updates
+      subscribeToAuctionUpdates((data) => {
+        if (data.auctionId === auctionId) {
+          setRealTimeOnlineCount(data.onlineCount);
+          setOnlineUsers(data.onlineUsers);
+        }
+      });
+
+      subscribeToAuctionJoined((data) => {
+        if (data.auctionId === auctionId) {
+          setRealTimeOnlineCount(data.onlineCount);
+          setOnlineUsers(data.onlineUsers);
+        }
+      });
+
+      // Join auction room (ใช้ mock user data สำหรับตอนนี้)
+      const mockUserId = Math.floor(Math.random() * 1000) + 1;
+      joinAuction({
+        auctionId: auctionId,
+        userId: mockUserId,
+        userName: `User ${mockUserId}`,
+        companyName: `Company ${mockUserId}`,
+      });
+
+      // Cleanup function
+      return () => {
+        leaveAuction({ auctionId: auctionId });
+        unsubscribeFromAuctionUpdates();
+        unsubscribeFromAuctionJoined();
+        setIsSocketConnected(false);
+      };
+    }
+  }, [auction, auctionId]);
 
   const loadAuctionTypes = async () => {
     try {
@@ -282,7 +338,8 @@ export default function AuctionDetailPage() {
   };
 
   const getOnlineParticipants = () => {
-    return participants.filter((p) => p.is_connected).length;
+    // ใช้เฉพาะ real-time data จาก socket เท่านั้น
+    return realTimeOnlineCount;
   };
 
   const openBidPopup = () => {
@@ -582,8 +639,23 @@ export default function AuctionDetailPage() {
                 <div className="text-3xl font-bold text-blue-600">
                   {getParticipantCount()}
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  ออนไลน์ {getOnlineParticipants()} คน
+                <div className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2">
+                  {isSocketConnected && realTimeOnlineCount > 0 ? (
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Live: {getOnlineParticipants()} คน
+                    </span>
+                  ) : isSocketConnected ? (
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                      กำลังเชื่อมต่อ...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      ไม่ได้เชื่อมต่อ
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

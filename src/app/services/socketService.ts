@@ -80,4 +80,99 @@ export const unsubscribeFromNotifications = (callback: (data: any) => void) => {
   }
 };
 
+// =============================================================================
+// AUCTION ROOM FUNCTIONS
+// =============================================================================
+
+// ฟังก์ชันสำหรับเข้าร่วมห้องประมูล
+export const joinAuction = (data: {
+  auctionId: number;
+  userId: number;
+  userName?: string;
+  companyName?: string;
+}) => {
+  try {
+    if (!socket.connected) {
+      console.warn('⚠️ Socket not connected, attempting to connect...');
+      socket.connect();
+    }
+
+    socket.emit('join-auction', data);
+    console.log('🏠 Joining auction:', data.auctionId);
+  } catch (error) {
+    console.error('❌ Error joining auction:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับออกจากห้องประมูล
+export const leaveAuction = (data: { auctionId: number }) => {
+  try {
+    if (socket.connected) {
+      socket.emit('leave-auction', data);
+      console.log('🚪 Leaving auction:', data.auctionId);
+    }
+  } catch (error) {
+    console.error('❌ Error leaving auction:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับรับข้อมูลการอัพเดทผู้เข้าร่วมประมูล
+export const subscribeToAuctionUpdates = (
+  callback: (data: {
+    auctionId: number;
+    onlineCount: number;
+    onlineUsers: Array<{
+      userId: number;
+      userName: string;
+      companyName: string;
+      socketId: string;
+    }>;
+  }) => void
+) => {
+  try {
+    socket.on('auction-participants-updated', (data) => {
+      console.log('📊 Auction participants updated:', data);
+      callback(data);
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing to auction updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับยกเลิกการรับข้อมูลการอัพเดทผู้เข้าร่วมประมูล
+export const unsubscribeFromAuctionUpdates = () => {
+  try {
+    socket.off('auction-participants-updated');
+  } catch (error) {
+    console.error('❌ Error unsubscribing from auction updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับรับยืนยันการเข้าร่วมห้องประมูล
+export const subscribeToAuctionJoined = (
+  callback: (data: {
+    auctionId: number;
+    onlineCount: number;
+    onlineUsers: Array<any>;
+  }) => void
+) => {
+  try {
+    socket.on('auction-joined', (data) => {
+      console.log('✅ Successfully joined auction:', data);
+      callback(data);
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing to auction joined:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับยกเลิกการรับยืนยันการเข้าร่วมห้องประมูล
+export const unsubscribeFromAuctionJoined = () => {
+  try {
+    socket.off('auction-joined');
+  } catch (error) {
+    console.error('❌ Error unsubscribing from auction joined:', error);
+  }
+};
+
 export default socket;
