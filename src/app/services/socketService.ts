@@ -53,7 +53,6 @@ export const sendNotification = (name: string) => {
       socket.connect();
     }
     socket.emit('new-notification', { name });
-    console.log('📤 Notification sent:', name);
   } catch (error) {
     console.error('❌ Error sending notification:', error);
   }
@@ -63,7 +62,6 @@ export const sendNotification = (name: string) => {
 export const subscribeToNotifications = (callback: (data: any) => void) => {
   try {
     socket.on('notification', (data: any) => {
-      console.log('📨 Notification received:', data);
       callback(data);
     });
   } catch (error) {
@@ -94,12 +92,10 @@ export const joinAuction = (data: {
 }) => {
   try {
     if (!socket.connected) {
-      console.warn('⚠️ Socket not connected, attempting to connect...');
       socket.connect();
     }
 
     socket.emit('join-auction', data);
-    console.log('🏠 Joining auction:', data.auctionId);
   } catch (error) {
     console.error('❌ Error joining auction:', error);
   }
@@ -110,7 +106,6 @@ export const leaveAuction = (data: { auctionId: number }) => {
   try {
     if (socket.connected) {
       socket.emit('leave-auction', data);
-      console.log('🚪 Leaving auction:', data.auctionId);
     }
   } catch (error) {
     console.error('❌ Error leaving auction:', error);
@@ -132,7 +127,6 @@ export const subscribeToAuctionUpdates = (
 ) => {
   try {
     socket.on('auction-participants-updated', (data) => {
-      console.log('📊 Auction participants updated:', data);
       callback(data);
     });
   } catch (error) {
@@ -159,7 +153,6 @@ export const subscribeToAuctionJoined = (
 ) => {
   try {
     socket.on('auction-joined', (data) => {
-      console.log('✅ Successfully joined auction:', data);
       callback(data);
     });
   } catch (error) {

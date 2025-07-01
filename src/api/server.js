@@ -88,17 +88,12 @@ const broadcastAuctionUpdate = (auctionId) => {
     onlineCount: onlineUsers.length,
     onlineUsers: onlineUsers,
   });
-
-  console.log(`📊 Auction ${auctionId}: ${onlineUsers.length} users online`);
 };
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('🔌 New client connected:', socket.id);
-
   // Handle joining auction room
   socket.on('join-auction', async (data) => {
-    console.log('📥 Received join-auction event:', data);
     try {
       const { auctionId, userId, userName, companyId, companyName } = data;
 
@@ -114,13 +109,11 @@ io.on('connection', (socket) => {
       socket.join(roomName);
 
       // ตรวจสอบว่า user เป็น participant ของ auction หรือไม่
-      console.log('🔍 Checking participant:', { auctionId, userId, companyId });
       const isParticipant = await auctionsHelper.isUserAuctionParticipant(
         auctionId,
         userId,
         companyId
       );
-      console.log('✅ Participant check result:', isParticipant);
 
       if (isParticipant) {
         // Leave previous auction room if exists
@@ -152,14 +145,8 @@ io.on('connection', (socket) => {
         }
         auctionRooms.get(auctionId).add(socket.id);
 
-        console.log(`👤 Participant ${userId} joined auction ${auctionId}`);
-
         // Broadcast updated participant list
         broadcastAuctionUpdate(auctionId);
-      } else {
-        console.log(
-          `👁️ User ${userId} viewing auction ${auctionId} (not a participant)`
-        );
       }
 
       // Send current room info to the user
@@ -189,7 +176,6 @@ io.on('connection', (socket) => {
         const room = auctionRooms.get(auctionId);
         if (room) {
           room.delete(socket.id);
-          console.log(`👤 User ${userInfo.userId} left auction ${auctionId}`);
           broadcastAuctionUpdate(auctionId);
         }
 
@@ -206,7 +192,6 @@ io.on('connection', (socket) => {
   socket.on('auction-update', (data) => {
     try {
       io.emit('auction-update', data);
-      console.log('📢 Auction update broadcasted:', data);
     } catch (error) {
       console.error('❌ Error broadcasting auction update:', error);
       socket.emit('error', { message: 'Failed to broadcast auction update' });
@@ -228,7 +213,6 @@ io.on('connection', (socket) => {
       );
 
       const result = await response.json();
-      console.log('✅ Notification logged:', result);
 
       io.emit('notification', data);
     } catch (error) {
@@ -239,8 +223,6 @@ io.on('connection', (socket) => {
 
   // Handle disconnection
   socket.on('disconnect', () => {
-    console.log('🔌 Client disconnected:', socket.id);
-
     // Clean up user from auction rooms
     const userInfo = userSockets.get(socket.id);
     if (userInfo) {
@@ -250,7 +232,6 @@ io.on('connection', (socket) => {
       const room = auctionRooms.get(auctionId);
       if (room) {
         room.delete(socket.id);
-        console.log(`👤 User ${userId} disconnected from auction ${auctionId}`);
         broadcastAuctionUpdate(auctionId);
       }
 

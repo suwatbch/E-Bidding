@@ -145,8 +145,6 @@ export default function AuctionDetailPage() {
         companyName: participantData?.company_name || '',
       });
 
-      console.log('Joined auction:', user.user_id, user.fullname);
-
       // Cleanup function
       return () => {
         leaveAuction({ auctionId: auctionId });
@@ -788,11 +786,11 @@ export default function AuctionDetailPage() {
                       }
                     >
                       <TableCell className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                        {/* <div className="flex items-center justify-center gap-2">
                           {isWinning && (
                             <span className="text-yellow-500">🏆</span>
                           )}
-                        </div>
+                        </div> */}
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center">
