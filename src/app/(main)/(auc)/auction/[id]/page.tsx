@@ -694,91 +694,100 @@ export default function AuctionDetailPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bids.length === 0 ? (
+              {participants.length === 0 ? (
                 <EmptyState
                   title="ไม่พบข้อมูล"
-                  description="ไม่พบข้อมูลบริษัทที่เสนอราคา"
+                  description="ไม่พบข้อมูลบริษัทที่เข้าร่วมประมูล"
                   colSpan={8}
                 />
               ) : (
-                bids
-                  .filter((bid) => bid.status === 'accept')
-                  .sort((a, b) => a.bid_amount - b.bid_amount)
-                  .map((bid, index) => {
-                    const saving = auction.reserve_price - bid.bid_amount;
-                    const savingRate = (
-                      (saving / auction.reserve_price) *
-                      100
-                    ).toFixed(2);
-                    const isWinning = index === 0;
+                participants.map((participant, index) => {
+                  // Mock data for price, saving, etc. since participants don't have bid data
+                  const mockPrice = auction.reserve_price * 0.9; // ราคาเสนอ 90% ของราคาเริ่มต้น
+                  const saving = auction.reserve_price - mockPrice;
+                  const savingRate = (
+                    (saving / auction.reserve_price) *
+                    100
+                  ).toFixed(2);
+                  const isWinning = index === 0;
 
-                    return (
-                      <TableRow
-                        key={bid.bid_id}
-                        className={
-                          isWinning ? 'bg-yellow-100' : 'hover:bg-gray-50'
-                        }
-                      >
-                        <TableCell className="py-3 px-4">
-                          <div className="flex items-center">
-                            {isWinning && (
-                              <span className="text-yellow-500 mr-2">🏆</span>
-                            )}
-                            <div>
-                              <div className="font-medium text-gray-900">
-                                บริษัท {bid.company_id}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                ผู้ใช้ {bid.user_id}
-                              </div>
+                  return (
+                    <TableRow
+                      key={participant.id}
+                      className={
+                        isWinning ? 'bg-yellow-100' : 'hover:bg-gray-50'
+                      }
+                    >
+                      <TableCell className="py-3 px-4 text-right">
+                        <span className="font-medium"></span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-right">
+                        <span className="font-medium"></span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <div className="flex items-center">
+                          {isWinning && (
+                            <span className="text-yellow-500 mr-2">🏆</span>
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {participant.company_name ||
+                                `บริษัท ${participant.company_id}`}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {participant.user_name ||
+                                `ผู้ใช้ ${participant.user_id}`}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right">
-                          <span className="font-medium">
-                            {formatPriceForDisplay(bid.bid_amount)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right">
-                          <span
-                            className={
-                              saving >= 0 ? 'text-green-600' : 'text-red-600'
-                            }
-                          >
-                            {saving >= 0 ? '' : '-'}
-                            {formatPriceForDisplay(Math.abs(saving))}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right">
-                          <span
-                            className={
-                              saving >= 0 ? 'text-green-600' : 'text-red-600'
-                            }
-                          >
-                            {saving >= 0 ? '' : '-'}
-                            {savingRate}%
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Accept
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right text-sm text-gray-600">
-                          {new Date(bid.bid_time).toLocaleDateString('en-GB', {
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-right">
+                        <span className="font-medium">
+                          {formatPriceForDisplay(mockPrice)}{' '}
+                          {getCurrencyName(auction.currency)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-right">
+                        <span className="text-green-600">
+                          {formatPriceForDisplay(saving)}{' '}
+                          {getCurrencyName(auction.currency)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-right">
+                        <span className="text-green-600">{savingRate}%</span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center">
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            participant.status === 1
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {participant.status === 1 ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-right text-sm text-gray-600">
+                        {new Date(participant.joined_dt).toLocaleDateString(
+                          'en-GB',
+                          {
                             day: '2-digit',
                             month: '2-digit',
                             year: '2-digit',
-                          })}{' '}
-                          {new Date(bid.bid_time).toLocaleTimeString('en-GB', {
+                          }
+                        )}{' '}
+                        {new Date(participant.joined_dt).toLocaleTimeString(
+                          'en-GB',
+                          {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                          }
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

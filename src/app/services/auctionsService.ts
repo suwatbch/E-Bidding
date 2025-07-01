@@ -106,6 +106,10 @@ export interface AuctionParticipant {
   status: number;
   is_connected: boolean;
   joined_dt: string;
+  // ข้อมูลเพิ่มเติมจาก getAuctionParticipantsWithDetails
+  user_name?: string;
+  user_email?: string;
+  company_name?: string;
 }
 
 export interface AuctionItem {
