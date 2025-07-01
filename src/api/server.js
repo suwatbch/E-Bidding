@@ -10,6 +10,7 @@ const userRouter = require('./controllers/users');
 const userCompanyRouter = require('./controllers/userCompany');
 const auctionsRouter = require('./controllers/auctions');
 const auctionTypeRouter = require('./controllers/auctionType');
+const auctionsHelper = require('./helper/auctionsHelper');
 
 const app = express();
 
@@ -96,52 +97,70 @@ io.on('connection', (socket) => {
   console.log('🔌 New client connected:', socket.id);
 
   // Handle joining auction room
-  socket.on('join-auction', (data) => {
+  socket.on('join-auction', async (data) => {
+    console.log('📥 Received join-auction event:', data);
     try {
-      const { auctionId, userId, userName, companyName } = data;
+      const { auctionId, userId, userName, companyId, companyName } = data;
 
       if (!auctionId || !userId) {
+        console.log('❌ Missing required fields:', { auctionId, userId });
         socket.emit('error', { message: 'auctionId and userId are required' });
         return;
       }
 
       const roomName = `auction-${auctionId}`;
 
-      // Leave previous auction room if exists
-      const currentUserInfo = userSockets.get(socket.id);
-      if (currentUserInfo && currentUserInfo.auctionId !== auctionId) {
-        const oldRoomName = `auction-${currentUserInfo.auctionId}`;
-        socket.leave(oldRoomName);
-
-        // Remove from old room tracking
-        const oldRoom = auctionRooms.get(currentUserInfo.auctionId);
-        if (oldRoom) {
-          oldRoom.delete(socket.id);
-          broadcastAuctionUpdate(currentUserInfo.auctionId);
-        }
-      }
-
-      // Join new auction room
+      // ทุกคนสามารถ join room ได้ (เพื่อดูข้อมูล)
       socket.join(roomName);
 
-      // Track user info
-      userSockets.set(socket.id, {
-        userId,
-        userName: userName || `User ${userId}`,
-        companyName: companyName || `Company ${userId}`,
+      // ตรวจสอบว่า user เป็น participant ของ auction หรือไม่
+      console.log('🔍 Checking participant:', { auctionId, userId, companyId });
+      const isParticipant = await auctionsHelper.isUserAuctionParticipant(
         auctionId,
-      });
+        userId,
+        companyId
+      );
+      console.log('✅ Participant check result:', isParticipant);
 
-      // Track room participants
-      if (!auctionRooms.has(auctionId)) {
-        auctionRooms.set(auctionId, new Set());
+      if (isParticipant) {
+        // Leave previous auction room if exists
+        const currentUserInfo = userSockets.get(socket.id);
+        if (currentUserInfo && currentUserInfo.auctionId !== auctionId) {
+          const oldRoomName = `auction-${currentUserInfo.auctionId}`;
+          socket.leave(oldRoomName);
+
+          // Remove from old room tracking
+          const oldRoom = auctionRooms.get(currentUserInfo.auctionId);
+          if (oldRoom) {
+            oldRoom.delete(socket.id);
+            broadcastAuctionUpdate(currentUserInfo.auctionId);
+          }
+        }
+
+        // Track user info (เฉพาะ participants เท่านั้น)
+        userSockets.set(socket.id, {
+          userId,
+          userName: userName || `User ${userId}`,
+          companyId: companyId || null,
+          companyName: companyName || `Company ${userId}`,
+          auctionId,
+        });
+
+        // Track room participants (เฉพาะ participants เท่านั้น)
+        if (!auctionRooms.has(auctionId)) {
+          auctionRooms.set(auctionId, new Set());
+        }
+        auctionRooms.get(auctionId).add(socket.id);
+
+        console.log(`👤 Participant ${userId} joined auction ${auctionId}`);
+
+        // Broadcast updated participant list
+        broadcastAuctionUpdate(auctionId);
+      } else {
+        console.log(
+          `👁️ User ${userId} viewing auction ${auctionId} (not a participant)`
+        );
       }
-      auctionRooms.get(auctionId).add(socket.id);
-
-      console.log(`👤 User ${userId} joined auction ${auctionId}`);
-
-      // Broadcast updated participant list
-      broadcastAuctionUpdate(auctionId);
 
       // Send current room info to the user
       const onlineUsers = getAuctionOnlineUsers(auctionId);

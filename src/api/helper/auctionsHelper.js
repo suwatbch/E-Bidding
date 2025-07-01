@@ -813,6 +813,31 @@ async function getAuctionItems(auctionId) {
   return await executeQuery(query, [auctionId]);
 }
 
+// ตรวจสอบว่า user เป็น participant ของ auction หรือไม่
+async function isUserAuctionParticipant(auctionId, userId, companyId = null) {
+  let query = `
+    SELECT COUNT(*) as count
+    FROM auction_participant 
+    WHERE auction_id = ? AND user_id = ? AND status > 0
+  `;
+
+  let params = [auctionId, userId];
+
+  // ถ้ามี companyId ให้เช็คด้วย
+  if (companyId !== null && companyId !== undefined) {
+    query += ` AND company_id = ?`;
+    params.push(companyId);
+  }
+
+  try {
+    const result = await executeQuery(query, params);
+    return result.success && result.data && result.data[0].count > 0;
+  } catch (error) {
+    console.error('Error checking if user is participant:', error);
+    return false;
+  }
+}
+
 module.exports = {
   getAllAuctions,
   getAuctionById,
@@ -832,4 +857,5 @@ module.exports = {
   updateAuctionWithParticipants,
   getAuctionParticipantsWithDetails,
   getAuctionItems,
+  isUserAuctionParticipant,
 };

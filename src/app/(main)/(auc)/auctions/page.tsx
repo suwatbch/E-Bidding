@@ -75,7 +75,7 @@ export default function AuctionsPage() {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 5);
+  const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 10);
   const [mounted, setMounted] = useState(false);
 
   const formatPrice = (price: number) => {

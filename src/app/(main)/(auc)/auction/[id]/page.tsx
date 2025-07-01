@@ -66,6 +66,7 @@ import { useAuth } from '@/app/contexts/AuthContext';
 export default function AuctionDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const { user } = useAuth();
 
   // ใช้ decodeAuctionId จาก globalFunction
   const auctionId =
@@ -110,7 +111,7 @@ export default function AuctionDetailPage() {
 
   // Socket useEffect
   useEffect(() => {
-    if (auction && auctionId) {
+    if (auction && auctionId && user) {
       // Connect socket
       connectSocket();
       setIsSocketConnected(true);
@@ -130,14 +131,21 @@ export default function AuctionDetailPage() {
         }
       });
 
-      // Join auction room (ใช้ mock user data สำหรับตอนนี้)
-      const mockUserId = Math.floor(Math.random() * 1000) + 1;
+      // หาข้อมูล company ของ user (ถ้ามี)
+      const participantData = participants.find(
+        (p) => p.user_id === user.user_id
+      );
+
+      // ทุกคนสามารถ join ได้ แต่เฉพาะ participants เท่านั้นที่จะถูกนับใน online count
       joinAuction({
         auctionId: auctionId,
-        userId: mockUserId,
-        userName: `User ${mockUserId}`,
-        companyName: `Company ${mockUserId}`,
+        userId: user.user_id,
+        userName: user.fullname || user.username,
+        companyId: participantData?.company_id,
+        companyName: participantData?.company_name || '',
       });
+
+      console.log('Joined auction:', user.user_id, user.fullname);
 
       // Cleanup function
       return () => {
@@ -147,7 +155,7 @@ export default function AuctionDetailPage() {
         setIsSocketConnected(false);
       };
     }
-  }, [auction, auctionId]);
+  }, [auction, auctionId, user, participants]);
 
   const loadAuctionTypes = async () => {
     try {
@@ -640,15 +648,10 @@ export default function AuctionDetailPage() {
                   {getParticipantCount()}
                 </div>
                 <div className="text-sm text-gray-500 mt-1 flex items-center justify-center gap-2">
-                  {isSocketConnected && realTimeOnlineCount > 0 ? (
+                  {isSocketConnected ? (
                     <span className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                       Live: {getOnlineParticipants()} คน
-                    </span>
-                  ) : isSocketConnected ? (
-                    <span className="flex items-center gap-1">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                      กำลังเชื่อมต่อ...
                     </span>
                   ) : (
                     <span className="flex items-center gap-1">

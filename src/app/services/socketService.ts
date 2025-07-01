@@ -12,11 +12,11 @@ const socket = io(SOCKET_URL, {
 });
 
 socket.on('connect', () => {
-  // console.log('🟢 Socket connected');
+  console.log('🟢 Socket connected');
 });
 
 socket.on('disconnect', () => {
-  // console.log('🔴 Socket disconnected');
+  console.log('🔴 Socket disconnected');
 });
 
 socket.on('connect_error', (error: any) => {
@@ -89,6 +89,7 @@ export const joinAuction = (data: {
   auctionId: number;
   userId: number;
   userName?: string;
+  companyId?: number;
   companyName?: string;
 }) => {
   try {
