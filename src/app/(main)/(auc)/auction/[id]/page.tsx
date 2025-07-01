@@ -119,17 +119,12 @@ export default function AuctionDetailPage() {
       }
 
       // ดึงข้อมูลทั้งหมดพร้อมกัน
-      const [
-        auctionResponse,
-        participantsResponse,
-        itemsResponse,
-        bidsResponse,
-      ] = await Promise.all([
-        auctionsService.getAuctionById(auctionId),
-        auctionsService.getAuctionParticipantsWithDetails(auctionId),
-        auctionsService.getAuctionItems(auctionId),
-        auctionsService.getAuctionBids(auctionId),
-      ]);
+      const [auctionResponse, participantsResponse, itemsResponse] =
+        await Promise.all([
+          auctionsService.getAuctionById(auctionId),
+          auctionsService.getAuctionParticipantsWithDetails(auctionId),
+          auctionsService.getAuctionItems(auctionId),
+        ]);
 
       if (!auctionResponse.success || !auctionResponse.data) {
         setError('ไม่พบข้อมูลตลาดประมูลที่ต้องการ');
@@ -155,9 +150,8 @@ export default function AuctionDetailPage() {
         setItems(itemsResponse.data);
       }
 
-      if (bidsResponse.success) {
-        setBids(bidsResponse.data);
-      }
+      // Mock bids data since API doesn't exist yet
+      setBids([]);
 
       setError('');
     } catch (err) {
@@ -718,17 +712,22 @@ export default function AuctionDetailPage() {
                         isWinning ? 'bg-yellow-100' : 'hover:bg-gray-50'
                       }
                     >
-                      <TableCell className="py-3 px-4 text-right">
-                        <span className="font-medium"></span>
+                      <TableCell className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          {isWinning && (
+                            <span className="text-yellow-500">🏆</span>
+                          )}
+                        </div>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <span className="font-medium"></span>
+                      <TableCell className="py-3 px-4 text-center">
+                        <div className="flex items-center justify-center">
+                          {participant.is_connected ? (
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         <div className="flex items-center">
-                          {isWinning && (
-                            <span className="text-yellow-500 mr-2">🏆</span>
-                          )}
                           <div>
                             <div className="font-medium text-gray-900">
                               {participant.company_name ||
@@ -741,50 +740,19 @@ export default function AuctionDetailPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
+                      <TableCell className="py-3 px-4 text-center">
                         <span className="font-medium">
-                          {formatPriceForDisplay(mockPrice)}{' '}
-                          {getCurrencyName(auction.currency)}
+                          {formatPriceForDisplay(mockPrice)}
                         </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <span className="text-green-600">
-                          {formatPriceForDisplay(saving)}{' '}
-                          {getCurrencyName(auction.currency)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <span className="text-green-600">{savingRate}%</span>
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            participant.status === 1
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {participant.status === 1 ? 'Active' : 'Inactive'}
+                        <span className="text-green-600">
+                          {formatPriceForDisplay(saving)}
                         </span>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-right text-sm text-gray-600">
-                        {new Date(participant.joined_dt).toLocaleDateString(
-                          'en-GB',
-                          {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit',
-                          }
-                        )}{' '}
-                        {new Date(participant.joined_dt).toLocaleTimeString(
-                          'en-GB',
-                          {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          }
-                        )}
-                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center"></TableCell>
+                      <TableCell className="py-3 px-4 text-center"></TableCell>
+                      <TableCell className="py-3 px-4 text-center text-sm text-gray-600"></TableCell>
                     </TableRow>
                   );
                 })
