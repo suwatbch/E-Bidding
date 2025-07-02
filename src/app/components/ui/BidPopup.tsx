@@ -86,12 +86,13 @@ const BidPopup: React.FC<BidPopupProps> = ({
           <input
             type="text"
             value={bidAmountFocused ? bidAmount : bidAmountDisplay}
-            onFocus={() => {
+            onFocus={(e) => {
               setBidAmountFocused(true);
               handlePriceFocus(bidAmountDisplay, (formattedValue) => {
                 setBidAmount(formattedValue);
                 setBidAmountDisplay(formattedValue);
               });
+              e.target.select();
             }}
             onChange={handleAmountChange}
             onBlur={() => {

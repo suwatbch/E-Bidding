@@ -59,6 +59,8 @@ import {
   subscribeToAuctionJoined,
   unsubscribeFromAuctionUpdates,
   unsubscribeFromAuctionJoined,
+  subscribeToBidUpdates,
+  unsubscribeFromBidUpdates,
 } from '@/app/services/socketService';
 import { useAuth } from '@/app/contexts/AuthContext';
 
@@ -129,6 +131,20 @@ export default function AuctionDetailPage() {
         }
       });
 
+      // Subscribe to bid updates
+      subscribeToBidUpdates((data) => {
+        if (data.auctionId === auctionId) {
+          // เพิ่มการ bid ใหม่เข้าไปใน bids array
+          setBids((prevBids) => {
+            const newBid = {
+              ...data.bidData,
+              bid_id: Date.now(), // temporary ID
+            };
+            return [newBid, ...prevBids];
+          });
+        }
+      });
+
       // หาข้อมูล company ของ user (ถ้ามี)
       const participantData = participants.find(
         (p) => p.user_id === user.user_id
@@ -148,6 +164,7 @@ export default function AuctionDetailPage() {
         leaveAuction({ auctionId: auctionId });
         unsubscribeFromAuctionUpdates();
         unsubscribeFromAuctionJoined();
+        unsubscribeFromBidUpdates();
         setIsSocketConnected(false);
       };
     }
@@ -377,8 +394,15 @@ export default function AuctionDetailPage() {
         }
       });
 
-    // สร้างข้อมูลสำหรับแสดงในตาราง
-    return participants.map((participant, index) => {
+    // หาราคาต่ำสุด
+    const allBidAmounts = Object.values(latestBidsByUser).map(
+      (bid) => bid.bid_amount
+    );
+    const lowestPrice =
+      allBidAmounts.length > 0 ? Math.min(...allBidAmounts) : null;
+
+    // สร้างข้อมูลสำหรับแสดงในตาราง - แสดงทุกคนที่เข้าร่วมประมูล
+    const tableData = participants.map((participant, index) => {
       const latestBid = latestBidsByUser[participant.user_id];
 
       let price = null;
@@ -389,11 +413,16 @@ export default function AuctionDetailPage() {
 
       if (latestBid && auction) {
         price = latestBid.bid_amount;
-        saving = auction.reserve_price - latestBid.bid_amount;
+        saving = auction.reserve_price - price;
         savingRate = ((saving / auction.reserve_price) * 100).toFixed(2);
         status = latestBid.status;
         bidTime = latestBid.bid_time;
       }
+
+      const isWinning =
+        latestBid &&
+        lowestPrice !== null &&
+        Number(price) === Number(lowestPrice);
 
       return {
         participant,
@@ -402,14 +431,11 @@ export default function AuctionDetailPage() {
         savingRate,
         status,
         bidTime,
-        isWinning:
-          latestBid &&
-          price ===
-            Math.min(
-              ...Object.values(latestBidsByUser).map((bid) => bid.bid_amount)
-            ),
+        isWinning,
       };
     });
+
+    return tableData;
   };
 
   const openBidPopup = () => {
@@ -439,18 +465,8 @@ export default function AuctionDetailPage() {
       });
 
       if (response.success && response.message === null) {
-        // เก็บตำแหน่ง scroll ปัจจุบัน
-        const currentScrollPosition =
-          window.pageYOffset || document.documentElement.scrollTop;
-
         setShowBidPopup(false);
-        // รีโหลดข้อมูลหน้าใหม่
-        await loadAuctionData();
-
-        // กลับไปตำแหน่ง scroll เดิม
-        setTimeout(() => {
-          window.scrollTo(0, currentScrollPosition);
-        }, 100);
+        // ไม่ต้องรีโหลดข้อมูล เพราะ Socket จะอัปเดตให้อัตโนมัติแล้ว
       } else {
         alert(response.message || 'เกิดข้อผิดพลาดในการเสนอราคา');
       }
@@ -723,9 +739,9 @@ export default function AuctionDetailPage() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <button
                 onClick={() => setShowHistoryPopup(true)}
-                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
               >
-                ดูประวัติการเสนอราคา
+                📊 ดูประวัติการเสนอราคา
               </button>
             </div>
 
@@ -734,9 +750,9 @@ export default function AuctionDetailPage() {
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <button
                   onClick={openBidPopup}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center gap-2"
                 >
-                  เสนอราคา
+                  💰 เสนอราคา
                 </button>
               </div>
             )}
@@ -804,16 +820,18 @@ export default function AuctionDetailPage() {
                     savingRate,
                     status,
                     bidTime,
+                    isWinning,
                   } = row;
 
                   return (
-                    <TableRow
-                      key={participant.id}
-                      className={0 ? 'bg-yellow-100' : 'hover:bg-gray-50'}
-                    >
+                    <TableRow key={participant.id}>
                       <TableCell className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <span className="text-yellow-500">🏆</span>
+                          {isWinning ? (
+                            <span className="text-yellow-500">🏆</span>
+                          ) : (
+                            ''
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">

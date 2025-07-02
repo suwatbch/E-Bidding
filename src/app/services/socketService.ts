@@ -169,4 +169,42 @@ export const unsubscribeFromAuctionJoined = () => {
   }
 };
 
+// =============================================================================
+// BID FUNCTIONS
+// =============================================================================
+
+// ฟังก์ชันสำหรับรับข้อมูลการเสนอราคาใหม่
+export const subscribeToBidUpdates = (
+  callback: (data: {
+    auctionId: number;
+    bidData: {
+      auction_id: number;
+      user_id: number;
+      company_id: number;
+      bid_amount: number;
+      bid_time: string;
+      status: string;
+      user_name?: string;
+      company_name?: string;
+    };
+  }) => void
+) => {
+  try {
+    socket.on('new-bid', (data) => {
+      callback(data);
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing to bid updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับยกเลิกการรับข้อมูลการเสนอราคา
+export const unsubscribeFromBidUpdates = () => {
+  try {
+    socket.off('new-bid');
+  } catch (error) {
+    console.error('❌ Error unsubscribing from bid updates:', error);
+  }
+};
+
 export default socket;

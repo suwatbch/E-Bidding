@@ -1341,11 +1341,12 @@ export default function AuctionFormPage() {
                 <input
                   type="text"
                   value={reservePriceDisplay}
-                  onFocus={() => {
+                  onFocus={(e) => {
                     setReservePriceFocused(true);
                     handlePriceFocus(formData.reserve_price, (formattedValue) =>
                       setReservePriceDisplay(formattedValue)
                     );
+                    e.target.select();
                   }}
                   onChange={handleReservePriceChange}
                   onBlur={() => {
@@ -2444,7 +2445,7 @@ export default function AuctionFormPage() {
                     type="text"
                     name="base_price"
                     value={auctionItemForm.base_price}
-                    onFocus={() => {
+                    onFocus={(e) => {
                       handlePriceFocus(
                         auctionItemForm.base_price,
                         (formattedValue) =>
@@ -2453,6 +2454,7 @@ export default function AuctionFormPage() {
                             base_price: formattedValue,
                           }))
                       );
+                      e.target.select();
                     }}
                     onChange={handleItemPriceChange}
                     onBlur={() => {
