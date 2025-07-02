@@ -131,8 +131,6 @@ export interface AuctionBid {
   bid_amount: number;
   bid_time: string;
   status: string;
-  attempt: number;
-  is_winning: boolean;
 }
 
 export interface ApiResponse {
@@ -782,14 +780,17 @@ export const auctionsService = {
   },
 
   /**
-   * ดึงราคาเสนอที่ชนะ (is_winning = true)
+   * ดึงราคาเสนอที่ชนะ (ราคาต่ำสุดจากการเสนอราคาที่ยอมรับ)
    */
   getWinningBid: async (auctionId: number): Promise<AuctionBid | null> => {
     try {
-      const response = await auctionsService.getAuctionBids(auctionId);
-      if (response.success) {
-        const winningBid = response.data.find((bid) => bid.is_winning);
-        return winningBid || null;
+      const response = await auctionsService.getAcceptedBids(auctionId);
+      if (response.success && response.data.length > 0) {
+        // หาราคาต่ำสุดจากการเสนอราคาที่ยอมรับแล้ว
+        const sortedBids = response.data.sort(
+          (a, b) => a.bid_amount - b.bid_amount
+        );
+        return sortedBids[0];
       }
       return null;
     } catch (error) {

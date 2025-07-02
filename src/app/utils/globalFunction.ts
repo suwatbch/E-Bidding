@@ -1080,9 +1080,6 @@ export const getLowestBid = async (
   return await auctionsService.getLowestBid(auctionId);
 };
 
-/**
- * ดึงราคาเสนอที่ชนะ (is_winning = true)
- */
 export const getWinningBid = async (
   auctionId: number
 ): Promise<AuctionBid | null> => {
@@ -1331,9 +1328,7 @@ export const getBidTableData = async (
         percentageDifference: percentageDiff,
         bidTime: bid.bid_time,
         isLowest: index === 0,
-        isWinning: bid.is_winning,
         status: bid.status,
-        attempt: bid.attempt,
         statusText: getBidStatusText(bid.status),
         statusColor: getBidStatusColor(bid.status),
         userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
@@ -1388,8 +1383,6 @@ export const getBidHistoryData = async (
         percentageDifference: percentageDiff,
         bidTime: bid.bid_time,
         status: bid.status,
-        attempt: bid.attempt,
-        isWinning: bid.is_winning,
         statusText: getBidStatusText(bid.status),
         statusColor: getBidStatusColor(bid.status),
         userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
@@ -1556,7 +1549,7 @@ export const isValidTaxId = (taxId: string): boolean => {
  * ลบค่าซ้ำในอาร์เรย์
  */
 export const removeDuplicates = <T>(array: T[]): T[] => {
-  return [...new Set(array)];
+  return Array.from(new Set(array));
 };
 
 /**
@@ -1611,8 +1604,8 @@ export interface FormChangeConfig {
  * @param config - configuration options
  */
 export const handleFormChange = <T extends Record<string, any>>(
-  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  setForm: React.Dispatch<React.SetStateAction<T>>,
+  e: any,
+  setForm: any,
   config?: FormChangeConfig
 ) => {
   const { name, value, type } = e.target;
@@ -1620,7 +1613,7 @@ export const handleFormChange = <T extends Record<string, any>>(
   // Handle checkbox
   if (type === 'checkbox') {
     const checked = (e.target as HTMLInputElement).checked;
-    setForm((prev) => ({ ...prev, [name]: checked }));
+    setForm((prev: T) => ({ ...prev, [name]: checked }));
     return;
   }
 
@@ -1664,7 +1657,7 @@ export const handleFormChange = <T extends Record<string, any>>(
     }
   }
 
-  setForm((prev) => ({ ...prev, [name]: processedValue }));
+  setForm((prev: T) => ({ ...prev, [name]: processedValue }));
 };
 
 /**
@@ -1850,7 +1843,15 @@ export const getBidCountFromArray = (bids: AuctionBid[]): number => {
 export const getWinningBidFromArray = (
   bids: AuctionBid[]
 ): AuctionBid | null => {
-  return getLowestBidFromArray(bids);
+  if (bids.length === 0) return null;
+
+  // หาราคาต่ำสุดจากการเสนอราคาที่ยอมรับแล้ว
+  const acceptedBids = bids.filter((bid) => bid.status === 'accept');
+  if (acceptedBids.length === 0) return null;
+
+  return acceptedBids.reduce((lowest, current) =>
+    current.bid_amount < lowest.bid_amount ? current : lowest
+  );
 };
 
 /**

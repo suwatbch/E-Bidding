@@ -354,10 +354,6 @@ export default function AuctionDetailPage() {
   };
 
   const openBidPopup = () => {
-    if (!canPlaceBid()) {
-      alert('ไม่สามารถเสนอราคาได้ในขณะนี้');
-      return;
-    }
     setShowBidPopup(true);
     setBidAmount('');
     setBidError('');
@@ -440,7 +436,16 @@ export default function AuctionDetailPage() {
   };
 
   const canPlaceBid = () => {
-    return auction && auction.status === 3; // สถานะ "กำลังประมูล"
+    if (!auction || !user) return false;
+
+    // ตรวจสอบสถานะการประมูล
+    if (auction.status !== 3 && auction.status !== 4) return false; // สถานะ "กำลังประมูล" หรือ "ใกล้สิ้นสุด"
+
+    // ตรวจสอบว่าผู้ใช้เป็น participant ในตารางประมูลหรือไม่
+    const isUserParticipant = participants.some(
+      (p) => p.user_id === user.user_id
+    );
+    return isUserParticipant;
   };
 
   if (isLoading) {
@@ -686,26 +691,6 @@ export default function AuctionDetailPage() {
               </div>
             </div>
 
-            {/* Bid Form */}
-            {canPlaceBid() && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  เสนอราคา
-                </h3>
-                <button
-                  onClick={openBidPopup}
-                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  เสนอราคา
-                </button>
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-600">
-                    💡 ราคาเสนอต้องน้อยกว่าราคาเริ่มต้นและราคาต่ำสุดปัจจุบัน
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* History Button */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <button
@@ -717,11 +702,13 @@ export default function AuctionDetailPage() {
             </div>
 
             {/* History Button */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <button className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
-                เสนอราคา
-              </button>
-            </div>
+            {canPlaceBid() && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <button className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                  เสนอราคา
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
