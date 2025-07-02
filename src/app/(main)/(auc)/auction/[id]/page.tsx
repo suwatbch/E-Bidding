@@ -594,11 +594,9 @@ export default function AuctionDetailPage() {
                   </div>
                 </div>
               </div>
-              {auction.remark && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">{auction.remark}</p>
-                </div>
-              )}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">{auction.remark}</p>
+              </div>
             </div>
 
             {/* Items List */}
@@ -715,6 +713,13 @@ export default function AuctionDetailPage() {
                 className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
                 ดูประวัติการเสนอราคา
+              </button>
+            </div>
+
+            {/* History Button */}
+            <div className="bg-white rounded-lg shadow-sm border p-6">
+              <button className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                เสนอราคา
               </button>
             </div>
           </div>
