@@ -19,6 +19,7 @@ const {
   updateAuctionWithParticipants,
   getAuctionParticipantsWithDetails,
   getAuctionItems,
+  createAuctionBid,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -163,6 +164,67 @@ router.get('/:id', async (req, res) => {
       });
     }
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/:id/bids - เสนอราคาในการประมูล
+router.post('/:id/bids', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const { user_id, company_id, bid_amount } = req.body;
+
+    // ตรวจสอบข้อมูลที่จำเป็น
+    if (!user_id || !bid_amount) {
+      return res.status(200).json({
+        success: true,
+        message: 'กรุณาระบุข้อมูลที่จำเป็น',
+      });
+    }
+
+    // ตรวจสอบว่าราคาเป็นตัวเลขและมากกว่า 0
+    const bidAmountNum = parseFloat(bid_amount);
+    if (isNaN(bidAmountNum) || bidAmountNum <= 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'ราคาเสนอไม่ถูกต้อง',
+      });
+    }
+
+    // เรียกใช้ helper function
+    const result = await createAuctionBid({
+      auction_id: auctionId,
+      user_id: parseInt(user_id),
+      company_id: company_id ? parseInt(company_id) : 0,
+      bid_amount: bidAmountNum,
+    });
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    console.error('Error creating bid:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

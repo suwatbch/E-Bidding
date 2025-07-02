@@ -1,5 +1,8 @@
 const { executeQuery, getConnection } = require('../config/dataconfig');
-const { formatDateTimeUTCToDb } = require('../globalFunction');
+const {
+  formatDateTimeUTCToDb,
+  getDateTimeUTCNow,
+} = require('../globalFunction');
 
 // ดึงข้อมูลประมูลทั้งหมด
 async function getAllAuctions() {
@@ -807,6 +810,100 @@ async function isUserAuctionParticipant(auctionId, userId, companyId = null) {
   }
 }
 
+/**
+ * สร้างการเสนอราคาใหม่
+ */
+const createAuctionBid = async (bidData) => {
+  const { auction_id, user_id, company_id, bid_amount } = bidData;
+
+  try {
+    // ตรวจสอบว่าการประมูลมีอยู่และเปิดให้เสนอราคาได้
+    const auctionQuery =
+      'SELECT auction_id, status FROM auction WHERE auction_id = ?';
+    const auctionResult = await executeQuery(auctionQuery, [auction_id]);
+
+    if (!auctionResult.success || auctionResult.data.length === 0) {
+      return {
+        success: false,
+        error: 'ไม่พบการประมูลที่ระบุ',
+      };
+    }
+
+    const auction = auctionResult.data[0];
+    // ตรวจสอบสถานะการประมูล (3 = กำลังประมูล, 4 = ใกล้สิ้นสุด)
+    if (auction.status !== 3 && auction.status !== 4) {
+      return {
+        success: false,
+        error: 'การประมูลนี้ไม่เปิดให้เสนอราคาในขณะนี้',
+      };
+    }
+
+    // ตรวจสอบว่าผู้ใช้เป็นผู้เข้าร่วมประมูลหรือไม่
+    const participantQuery = `
+      SELECT ap.auction_id 
+      FROM auction_participant ap 
+      WHERE ap.auction_id = ? AND ap.user_id = ? AND ap.status > 0
+    `;
+    const participantResult = await executeQuery(participantQuery, [
+      auction_id,
+      user_id,
+    ]);
+
+    if (!participantResult.success || participantResult.data.length === 0) {
+      return {
+        success: false,
+        error: 'คุณไม่ได้รับอนุญาตให้เข้าร่วมการประมูลนี้',
+      };
+    }
+
+    // บันทึกการเสนอราคา โดยใช้เวลาไทย
+    const insertQuery = `
+      INSERT INTO auction_bid (
+        auction_id, 
+        user_id, 
+        company_id, 
+        bid_amount, 
+        bid_time, 
+        status
+      ) VALUES (?, ?, ?, ?, now(), 'accept')
+    `;
+
+    const insertResult = await executeQuery(insertQuery, [
+      auction_id,
+      user_id,
+      company_id,
+      bid_amount,
+    ]);
+
+    if (insertResult.success && insertResult.data.affectedRows > 0) {
+      return {
+        success: true,
+        data: {
+          bid_id: insertResult.data.insertId,
+          auction_id,
+          user_id,
+          company_id,
+          bid_amount,
+          bid_time: getDateTimeUTCNow(),
+          status: 'accept',
+        },
+        message: 'บันทึกการเสนอราคาสำเร็จ',
+      };
+    } else {
+      return {
+        success: false,
+        error: 'ไม่สามารถบันทึกการเสนอราคาได้',
+      };
+    }
+  } catch (error) {
+    console.error('Error in createAuctionBid:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+    };
+  }
+};
+
 module.exports = {
   getAllAuctions,
   getAuctionById,
@@ -827,4 +924,5 @@ module.exports = {
   getAuctionParticipantsWithDetails,
   getAuctionItems,
   isUserAuctionParticipant,
+  createAuctionBid,
 };

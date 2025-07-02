@@ -133,10 +133,10 @@ export interface AuctionBid {
   status: string;
 }
 
-export interface ApiResponse {
+export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
-  data?: any;
+  data?: T;
   total?: number;
 }
 
@@ -836,6 +836,34 @@ export const auctionsService = {
     } catch (error) {
       console.error('Error checking if user has bid:', error);
       return false;
+    }
+  },
+
+  /**
+   * เสนอราคาในการประมูล
+   */
+  placeBid: async (bidData: {
+    auction_id: number;
+    user_id: number;
+    company_id: number;
+    bid_amount: number;
+  }): Promise<ApiResponse<any>> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/${bidData.auction_id}/bids`,
+        {
+          user_id: bidData.user_id,
+          company_id: bidData.company_id,
+          bid_amount: bidData.bid_amount,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error placing bid:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการเสนอราคา',
+      };
     }
   },
 };

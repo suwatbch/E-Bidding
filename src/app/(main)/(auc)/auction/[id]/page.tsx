@@ -13,6 +13,7 @@ import {
 } from '@/app/components/ui/AucTable';
 import EmptyState from '@/app/components/ui/EmptyState';
 import BidHistory from '@/app/components/history/BidHistory';
+import BidPopup from '@/app/components/ui/BidPopup';
 import {
   AucCategoryIcon,
   AucStartTimeIcon,
@@ -82,8 +83,7 @@ export default function AuctionDetailPage() {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showBidPopup, setShowBidPopup] = useState(false);
-  const [bidAmount, setBidAmount] = useState<string>('');
-  const [bidError, setBidError] = useState<string>('');
+
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
 
   // Socket states
@@ -355,81 +355,49 @@ export default function AuctionDetailPage() {
 
   const openBidPopup = () => {
     setShowBidPopup(true);
-    setBidAmount('');
-    setBidError('');
   };
 
   const closeBidPopup = () => {
     setShowBidPopup(false);
-    setBidAmount('');
-    setBidError('');
   };
 
-  const validateBidAmount = (amount: string): string | null => {
-    if (!amount || amount.trim() === '') {
-      return 'กรุณาระบุจำนวนเงิน';
-    }
-
-    const numericAmount = parseFloat(amount.replace(/,/g, ''));
-
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      return 'จำนวนเงินต้องเป็นตัวเลขที่มากกว่า 0';
-    }
-
-    if (!auction) {
-      return 'ไม่พบข้อมูลตลาดประมูล';
-    }
-
-    if (numericAmount >= auction.reserve_price) {
-      return `จำนวนเงินต้องน้อยกว่าราคาเริ่มต้น (${formatPrice(
-        auction.reserve_price
-      )})`;
-    }
-
-    const lowestBid = getLowestBid();
-    if (lowestBid && numericAmount >= lowestBid.bid_amount) {
-      return `จำนวนเงินต้องน้อยกว่าราคาต่ำสุดปัจจุบัน (${formatPrice(
-        lowestBid.bid_amount
-      )})`;
-    }
-
-    return null;
-  };
-
-  const submitBid = async () => {
-    if (isSubmittingBid) return;
-
-    const validationError = validateBidAmount(bidAmount);
-    if (validationError) {
-      setBidError(validationError);
-      return;
-    }
+  const submitBid = async (bidAmount: number) => {
+    if (!user || !auction) return;
 
     try {
       setIsSubmittingBid(true);
-      setBidError('');
 
-      const numericAmount = parseFloat(bidAmount.replace(/,/g, ''));
+      // หาข้อมูล company ของ user
+      const userParticipant = participants.find(
+        (p) => p.user_id === user.user_id
+      );
 
-      const response = await auctionsService.createBid({
+      const response = await auctionsService.placeBid({
         auction_id: auctionId,
-        bid_amount: numericAmount,
+        user_id: user.user_id,
+        company_id: userParticipant?.company_id || 0,
+        bid_amount: bidAmount,
       });
 
-      if (response.success) {
-        alert('เสนอราคาสำเร็จ!');
-        closeBidPopup();
-        // รีโหลดข้อมูลการเสนอราคา
-        const bidsResponse = await auctionsService.getAuctionBids(auctionId);
-        if (bidsResponse.success) {
-          setBids(bidsResponse.data);
-        }
+      if (response.success && response.message === null) {
+        // เก็บตำแหน่ง scroll ปัจจุบัน
+        const currentScrollPosition =
+          window.pageYOffset || document.documentElement.scrollTop;
+
+        setShowBidPopup(false);
+        // รีโหลดข้อมูลหน้าใหม่
+        await loadAuctionData();
+
+        // กลับไปตำแหน่ง scroll เดิม
+        setTimeout(() => {
+          window.scrollTo(0, currentScrollPosition);
+        }, 100);
       } else {
-        setBidError(response.message || 'เกิดข้อผิดพลาดในการเสนอราคา');
+        alert(response.message || 'เกิดข้อผิดพลาดในการเสนอราคา');
       }
     } catch (error) {
       console.error('Error submitting bid:', error);
-      setBidError('เกิดข้อผิดพลาดในการเสนอราคา');
+      alert('เกิดข้อผิดพลาดในการเสนอราคา: ' + error);
     } finally {
       setIsSubmittingBid(false);
     }
@@ -445,6 +413,7 @@ export default function AuctionDetailPage() {
     const isUserParticipant = participants.some(
       (p) => p.user_id === user.user_id
     );
+
     return isUserParticipant;
   };
 
@@ -701,10 +670,13 @@ export default function AuctionDetailPage() {
               </button>
             </div>
 
-            {/* History Button */}
+            {/* Bid Button */}
             {canPlaceBid() && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
-                <button className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                <button
+                  onClick={openBidPopup}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                >
                   เสนอราคา
                 </button>
               </div>
@@ -841,62 +813,12 @@ export default function AuctionDetailPage() {
       </div>
 
       {/* Bid Popup */}
-      {showBidPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              เสนอราคา
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  จำนวนเงิน (บาท)
-                </label>
-                <input
-                  type="text"
-                  value={bidAmount}
-                  onChange={(e) => setBidAmount(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="ระบุจำนวนเงิน"
-                />
-                {bidError && (
-                  <p className="mt-1 text-sm text-red-600">{bidError}</p>
-                )}
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg text-sm">
-                <p className="text-gray-600">
-                  <strong>ราคาเริ่มต้น:</strong>{' '}
-                  {formatPrice(auction.reserve_price)}
-                </p>
-                {getLowestBid() && (
-                  <p className="text-gray-600">
-                    <strong>ราคาต่ำสุดปัจจุบัน:</strong>{' '}
-                    {formatPrice(getLowestBid()!.bid_amount)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={closeBidPopup}
-                className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={submitBid}
-                disabled={isSubmittingBid}
-                className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmittingBid ? 'กำลังส่ง...' : 'ยืนยัน'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <BidPopup
+        isOpen={showBidPopup}
+        onClose={() => setShowBidPopup(false)}
+        onSubmit={submitBid}
+        isLoading={isSubmittingBid}
+      />
 
       {/* History Popup */}
       {showHistoryPopup && (
