@@ -2,11 +2,15 @@ import {
   auctionsService,
   type AuctionParticipant,
   type AuctionBid,
-  getBidStatusText,
   getBidStatusColor,
 } from '@/app/services/auctionsService';
 
-import { type UserCompany } from '@/app/services/userCompanyService';
+import {
+  type UserCompany,
+  userCompanyService,
+} from '@/app/services/userCompanyService';
+import { userService } from '@/app/services/userService';
+import { companyService } from '@/app/services/companyService';
 
 // =============================================================================
 // USER COMPANY UTILITIES (NEW VERSIONS WITH userCompanyService)
@@ -1333,7 +1337,7 @@ export const getBidTableData = async (
         bidTime: bid.bid_time,
         isLowest: index === 0,
         status: bid.status,
-        statusText: getBidStatusText(bid.status),
+        statusText: bid.status,
         statusColor: getBidStatusColor(bid.status),
         userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
         canBid: canUserBidFromArray(bid.user_id, []),
@@ -1347,30 +1351,58 @@ export const getBidTableData = async (
 };
 
 /**
- * สร้างข้อมูลประวัติการเสนอราคาทั้งหมด
- * @param auctionId - ID ของการประมูล
- * @param reservePrice - ราคาประกัน
- * @param companies - Array ของบริษัททั้งหมด
- * @returns ข้อมูลประวัติการเสนอราคา
+ * ดึงข้อมูลประวัติการเสนอราคา (รวมข้อมูล User และ Company)
  */
 export const getBidHistoryData = async (
   auctionId: number,
-  reservePrice: number,
-  companies: any[] = []
+  reservePrice: number
 ) => {
   try {
+    // ดึงข้อมูลการเสนอราคาทั้งหมด
     const allBids = await getAllAuctionBids(auctionId);
 
-    // เรียงลำดับตามเวลาจากน้อยไปมาก (เก่าไปใหม่)
+    // ดึงข้อมูล users และ companies ทั้งหมด
+    const [usersResponse, companiesResponse, userCompaniesResponse] =
+      await Promise.all([
+        userService.getAllUsers(),
+        companyService.getAllCompanies(),
+        userCompanyService.getAllUserCompanies(),
+      ]);
+
+    const users = usersResponse.success ? usersResponse.data : [];
+    const companies = companiesResponse.success ? companiesResponse.data : [];
+    const userCompanies = userCompaniesResponse.success
+      ? userCompaniesResponse.data
+      : [];
+
+    // เรียงลำดับตามเวลาจากใหม่ไปเก่า (ใหม่สุดด้านบน)
     const sortedBids = allBids.sort((a, b) => {
       const timeA = new Date(a.bid_time).getTime();
       const timeB = new Date(b.bid_time).getTime();
-      return timeA - timeB; // เรียงจากน้อยไปมาก
+      return timeB - timeA; // เรียงจากมากไปน้อย (ใหม่ไปเก่า)
     });
 
     return sortedBids.map((bid) => {
-      const companyId = getCompanyByUserIdFromArray(bid.user_id, []);
-      const company = companyId ? getCompanyById(companyId, companies) : null;
+      // หาข้อมูล user
+      const user = users.find((u: any) => u.user_id === bid.user_id);
+      const userName = user
+        ? user.fullname || `ผู้ใช้ #${bid.user_id}`
+        : `ผู้ใช้ #${bid.user_id}`;
+
+      // หาข้อมูล company ของ user
+      const userCompany =
+        userCompanies.find(
+          (uc: any) => uc.user_id === bid.user_id && uc.is_primary === true
+        ) || userCompanies.find((uc: any) => uc.user_id === bid.user_id);
+
+      const company = userCompany
+        ? companies.find((c: any) => c.id === userCompany.company_id)
+        : null;
+      const companyName = company
+        ? company.name
+        : `บริษัท #${bid.company_id || 'ไม่ระบุ'}`;
+
+      // คำนวณส่วนต่าง
       const priceDiff = calculatePriceDifference(reservePrice, bid.bid_amount);
       const percentageDiff = calculatePriceDifferencePercentage(
         reservePrice,
@@ -1379,17 +1411,19 @@ export const getBidHistoryData = async (
 
       return {
         bidId: bid.bid_id,
+        auctionId: auctionId,
         userId: bid.user_id,
-        companyId: companyId || 0,
-        companyName: company?.name || `ผู้ใช้ #${bid.user_id}`,
+        userName: userName,
+        companyId: userCompany?.company_id || bid.company_id || 0,
+        companyName: companyName,
         bidAmount: bid.bid_amount,
         priceDifference: priceDiff,
         percentageDifference: percentageDiff,
         bidTime: bid.bid_time,
         status: bid.status,
-        statusText: getBidStatusText(bid.status),
+        statusText: bid.status, // แสดงสถานะตรงๆ จากฐานข้อมูล
         statusColor: getBidStatusColor(bid.status),
-        userRole: getUserRoleFromArray(bid.user_id, []) || 'unknown',
+        userRole: userCompany?.role_in_company || 'unknown',
       };
     });
   } catch (error) {

@@ -225,20 +225,6 @@ export const BidStatus = {
 
 export type BidStatusType = (typeof BidStatus)[keyof typeof BidStatus];
 
-// Bid Status Utility Functions
-export const getBidStatusText = (status: string): string => {
-  switch (status) {
-    case BidStatus.ACCEPT:
-      return 'ยอมรับ';
-    case BidStatus.REJECTED:
-      return 'ปฏิเสธ';
-    case BidStatus.CANCELED:
-      return 'ยกเลิก';
-    default:
-      return 'ไม่ทราบสถานะ';
-  }
-};
-
 export const getBidStatusColor = (status: string): string => {
   switch (status) {
     case BidStatus.ACCEPT:

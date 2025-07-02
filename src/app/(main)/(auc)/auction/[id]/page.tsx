@@ -929,6 +929,7 @@ export default function AuctionDetailPage() {
           isOpen={showHistoryPopup}
           auctionId={auctionId}
           reservePrice={auction.reserve_price}
+          auction={auction}
           onClose={() => setShowHistoryPopup(false)}
         />
       )}
