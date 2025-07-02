@@ -19,7 +19,6 @@ import {
   AucStartTimeIcon,
   AucEndTimeIcon,
   AucOfferIcon,
-  AucUserIcon,
   AucBalanceIcon,
   StatusBiddingIcon,
   StatusEndingSoonIcon,
@@ -45,13 +44,12 @@ import {
   currencyConfig,
 } from '@/app/model/config';
 import {
-  getCurrentDateTime,
   decodeAuctionId,
   formatAuctionId,
-  formatPrice,
   formatPriceForDisplay,
   calculateTimeRemaining,
   formatTimeRemaining,
+  formatDateTime,
 } from '@/app/utils/globalFunction';
 import {
   connectSocket,
@@ -181,12 +179,17 @@ export default function AuctionDetailPage() {
       }
 
       // ดึงข้อมูลทั้งหมดพร้อมกัน
-      const [auctionResponse, participantsResponse, itemsResponse] =
-        await Promise.all([
-          auctionsService.getAuctionById(auctionId),
-          auctionsService.getAuctionParticipantsWithDetails(auctionId),
-          auctionsService.getAuctionItems(auctionId),
-        ]);
+      const [
+        auctionResponse,
+        participantsResponse,
+        itemsResponse,
+        bidsResponse,
+      ] = await Promise.all([
+        auctionsService.getAuctionById(auctionId),
+        auctionsService.getAuctionParticipantsWithDetails(auctionId),
+        auctionsService.getAuctionItems(auctionId),
+        auctionsService.getAuctionBids(auctionId),
+      ]);
 
       if (!auctionResponse.success || !auctionResponse.data) {
         setError('ไม่พบข้อมูลตลาดประมูลที่ต้องการ');
@@ -212,8 +215,9 @@ export default function AuctionDetailPage() {
         setItems(itemsResponse.data);
       }
 
-      // Mock bids data since API doesn't exist yet
-      setBids([]);
+      if (bidsResponse.success) {
+        setBids(bidsResponse.data);
+      }
 
       setError('');
     } catch (err) {
@@ -351,6 +355,61 @@ export default function AuctionDetailPage() {
   // เช็คว่า participant แต่ละคนออนไลน์หรือไม่
   const isParticipantOnline = (participantUserId: number): boolean => {
     return onlineUsers.some((user) => user.userId === participantUserId);
+  };
+
+  // สร้างข้อมูลสำหรับแสดงในตาราง
+  const getTableData = () => {
+    if (!auction) return [];
+
+    // หาข้อมูลการเสนอราคาล่าสุดของแต่ละคน (user_id)
+    const latestBidsByUser: { [userId: number]: AuctionBid } = {};
+
+    // กรองเฉพาะสถานะ accept และจัดกลุ่มตาม user_id
+    bids
+      .filter((bid) => bid.status === 'accept')
+      .forEach((bid) => {
+        const userId = bid.user_id;
+        if (
+          !latestBidsByUser[userId] ||
+          new Date(bid.bid_time) > new Date(latestBidsByUser[userId].bid_time)
+        ) {
+          latestBidsByUser[userId] = bid;
+        }
+      });
+
+    // สร้างข้อมูลสำหรับแสดงในตาราง
+    return participants.map((participant, index) => {
+      const latestBid = latestBidsByUser[participant.user_id];
+
+      let price = null;
+      let saving = null;
+      let savingRate = null;
+      let status = null;
+      let bidTime = null;
+
+      if (latestBid && auction) {
+        price = latestBid.bid_amount;
+        saving = auction.reserve_price - latestBid.bid_amount;
+        savingRate = ((saving / auction.reserve_price) * 100).toFixed(2);
+        status = latestBid.status;
+        bidTime = latestBid.bid_time;
+      }
+
+      return {
+        participant,
+        price,
+        saving,
+        savingRate,
+        status,
+        bidTime,
+        isWinning:
+          latestBid &&
+          price ===
+            Math.min(
+              ...Object.values(latestBidsByUser).map((bid) => bid.bid_amount)
+            ),
+      };
+    });
   };
 
   const openBidPopup = () => {
@@ -730,36 +789,32 @@ export default function AuctionDetailPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {participants.length === 0 ? (
+              {getTableData().length === 0 ? (
                 <EmptyState
                   title="ไม่พบข้อมูล"
                   description="ไม่พบข้อมูลบริษัทที่เข้าร่วมประมูล"
                   colSpan={8}
                 />
               ) : (
-                participants.map((participant, index) => {
-                  // Mock data for price, saving, etc. since participants don't have bid data
-                  const mockPrice = auction.reserve_price * 0.9; // ราคาเสนอ 90% ของราคาเริ่มต้น
-                  const saving = auction.reserve_price - mockPrice;
-                  const savingRate = (
-                    (saving / auction.reserve_price) *
-                    100
-                  ).toFixed(2);
-                  const isWinning = index === 0;
+                getTableData().map((row, index) => {
+                  const {
+                    participant,
+                    price,
+                    saving,
+                    savingRate,
+                    status,
+                    bidTime,
+                  } = row;
 
                   return (
                     <TableRow
                       key={participant.id}
-                      className={
-                        isWinning ? 'bg-yellow-100' : 'hover:bg-gray-50'
-                      }
+                      className={0 ? 'bg-yellow-100' : 'hover:bg-gray-50'}
                     >
                       <TableCell className="py-3 px-4 text-center">
-                        {/* <div className="flex items-center justify-center gap-2">
-                          {isWinning && (
-                            <span className="text-yellow-500">🏆</span>
-                          )}
-                        </div> */}
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-yellow-500">🏆</span>
+                        </div>
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center">
@@ -792,17 +847,47 @@ export default function AuctionDetailPage() {
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
                         <span className="font-medium">
-                          {formatPriceForDisplay(mockPrice)}
+                          {price ? formatPriceForDisplay(price) : ''}
                         </span>
                       </TableCell>
                       <TableCell className="py-3 px-4 text-center">
-                        <span className="text-green-600">
-                          {formatPriceForDisplay(saving)}
+                        <span
+                          className={`${
+                            price && price < auction.reserve_price
+                              ? 'text-green-600'
+                              : ''
+                          }`}
+                        >
+                          {saving ? formatPriceForDisplay(saving) : ''}
                         </span>
                       </TableCell>
-                      <TableCell className="py-3 px-4 text-center"></TableCell>
-                      <TableCell className="py-3 px-4 text-center"></TableCell>
-                      <TableCell className="py-3 px-4 text-center text-sm text-gray-600"></TableCell>
+                      <TableCell className="py-3 px-4 text-center">
+                        <span
+                          className={`${
+                            price && price < auction.reserve_price
+                              ? 'text-green-600'
+                              : ''
+                          }`}
+                        >
+                          {savingRate ? `${savingRate}%` : ''}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center">
+                        {status === 'accept' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {status || ''}
+                          </span>
+                        ) : status === 'reject' ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            {status || ''}
+                          </span>
+                        ) : (
+                          ''
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3 px-4 text-center text-sm text-gray-600">
+                        {bidTime ? formatDateTime(bidTime) : ''}
+                      </TableCell>
                     </TableRow>
                   );
                 })

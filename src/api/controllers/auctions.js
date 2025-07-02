@@ -20,6 +20,7 @@ const {
   getAuctionParticipantsWithDetails,
   getAuctionItems,
   createAuctionBid,
+  getAuctionBids,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -157,6 +158,42 @@ router.get('/:id', async (req, res) => {
           message: 'ไม่พบข้อมูลประมูลที่ระบุ',
         });
       }
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// GET /api/auctions/:id/bids - ดึงข้อมูลการเสนอราคา
+router.get('/:id/bids', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const result = await getAuctionBids(auctionId);
+
+    if (result.success) {
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: null,
+        total: result.data.length,
+      });
     } else {
       res.status(200).json({
         success: true,

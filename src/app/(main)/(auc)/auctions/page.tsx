@@ -35,7 +35,7 @@ import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
 import {
-  formatDateForDisplay,
+  formatDateTime,
   safeParseDate,
   createSecureUrl,
   formatAuctionId,
@@ -85,10 +85,6 @@ export default function AuctionsPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(price);
-  };
-
-  const formatDateTime = (dateTimeStr: string) => {
-    return formatDateForDisplay(safeParseDate(dateTimeStr), true);
   };
 
   // สร้างข้อมูลสำหรับแสดงผล

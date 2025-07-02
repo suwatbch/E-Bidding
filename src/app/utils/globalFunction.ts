@@ -103,6 +103,10 @@ export const formatDateForData = (date: Date): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+export const formatDateTime = (dateTimeStr: string) => {
+  return formatDateForDisplay(safeParseDate(dateTimeStr), true);
+};
+
 /**
  * แปลง Date object เป็น string format สำหรับแสดงผล
  * @param date - Date object ที่ต้องการแปลง
@@ -1915,6 +1919,7 @@ export default {
   // Date & Time
   formatDateForData,
   formatDateForDisplay,
+  formatDateTime,
   parseStringToDate,
   isValidDate,
   getCurrentDateTime,

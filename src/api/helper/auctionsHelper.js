@@ -811,6 +811,20 @@ async function isUserAuctionParticipant(auctionId, userId, companyId = null) {
 }
 
 /**
+ * ดึงข้อมูลการเสนอราคาทั้งหมดของตลาด
+ */
+const getAuctionBids = async (auctionId) => {
+  const query = `
+    SELECT ab.*
+    FROM auction_bid ab
+    WHERE ab.auction_id = ?
+    ORDER BY ab.bid_time DESC
+  `;
+
+  return await executeQuery(query, [auctionId]);
+};
+
+/**
  * สร้างการเสนอราคาใหม่
  */
 const createAuctionBid = async (bidData) => {
@@ -925,4 +939,5 @@ module.exports = {
   getAuctionItems,
   isUserAuctionParticipant,
   createAuctionBid,
+  getAuctionBids,
 };
