@@ -6,6 +6,7 @@ import {
   formatDateTime,
   getBidHistoryData,
   formatAuctionId,
+  getPriceColor,
 } from '@/app/utils/globalFunction';
 import { currencyConfig } from '@/app/model/config';
 
@@ -192,7 +193,12 @@ export default function BidHistory({
                           </div>
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap text-right">
-                          <div className="text-sm font-semibold text-gray-900">
+                          <div
+                            className={`text-sm font-semibold ${getPriceColor(
+                              bid.bidAmount,
+                              reservePrice
+                            )}`}
+                          >
                             {formatPriceForDisplay(bid.bidAmount)}
                           </div>
                           {bid.priceDifference !== 0 && (
@@ -272,7 +278,12 @@ export default function BidHistory({
                       {getCurrencyName(auction?.currency || 1)}{' '}
                     </span>
                     • ราคาต่ำสุด:{' '}
-                    <span className="font-medium text-green-600">
+                    <span
+                      className={`font-medium ${getPriceColor(
+                        Math.min(...bidHistory.map((b) => b.bidAmount)),
+                        reservePrice
+                      )}`}
+                    >
                       {formatPriceForDisplay(
                         Math.min(...bidHistory.map((b) => b.bidAmount))
                       )}{' '}
