@@ -20,6 +20,7 @@ const {
   getAuctionParticipantsWithDetails,
   getAuctionItems,
   createAuctionBid,
+  rejectBid,
   getAuctionBids,
   updateAuctionStatus,
 } = require('../helper/auctionsHelper');
@@ -265,8 +266,6 @@ router.post('/:id/bids', async (req, res) => {
             bid_amount: bidAmountNum,
             bid_time: savedBid.bid_time,
             status: savedBid.status,
-            user_name: userData.fullname,
-            company_name: companyData.name,
           },
         });
       }
@@ -284,6 +283,61 @@ router.post('/:id/bids', async (req, res) => {
     }
   } catch (error) {
     console.error('Error creating bid:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/bids/:bidId/reject - ปฏิเสธการเสนอราคา
+router.post('/bids/:bidId/reject', async (req, res) => {
+  try {
+    const bidId = parseInt(req.params.bidId);
+
+    if (isNaN(bidId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสการเสนอราคาไม่ถูกต้อง',
+      });
+    }
+
+    // TODO: เพิ่มการตรวจสอบสิทธิ์ว่า user สามารถ reject bid นี้ได้หรือไม่
+    // เช่น เป็นเจ้าของ bid หรือเป็น admin
+
+    const result = await rejectBid(bidId);
+
+    if (result.success) {
+      // Broadcast ข้อมูลการอัปเดทสถานะ bid ผ่าน Socket.IO
+      const io = req.app.get('io');
+      if (io) {
+        // ดึงข้อมูล bid ที่ถูก reject เพื่อ broadcast
+        const bidData = result.data;
+        if (bidData && bidData.auction_id) {
+          const roomName = `auction-${bidData.auction_id}`;
+          io.to(roomName).emit('bid-status-updated', {
+            auctionId: bidData.auction_id,
+            bidId: bidId,
+            status: 'reject',
+            bidData: bidData,
+          });
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    console.error('Error rejecting bid:', error);
     res.status(500).json({
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',

@@ -919,6 +919,62 @@ const createAuctionBid = async (bidData) => {
 };
 
 /**
+ * ปฏิเสธการเสนอราคา (อัปเดทสถานะเป็น reject)
+ */
+const rejectBid = async (bidId) => {
+  try {
+    // ตรวจสอบว่า bid มีอยู่และมีสถานะ accept
+    const bidQuery = `
+      SELECT bid_id, auction_id, user_id, company_id, bid_amount, bid_time, status
+      FROM auction_bid 
+      WHERE bid_id = ? AND status = 'accept'
+    `;
+    const bidResult = await executeQuery(bidQuery, [bidId]);
+
+    if (!bidResult.success || bidResult.data.length === 0) {
+      return {
+        success: false,
+        error:
+          'ไม่พบการเสนอราคาที่ต้องการปฏิเสธ หรือการเสนอราคานี้ถูกปฏิเสธแล้ว',
+      };
+    }
+
+    const bid = bidResult.data[0];
+
+    // อัปเดทสถานะเป็น reject
+    const updateQuery = `
+      UPDATE auction_bid 
+      SET status = 'reject'
+      WHERE bid_id = ?
+    `;
+
+    const updateResult = await executeQuery(updateQuery, [bidId]);
+
+    if (updateResult.success && updateResult.data.affectedRows > 0) {
+      return {
+        success: true,
+        data: {
+          ...bid,
+          status: 'reject',
+        },
+        message: 'ปฏิเสธการเสนอราคาสำเร็จ',
+      };
+    } else {
+      return {
+        success: false,
+        error: 'ไม่สามารถปฏิเสธการเสนอราคาได้',
+      };
+    }
+  } catch (error) {
+    console.error('Error in rejectBid:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการปฏิเสธการเสนอราคา',
+    };
+  }
+};
+
+/**
  * อัปเดทสถานะประมูล
  */
 const updateAuctionStatus = async (auctionId, status) => {
@@ -998,6 +1054,7 @@ module.exports = {
   getAuctionItems,
   isUserAuctionParticipant,
   createAuctionBid,
+  rejectBid,
   getAuctionBids,
   updateAuctionStatus,
 };

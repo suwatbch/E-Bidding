@@ -46,6 +46,70 @@ export default function BidHistory({
     return currency ? currency.code : 'THB';
   };
 
+  // ฟังก์ชันสำหรับตรวจสอบว่าควรแสดงปุ่ม Reject หรือไม่
+  const shouldShowRejectButton = (bid: any, index: number): boolean => {
+    // แสดงเฉพาะถ้าเป็น user ปัจจุบัน
+    if (!user || bid.userId !== user.user_id) return false;
+
+    // แสดงเฉพาะถ้าสถานะเป็น accept
+    if (bid.statusText !== 'accept') return false;
+
+    // หาแถวล่าสุดที่เป็น accept ของ user นี้
+    const userBids = bidHistory.filter(
+      (b) => b.userId === user.user_id && b.statusText === 'accept'
+    );
+    if (userBids.length === 0) return false;
+
+    // เรียงตามเวลาใหม่สุดก่อน และเช็คว่าเป็นแถวล่าสุดหรือไม่
+    const latestAcceptedBid = userBids.sort(
+      (a, b) => new Date(b.bidTime).getTime() - new Date(a.bidTime).getTime()
+    )[0];
+
+    return bid.bidId === latestAcceptedBid.bidId;
+  };
+
+  // ฟังก์ชันสำหรับ reject bid
+  const handleRejectBid = async (bidId: number) => {
+    if (!confirm('คุณต้องการปฏิเสธการเสนอราคานี้หรือไม่?')) return;
+
+    try {
+      setIsLoading(true);
+      const { auctionsService } = await import(
+        '@/app/services/auctionsService'
+      );
+      const response = await auctionsService.rejectBid(bidId);
+
+      if (response.success && response.message === null) {
+        // รีโหลดข้อมูลประวัติการเสนอราคา
+        const data = await getBidHistoryData(auctionId, reservePrice);
+
+        // กรองข้อมูลตามสิทธิ์ผู้ใช้
+        let filteredData = data;
+        if (user && user.type !== 'admin') {
+          if (userCompanyId) {
+            filteredData = data.filter(
+              (bid: any) => bid.companyId === userCompanyId
+            );
+          } else {
+            filteredData = data.filter(
+              (bid: any) => bid.userId === user.user_id
+            );
+          }
+        }
+
+        setBidHistory(filteredData);
+        alert('ปฏิเสธการเสนอราคาเรียบร้อยแล้ว');
+      } else {
+        alert(response.message || 'เกิดข้อผิดพลาดในการปฏิเสธการเสนอราคา');
+      }
+    } catch (error) {
+      console.error('Error rejecting bid:', error);
+      alert('เกิดข้อผิดพลาดในการปฏิเสธการเสนอราคา');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -158,6 +222,9 @@ export default function BidHistory({
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         วันที่-เวลา
                       </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
+                        จัดการ
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -227,6 +294,32 @@ export default function BidHistory({
                         <td className="px-4 py-4 whitespace-nowrap text-center text-sm text-gray-900">
                           {formatDateTime(bid.bidTime)}
                         </td>
+                        <td className="px-4 py-4 whitespace-nowrap text-center">
+                          {shouldShowRejectButton(bid, index) ? (
+                            <button
+                              onClick={() => handleRejectBid(bid.bidId)}
+                              className="inline-flex items-center px-3 py-1 border border-red-300 text-xs font-medium rounded text-red-700 bg-red-50 hover:bg-red-100 hover:border-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                              title="ปฏิเสธการเสนอราคานี้"
+                            >
+                              <svg
+                                className="w-3 h-3 mr-1"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                              ปฏิเสธ
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 text-xs">-</span>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -279,15 +372,30 @@ export default function BidHistory({
                     </span>
                     • ราคาต่ำสุด:{' '}
                     <span
-                      className={`font-medium ${getPriceColor(
-                        Math.min(...bidHistory.map((b) => b.bidAmount)),
-                        reservePrice
-                      )}`}
+                      className={`font-medium ${(() => {
+                        const acceptedBids = bidHistory.filter(
+                          (b) => b.status === 'accept'
+                        );
+                        return acceptedBids.length > 0
+                          ? getPriceColor(
+                              Math.min(...acceptedBids.map((b) => b.bidAmount)),
+                              reservePrice
+                            )
+                          : 'text-gray-500';
+                      })()}`}
                     >
-                      {formatPriceForDisplay(
-                        Math.min(...bidHistory.map((b) => b.bidAmount))
-                      )}{' '}
-                      {getCurrencyName(auction?.currency || 1)}
+                      {(() => {
+                        const acceptedBids = bidHistory.filter(
+                          (b) => b.status === 'accept'
+                        );
+                        return acceptedBids.length > 0
+                          ? formatPriceForDisplay(
+                              Math.min(...acceptedBids.map((b) => b.bidAmount))
+                            )
+                          : 'ยังไม่มี';
+                      })()}{' '}
+                      {bidHistory.filter((b) => b.status === 'accept').length >
+                        0 && getCurrencyName(auction?.currency || 1)}
                     </span>
                   </span>
                 </div>

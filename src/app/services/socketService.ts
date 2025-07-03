@@ -178,14 +178,13 @@ export const subscribeToBidUpdates = (
   callback: (data: {
     auctionId: number;
     bidData: {
+      bid_id: number;
       auction_id: number;
       user_id: number;
       company_id: number;
       bid_amount: number;
       bid_time: string;
       status: string;
-      user_name?: string;
-      company_name?: string;
     };
   }) => void
 ) => {
@@ -204,6 +203,41 @@ export const unsubscribeFromBidUpdates = () => {
     socket.off('new-bid');
   } catch (error) {
     console.error('❌ Error unsubscribing from bid updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับรับข้อมูลการอัปเดทสถานะ bid (reject, cancel, etc.)
+export const subscribeToBidStatusUpdates = (
+  callback: (data: {
+    auctionId: number;
+    bidId: number;
+    status: string;
+    bidData: {
+      bid_id: number;
+      auction_id: number;
+      user_id: number;
+      company_id: number;
+      bid_amount: number;
+      bid_time: string;
+      status: string;
+    };
+  }) => void
+) => {
+  try {
+    socket.on('bid-status-updated', (data) => {
+      callback(data);
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing to bid status updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับยกเลิกการรับข้อมูลการอัปเดทสถานะ bid
+export const unsubscribeFromBidStatusUpdates = () => {
+  try {
+    socket.off('bid-status-updated');
+  } catch (error) {
+    console.error('❌ Error unsubscribing from bid status updates:', error);
   }
 };
 

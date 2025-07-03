@@ -219,7 +219,7 @@ export interface UpdateAuctionWithParticipantsRequest {
 // Bid Status Constants
 export const BidStatus = {
   ACCEPT: 'accept',
-  REJECTED: 'rejected',
+  REJECT: 'reject',
   CANCELED: 'canceled',
 } as const;
 
@@ -229,7 +229,7 @@ export const getBidStatusColor = (status: string): string => {
   switch (status) {
     case BidStatus.ACCEPT:
       return 'text-green-600 bg-green-100';
-    case BidStatus.REJECTED:
+    case BidStatus.REJECT:
       return 'text-red-600 bg-red-100';
     case BidStatus.CANCELED:
       return 'text-gray-600 bg-gray-100';
@@ -795,17 +795,16 @@ export const auctionsService = {
         const bids = response.data;
         return {
           accept: bids.filter((bid) => bid.status === BidStatus.ACCEPT).length,
-          rejected: bids.filter((bid) => bid.status === BidStatus.REJECTED)
-            .length,
+          reject: bids.filter((bid) => bid.status === BidStatus.REJECT).length,
           canceled: bids.filter((bid) => bid.status === BidStatus.CANCELED)
             .length,
           total: bids.length,
         };
       }
-      return { accept: 0, rejected: 0, canceled: 0, total: 0 };
+      return { accept: 0, reject: 0, canceled: 0, total: 0 };
     } catch (error) {
       console.error('Error getting bid stats by status:', error);
-      return { accept: 0, rejected: 0, canceled: 0, total: 0 };
+      return { accept: 0, reject: 0, canceled: 0, total: 0 };
     }
   },
 
@@ -849,6 +848,26 @@ export const auctionsService = {
       return {
         success: false,
         message: error.response?.data?.message || 'เกิดข้อผิดพลาดในการเสนอราคา',
+      };
+    }
+  },
+
+  /**
+   * ปฏิเสธการเสนอราคา (อัพเดทสถานะเป็น reject)
+   */
+  rejectBid: async (bidId: number): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/bids/${bidId}/reject`
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error rejecting bid:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการปฏิเสธการเสนอราคา',
       };
     }
   },

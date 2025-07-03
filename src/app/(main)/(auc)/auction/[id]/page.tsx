@@ -68,6 +68,8 @@ import {
   unsubscribeFromAuctionJoined,
   subscribeToBidUpdates,
   unsubscribeFromBidUpdates,
+  subscribeToBidStatusUpdates,
+  unsubscribeFromBidStatusUpdates,
   subscribeToAuctionStatusUpdates,
   unsubscribeFromAuctionStatusUpdates,
 } from '@/app/services/socketService';
@@ -170,10 +172,21 @@ export default function AuctionDetailPage() {
           setBids((prevBids) => {
             const newBid = {
               ...data.bidData,
-              bid_id: Date.now(), // temporary ID
             };
             return [newBid, ...prevBids];
           });
+        }
+      });
+
+      // Subscribe to bid status updates (reject, cancel, etc.)
+      subscribeToBidStatusUpdates((data) => {
+        if (data.auctionId === auctionId) {
+          // อัปเดทสถานะ bid ที่ถูก reject
+          setBids((prevBids) =>
+            prevBids.map((bid) =>
+              bid.bid_id === data.bidId ? { ...bid, status: data.status } : bid
+            )
+          );
         }
       });
 
@@ -208,6 +221,7 @@ export default function AuctionDetailPage() {
         unsubscribeFromAuctionUpdates();
         unsubscribeFromAuctionJoined();
         unsubscribeFromBidUpdates();
+        unsubscribeFromBidStatusUpdates();
         unsubscribeFromAuctionStatusUpdates();
         setIsSocketConnected(false);
       };
@@ -306,12 +320,12 @@ export default function AuctionDetailPage() {
       setTimeRemaining('สิ้นสุดแล้ว');
 
       // แจ้งเตือนสิ้นสุดการประมูล (ครั้งเดียว)
-      if (!hasShownEndedAlert && user && user.type !== 'admin') {
-        setAlertTitle('แจ้งเตือน');
-        setAlertMessage('สิ้นสุดการประมูล');
-        setShowAlert(true);
-        setHasShownEndedAlert(true);
-      }
+      // if (!hasShownEndedAlert && user && user.type !== 'admin') {
+      //   setAlertTitle('แจ้งเตือน');
+      //   setAlertMessage('สิ้นสุดการประมูล');
+      //   setShowAlert(true);
+      //   setHasShownEndedAlert(true);
+      // }
 
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
       if (auction.status == 4) {
@@ -327,25 +341,25 @@ export default function AuctionDetailPage() {
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
     // แจ้งเตือนเริ่มประมูล (ครั้งเดียวเมื่อเริ่มนับถอยหลัง)
-    if (!hasShownStartAlert && user && user.type !== 'admin') {
-      setAlertTitle('แจ้งเตือน');
-      setAlertMessage('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
-      setShowAlert(true);
-      setHasShownStartAlert(true);
-    }
+    // if (!hasShownStartAlert && user && user.type !== 'admin') {
+    //   setAlertTitle('แจ้งเตือน');
+    //   setAlertMessage('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
+    //   setShowAlert(true);
+    //   setHasShownStartAlert(true);
+    // }
 
     // แจ้งเตือนใกล้สิ้นสุด (ครั้งเดียวเมื่อเหลือ 3 นาที)
-    if (
-      totalMinutes <= 2 &&
-      !hasShownEndingSoonAlert &&
-      user &&
-      user.type !== 'admin'
-    ) {
-      setAlertTitle('แจ้งเตือน');
-      setAlertMessage('การประมูลใกล้จะสิ้นสุดแล้ว');
-      setShowAlert(true);
-      setHasShownEndingSoonAlert(true);
-    }
+    // if (
+    //   totalMinutes <= 2 &&
+    //   !hasShownEndingSoonAlert &&
+    //   user &&
+    //   user.type !== 'admin'
+    // ) {
+    //   setAlertTitle('แจ้งเตือน');
+    //   setAlertMessage('การประมูลใกล้จะสิ้นสุดแล้ว');
+    //   setShowAlert(true);
+    //   setHasShownEndingSoonAlert(true);
+    // }
 
     // การเข้าฟังก์ชันนี้ได้ แสดงว่าอยู่ในช่วงประมูล
     // หากสถานะ = 2 (รอการประมูล) ให้อัปเดทเป็น 3 (กำลังประมูล)
