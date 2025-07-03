@@ -83,6 +83,7 @@ export default function AuctionDetailPage() {
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showBidPopup, setShowBidPopup] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
 
@@ -100,14 +101,26 @@ export default function AuctionDetailPage() {
   }, [auctionId]);
 
   useEffect(() => {
-    if (auction && auction.status === 3) {
+    if (auction) {
       const timer = setInterval(() => {
         updateTimeRemaining();
       }, 1000);
 
+      // เรียกครั้งแรกทันที
+      updateTimeRemaining();
+
       return () => clearInterval(timer);
     }
-  }, [auction]);
+  }, [auction, currentTime]);
+
+  // Real-time clock update for bid button availability
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Socket useEffect
   useEffect(() => {
@@ -248,14 +261,32 @@ export default function AuctionDetailPage() {
   const updateTimeRemaining = () => {
     if (!auction) return;
 
-    const timeData = calculateTimeRemaining(auction.end_dt);
+    const startTime = new Date(auction.start_dt);
+    const endTime = new Date(auction.end_dt);
 
-    if (timeData.isExpired) {
-      setTimeRemaining('หมดเวลา');
+    // ถ้ายังไม่เริ่ม
+    if (currentTime < startTime) {
+      setTimeRemaining(`ยังไม่เริ่ม`);
       return;
     }
 
-    setTimeRemaining(formatTimeRemaining(timeData));
+    // ถ้าสิ้นสุดแล้ว
+    if (currentTime >= endTime) {
+      setTimeRemaining('สิ้นสุดแล้ว');
+      return;
+    }
+
+    // ถ้ากำลังประมูล - แสดงเวลาที่เหลือ
+    const diffMs = endTime.getTime() - currentTime.getTime();
+    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+    const minutes = totalMinutes % 60;
+    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+    setTimeRemaining(
+      `${minutes.toString().padStart(2, '0')}:${seconds
+        .toString()
+        .padStart(2, '0')}`
+    );
   };
 
   // ใช้ statusConfig แทน getStatusInfo function เดิม
@@ -446,6 +477,13 @@ export default function AuctionDetailPage() {
     setShowBidPopup(false);
   };
 
+  // Auto-close BidPopup when auction time expires
+  useEffect(() => {
+    if (showBidPopup && !canPlaceBid()) {
+      setShowBidPopup(false);
+    }
+  }, [showBidPopup, currentTime, auction, user, participants]);
+
   const submitBid = async (bidAmount: number) => {
     if (!user || !auction) return;
 
@@ -481,8 +519,12 @@ export default function AuctionDetailPage() {
   const canPlaceBid = () => {
     if (!auction || !user) return false;
 
-    // ตรวจสอบสถานะการประมูล
-    if (auction.status !== 3 && auction.status !== 4) return false; // สถานะ "กำลังประมูล" หรือ "ใกล้สิ้นสุด"
+    // ตรวจสอบช่วงเวลาการประมูล (ใช้ currentTime state ที่ update ทุกวินาที)
+    const startTime = new Date(auction.start_dt);
+    const endTime = new Date(auction.end_dt);
+
+    // เวลาปัจจุบันต้องมากกว่าเวลาเริ่มต้นและน้อยกว่าเวลาสิ้นสุด
+    if (currentTime < startTime || currentTime >= endTime) return false;
 
     // ตรวจสอบว่าผู้ใช้เป็น participant ในตารางประมูลหรือไม่
     const isUserParticipant = participants.some(
@@ -610,7 +652,7 @@ export default function AuctionDetailPage() {
                   <div>
                     <p className="text-sm text-gray-500">เวลาเริ่มต้น</p>
                     <p className="font-medium">
-                      {new Date(auction.start_dt).toLocaleString('th-TH')}
+                      {formatDateTime(auction.start_dt)}
                     </p>
                   </div>
                 </div>
@@ -619,7 +661,7 @@ export default function AuctionDetailPage() {
                   <div>
                     <p className="text-sm text-gray-500">เวลาสิ้นสุด</p>
                     <p className="font-medium">
-                      {new Date(auction.end_dt).toLocaleString('th-TH')}
+                      {formatDateTime(auction.end_dt)}
                     </p>
                   </div>
                 </div>
@@ -719,19 +761,9 @@ export default function AuctionDetailPage() {
                 เวลาคงเหลือ
               </h3>
               <div className="text-center">
-                {auction.status === 3 ? (
-                  <div className="text-2xl font-bold text-orange-600">
-                    {timeRemaining}
-                  </div>
-                ) : auction.status === 5 ? (
-                  <div className="text-2xl font-bold text-red-600">
-                    สิ้นสุดแล้ว
-                  </div>
-                ) : (
-                  <div className="text-2xl font-bold text-gray-600">
-                    ยังไม่เริ่ม
-                  </div>
-                )}
+                <div className="text-2xl font-bold text-orange-600">
+                  {timeRemaining}
+                </div>
               </div>
             </div>
 
