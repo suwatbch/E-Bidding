@@ -255,17 +255,15 @@ router.post('/:id/bids', async (req, res) => {
       const io = req.app.get('io');
       if (io) {
         const roomName = `auction-${auctionId}`;
-        const savedBid = result.data;
         io.to(roomName).emit('new-bid', {
           auctionId: auctionId,
           bidData: {
-            bid_id: savedBid.bid_id,
             auction_id: auctionId,
             user_id: parseInt(user_id),
             company_id: company_id ? parseInt(company_id) : 0,
             bid_amount: bidAmountNum,
-            bid_time: savedBid.bid_time,
-            status: savedBid.status,
+            bid_time: new Date().toISOString(),
+            status: 'accept',
           },
         });
       }

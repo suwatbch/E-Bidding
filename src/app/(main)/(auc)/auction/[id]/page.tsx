@@ -172,6 +172,7 @@ export default function AuctionDetailPage() {
           setBids((prevBids) => {
             const newBid = {
               ...data.bidData,
+              bid_id: Date.now(),
             };
             return [newBid, ...prevBids];
           });

@@ -213,13 +213,14 @@ export const subscribeToBidStatusUpdates = (
     bidId: number;
     status: string;
     bidData: {
-      bid_id: number;
       auction_id: number;
       user_id: number;
       company_id: number;
       bid_amount: number;
       bid_time: string;
       status: string;
+      user_name?: string;
+      company_name?: string;
     };
   }) => void
 ) => {
