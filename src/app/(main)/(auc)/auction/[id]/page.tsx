@@ -14,6 +14,7 @@ import {
 import EmptyState from '@/app/components/ui/EmptyState';
 import BidHistory from '@/app/components/history/BidHistory';
 import BidPopup from '@/app/components/ui/BidPopup';
+import CustomAlert from '@/app/components/ui/CustomAlert';
 import {
   AucCategoryIcon,
   AucStartTimeIcon,
@@ -55,6 +56,7 @@ import {
   calculateTimeRemaining,
   formatTimeRemaining,
   formatDateTime,
+  getPriceColor,
 } from '@/app/utils/globalFunction';
 import {
   connectSocket,
@@ -93,6 +95,16 @@ export default function AuctionDetailPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const [isSubmittingBid, setIsSubmittingBid] = useState(false);
+
+  // Custom Alert states
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+
+  // Track alert states เพื่อไม่ให้แสดง alert ซ้ำ
+  const [hasShownStartAlert, setHasShownStartAlert] = useState(false);
+  const [hasShownEndingSoonAlert, setHasShownEndingSoonAlert] = useState(false);
+  const [hasShownEndedAlert, setHasShownEndedAlert] = useState(false);
 
   // Socket states
   const [realTimeOnlineCount, setRealTimeOnlineCount] = useState(0);
@@ -292,6 +304,15 @@ export default function AuctionDetailPage() {
     // ถ้าสิ้นสุดแล้ว
     if (currentTime >= endTime) {
       setTimeRemaining('สิ้นสุดแล้ว');
+
+      // แจ้งเตือนสิ้นสุดการประมูล (ครั้งเดียว)
+      if (!hasShownEndedAlert && user && user.type !== 'admin') {
+        setAlertTitle('แจ้งเตือน');
+        setAlertMessage('สิ้นสุดการประมูล');
+        setShowAlert(true);
+        setHasShownEndedAlert(true);
+      }
+
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
       if (auction.status == 4) {
         updateAuctionStatusToEndingSoon(5);
@@ -305,12 +326,33 @@ export default function AuctionDetailPage() {
     const minutes = totalMinutes % 60;
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
+    // แจ้งเตือนเริ่มประมูล (ครั้งเดียวเมื่อเริ่มนับถอยหลัง)
+    if (!hasShownStartAlert && user && user.type !== 'admin') {
+      setAlertTitle('แจ้งเตือน');
+      setAlertMessage('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
+      setShowAlert(true);
+      setHasShownStartAlert(true);
+    }
+
+    // แจ้งเตือนใกล้สิ้นสุด (ครั้งเดียวเมื่อเหลือ 3 นาที)
+    if (
+      totalMinutes <= 2 &&
+      !hasShownEndingSoonAlert &&
+      user &&
+      user.type !== 'admin'
+    ) {
+      setAlertTitle('แจ้งเตือน');
+      setAlertMessage('การประมูลใกล้จะสิ้นสุดแล้ว');
+      setShowAlert(true);
+      setHasShownEndingSoonAlert(true);
+    }
+
     // การเข้าฟังก์ชันนี้ได้ แสดงว่าอยู่ในช่วงประมูล
     // หากสถานะ = 2 (รอการประมูล) ให้อัปเดทเป็น 3 (กำลังประมูล)
     if (auction.status === 2) {
       updateAuctionStatusToEndingSoon(3);
     }
-    // เช็คว่าเหลือเวลา 3 นาทีหรือไม่ และสถานะเป็น 3
+    // เช็คว่าเหลือเวลา 2 นาทีหรือไม่ และสถานะเป็น 3
     else if (totalMinutes <= 2 && auction.status === 3) {
       updateAuctionStatusToEndingSoon(4);
     }
@@ -430,13 +472,69 @@ export default function AuctionDetailPage() {
 
   // ใช้ formatPrice จาก globalFunction.ts แทน
 
-  const getLowestBid = () => {
-    if (bids.length === 0) return null;
-    const acceptedBids = bids.filter((bid) => bid.status === 'accept');
-    if (acceptedBids.length === 0) return null;
-    return acceptedBids.reduce((lowest, current) =>
+  // ฟังก์ชันหาข้อมูลการเสนอราคาที่ดีที่สุด (ใช้ logic เดียวกับ getTableData)
+  const getBestBidInfo = () => {
+    if (!auction || bids.length === 0) return null;
+
+    // หาข้อมูลการเสนอราคาล่าสุดของแต่ละคน (user_id) - เหมือน getTableData
+    const latestBidsByUser: { [userId: number]: AuctionBid } = {};
+
+    // กรองเฉพาะสถานะ accept และจัดกลุ่มตาม user_id
+    bids
+      .filter((bid) => bid.status === 'accept')
+      .forEach((bid) => {
+        const userId = bid.user_id;
+        if (
+          !latestBidsByUser[userId] ||
+          new Date(bid.bid_time) > new Date(latestBidsByUser[userId].bid_time)
+        ) {
+          latestBidsByUser[userId] = bid;
+        }
+      });
+
+    // หาราคาต่ำสุดจาก bid ล่าสุดของแต่ละคน
+    const latestAcceptedBids = Object.values(latestBidsByUser);
+
+    if (latestAcceptedBids.length === 0) {
+      // ถ้าไม่มี bid ที่ accept แต่มี bid อยู่ แสดงว่ามีการเสนอราคาแล้ว
+      const allBidAmounts = bids.map((bid) => bid.bid_amount);
+      const lowestAmount = Math.min(...allBidAmounts);
+      const savingAmount = auction.reserve_price - lowestAmount;
+      const savingPercentage = (
+        (savingAmount / auction.reserve_price) *
+        100
+      ).toFixed(2);
+
+      return {
+        amount: lowestAmount,
+        savingAmount,
+        savingPercentage,
+        isAccepted: false,
+        currency: getCurrencyName(auction.currency),
+        reservePrice: auction.reserve_price,
+      };
+    }
+
+    // หาราคาต่ำสุดจาก bid ล่าสุดของแต่ละคน
+    const lowestBid = latestAcceptedBids.reduce((lowest, current) =>
       current.bid_amount < lowest.bid_amount ? current : lowest
     );
+
+    const savingAmount = auction.reserve_price - lowestBid.bid_amount;
+    const savingPercentage = (
+      (savingAmount / auction.reserve_price) *
+      100
+    ).toFixed(2);
+
+    return {
+      amount: lowestBid.bid_amount,
+      savingAmount,
+      savingPercentage,
+      isAccepted: true,
+      currency: getCurrencyName(auction.currency),
+      reservePrice: auction.reserve_price,
+      bidData: lowestBid,
+    };
   };
 
   const getBidCount = () => {
@@ -477,12 +575,9 @@ export default function AuctionDetailPage() {
         }
       });
 
-    // หาราคาต่ำสุด
-    const allBidAmounts = Object.values(latestBidsByUser).map(
-      (bid) => bid.bid_amount
-    );
-    const lowestPrice =
-      allBidAmounts.length > 0 ? Math.min(...allBidAmounts) : null;
+    // ใช้ getBestBidInfo() เพื่อหาราคาที่ดีที่สุด
+    const bestBidInfo = getBestBidInfo();
+    const lowestPrice = bestBidInfo?.amount || null;
 
     // สร้างข้อมูลสำหรับแสดงในตาราง - แสดงทุกคนที่เข้าร่วมประมูล
     const tableData = participants.map((participant, index) => {
@@ -500,6 +595,12 @@ export default function AuctionDetailPage() {
         savingRate = ((saving / auction.reserve_price) * 100).toFixed(2);
         status = latestBid.status;
         bidTime = latestBid.bid_time;
+
+        // ถ้าราคาเท่ากับราคาประกัน ให้ saving = 0
+        if (price === auction.reserve_price) {
+          saving = 0;
+          savingRate = '0.00';
+        }
       }
 
       const isWinning =
@@ -844,158 +945,210 @@ export default function AuctionDetailPage() {
         </div>
 
         {/* Bidding Results Table */}
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden mt-6">
-          <Table className="table-fixed w-full">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[5%] min-w-[50px] max-w-[80px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    ...
-                  </div>
-                </TableHead>
-                <TableHead className="w-[5%] min-w-[200px] max-w-[400px]">
-                  <div className="flex items-center justify-center gap-2">
-                    ...
-                  </div>
-                </TableHead>
-                <TableHead className="w-[25%] min-w-[100px] max-w-[150px]">
-                  <div className="flex items-center gap-2">บริษัท</div>
-                </TableHead>
-                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    ราคา
-                  </div>
-                </TableHead>
-                <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    ประหยัด
-                  </div>
-                </TableHead>
-                <TableHead className="w-[15%] min-w-[80px] max-w-[100px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    อัตราประหยัด
-                  </div>
-                </TableHead>
-                <TableHead className="w-[10%] min-w-[80px] max-w-[120px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    สถานะ
-                  </div>
-                </TableHead>
-                <TableHead className="w-[15%] min-w-[90px] max-w-[130px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    เวลา
-                  </div>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {getTableData().length === 0 ? (
-                <EmptyState
-                  title="ไม่พบข้อมูล"
-                  description="ไม่พบข้อมูลบริษัทที่เข้าร่วมประมูล"
-                  colSpan={8}
-                />
-              ) : (
-                getTableData().map((row, index) => {
-                  const {
-                    participant,
-                    price,
-                    saving,
-                    savingRate,
-                    status,
-                    bidTime,
-                    isWinning,
-                  } = row;
+        <div className="mt-6">
+          {/* Best Bid Display */}
+          {(() => {
+            const bestBidInfo = getBestBidInfo();
+            if (!bestBidInfo) return null;
 
-                  return (
-                    <TableRow key={participant.id}>
-                      <TableCell className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {isWinning ? (
-                            <span className="text-yellow-500">🏆</span>
+            return (
+              <div className="rounded-lg p-2 mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="bg-yellow-100 p-2 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-yellow-600"
+                      fill="currentColor"
+                      viewBox="0 2 22 22"
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-md font-semibold text-gray-700">
+                      ราคาที่ดีที่สุดขณะนี้:
+                    </span>
+                    <span
+                      className={`text-md font-semibold ${getPriceColor(
+                        bestBidInfo.amount,
+                        auction.reserve_price
+                      )}`}
+                    >
+                      {formatPriceForDisplay(bestBidInfo.amount)}{' '}
+                      {bestBidInfo.currency}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-500">ประหยัด:</span>
+                    <span
+                      className={`text-md font-semibold ${getPriceColor(
+                        bestBidInfo.amount,
+                        auction.reserve_price
+                      )}`}
+                    >
+                      {formatPriceForDisplay(bestBidInfo.savingAmount)} (
+                      {bestBidInfo.savingPercentage}%)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+            <Table className="table-fixed w-full">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[5%] min-w-[50px] max-w-[80px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      ...
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[5%] min-w-[200px] max-w-[400px]">
+                    <div className="flex items-center justify-center gap-2">
+                      ...
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[25%] min-w-[100px] max-w-[150px]">
+                    <div className="flex items-center gap-2">บริษัท</div>
+                  </TableHead>
+                  <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      ราคา
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[15%] min-w-[120px] max-w-[180px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      ประหยัด
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[15%] min-w-[80px] max-w-[100px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      อัตราประหยัด
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[10%] min-w-[80px] max-w-[120px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      สถานะ
+                    </div>
+                  </TableHead>
+                  <TableHead className="w-[15%] min-w-[90px] max-w-[130px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      เวลา
+                    </div>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {getTableData().length === 0 ? (
+                  <EmptyState
+                    title="ไม่พบข้อมูล"
+                    description="ไม่พบข้อมูลบริษัทที่เข้าร่วมประมูล"
+                    colSpan={8}
+                  />
+                ) : (
+                  getTableData().map((row, index) => {
+                    const {
+                      participant,
+                      price,
+                      saving,
+                      savingRate,
+                      status,
+                      bidTime,
+                      isWinning,
+                    } = row;
+
+                    return (
+                      <TableRow key={participant.id}>
+                        <TableCell className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            {isWinning ? (
+                              <span className="text-yellow-500">🏆</span>
+                            ) : (
+                              ''
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          <div className="flex items-center justify-center">
+                            {isParticipantOnline(participant.user_id) ? (
+                              <div
+                                className="w-3 h-3 bg-green-500 rounded-full"
+                                title="ออนไลน์"
+                              ></div>
+                            ) : (
+                              <div
+                                className="w-3 h-3 bg-gray-300 rounded-full"
+                                title="ออฟไลน์"
+                              ></div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          <div className="flex items-center">
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {participant.company_name ||
+                                  `บริษัท ${participant.company_id}`}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {participant.user_name ||
+                                  `ผู้ใช้ ${participant.user_id}`}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          <span className="font-medium">
+                            {price ? formatPriceForDisplay(price) : ''}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          <span
+                            className={`${
+                              price && price < auction.reserve_price
+                                ? 'text-green-600'
+                                : ''
+                            }`}
+                          >
+                            {saving !== null
+                              ? formatPriceForDisplay(saving)
+                              : ''}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          <span
+                            className={`${
+                              price && price < auction.reserve_price
+                                ? 'text-green-600'
+                                : ''
+                            }`}
+                          >
+                            {savingRate !== null ? `${savingRate}%` : ''}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          {status === 'accept' ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {status || ''}
+                            </span>
+                          ) : status === 'reject' ? (
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              {status || ''}
+                            </span>
                           ) : (
                             ''
                           )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <div className="flex items-center justify-center">
-                          {isParticipantOnline(participant.user_id) ? (
-                            <div
-                              className="w-3 h-3 bg-green-500 rounded-full"
-                              title="ออนไลน์"
-                            ></div>
-                          ) : (
-                            <div
-                              className="w-3 h-3 bg-gray-300 rounded-full"
-                              title="ออฟไลน์"
-                            ></div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="font-medium text-gray-900">
-                              {participant.company_name ||
-                                `บริษัท ${participant.company_id}`}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {participant.user_name ||
-                                `ผู้ใช้ ${participant.user_id}`}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <span className="font-medium">
-                          {price ? formatPriceForDisplay(price) : ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <span
-                          className={`${
-                            price && price < auction.reserve_price
-                              ? 'text-green-600'
-                              : ''
-                          }`}
-                        >
-                          {saving ? formatPriceForDisplay(saving) : ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <span
-                          className={`${
-                            price && price < auction.reserve_price
-                              ? 'text-green-600'
-                              : ''
-                          }`}
-                        >
-                          {savingRate ? `${savingRate}%` : ''}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        {status === 'accept' ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {status || ''}
-                          </span>
-                        ) : status === 'reject' ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            {status || ''}
-                          </span>
-                        ) : (
-                          ''
-                        )}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center text-sm text-gray-600">
-                        {bidTime ? formatDateTime(bidTime) : ''}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center text-sm text-gray-600">
+                          {bidTime ? formatDateTime(bidTime) : ''}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
 
@@ -1023,6 +1176,14 @@ export default function AuctionDetailPage() {
           onClose={() => setShowHistoryPopup(false)}
         />
       )}
+
+      {/* Custom Alert */}
+      <CustomAlert
+        isOpen={showAlert}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={() => setShowAlert(false)}
+      />
     </Container>
   );
 }

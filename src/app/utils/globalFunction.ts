@@ -79,6 +79,29 @@ export const canUserBidFromArray = (
 };
 
 // =============================================================================
+// PRICE & COLOR UTILITIES
+// =============================================================================
+
+/**
+ * กำหนดสีตามราคาเปรียบเทียบกับราคาประกัน
+ * @param bidAmount - ราคาที่เสนอ
+ * @param reservePrice - ราคาประกัน
+ * @returns string - CSS class สำหรับสี
+ */
+export const getPriceColor = (
+  bidAmount: number,
+  reservePrice: number
+): string => {
+  if (bidAmount < reservePrice) {
+    return 'text-green-600'; // ราคาต่ำกว่าราคาประกัน (ประหยัด)
+  } else if (bidAmount === reservePrice) {
+    return 'text-gray-600'; // ราคาเท่าราคาประกัน
+  } else {
+    return 'text-red-600'; // ราคาสูงกว่าราคาประกัน (แพง)
+  }
+};
+
+// =============================================================================
 // DATE & TIME UTILITIES
 // =============================================================================
 
