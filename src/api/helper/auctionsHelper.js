@@ -918,6 +918,65 @@ const createAuctionBid = async (bidData) => {
   }
 };
 
+/**
+ * อัปเดทสถานะประมูล
+ */
+const updateAuctionStatus = async (auctionId, status) => {
+  try {
+    // ตรวจสอบว่าการประมูลมีอยู่
+    const auctionQuery =
+      'SELECT auction_id FROM auction WHERE auction_id = ? AND is_deleted = 0';
+    const auctionResult = await executeQuery(auctionQuery, [auctionId]);
+
+    if (!auctionResult.success || auctionResult.data.length === 0) {
+      return {
+        success: false,
+        error: 'ไม่พบการประมูลที่ระบุ',
+      };
+    }
+
+    // ตรวจสอบสถานะที่ถูกต้อง (1-6)
+    if (typeof status !== 'number' || status < 1 || status > 6) {
+      return {
+        success: false,
+        error: 'สถานะต้องเป็นตัวเลข 1-6',
+      };
+    }
+
+    // อัปเดทสถานะ
+    const updateQuery = `
+      UPDATE auction 
+      SET status = ?, updated_dt = now()
+      WHERE auction_id = ? AND is_deleted = 0
+    `;
+
+    const updateResult = await executeQuery(updateQuery, [status, auctionId]);
+
+    if (updateResult.success && updateResult.data.affectedRows > 0) {
+      return {
+        success: true,
+        data: {
+          auction_id: auctionId,
+          status: status,
+          updated_dt: getDateTimeUTCNow(),
+        },
+        message: 'อัปเดทสถานะประมูลสำเร็จ',
+      };
+    } else {
+      return {
+        success: false,
+        error: 'ไม่สามารถอัปเดทสถานะประมูลได้',
+      };
+    }
+  } catch (error) {
+    console.error('Error in updateAuctionStatus:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการอัปเดทสถานะ',
+    };
+  }
+};
+
 module.exports = {
   getAllAuctions,
   getAuctionById,
@@ -940,4 +999,5 @@ module.exports = {
   isUserAuctionParticipant,
   createAuctionBid,
   getAuctionBids,
+  updateAuctionStatus,
 };

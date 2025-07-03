@@ -852,4 +852,28 @@ export const auctionsService = {
       };
     }
   },
+
+  /**
+   * อัพเดทสถานะประมูล
+   */
+  updateAuctionStatus: async (
+    auctionId: number,
+    status: number
+  ): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        `/update-status/${auctionId}`,
+        { status }
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error updating auction status:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการอัพเดทสถานะประมูล',
+      };
+    }
+  },
 };

@@ -207,4 +207,34 @@ export const unsubscribeFromBidUpdates = () => {
   }
 };
 
+// =============================================================================
+// AUCTION STATUS FUNCTIONS
+// =============================================================================
+
+// ฟังก์ชันสำหรับรับข้อมูลการอัปเดทสถานะประมูล
+export const subscribeToAuctionStatusUpdates = (
+  callback: (data: {
+    auctionId: number;
+    status: number;
+    timestamp: string;
+  }) => void
+) => {
+  try {
+    socket.on('auctionStatusUpdate', (data) => {
+      callback(data);
+    });
+  } catch (error) {
+    console.error('❌ Error subscribing to auction status updates:', error);
+  }
+};
+
+// ฟังก์ชันสำหรับยกเลิกการรับข้อมูลการอัปเดทสถานะประมูล
+export const unsubscribeFromAuctionStatusUpdates = () => {
+  try {
+    socket.off('auctionStatusUpdate');
+  } catch (error) {
+    console.error('❌ Error unsubscribing from auction status updates:', error);
+  }
+};
+
 export default socket;

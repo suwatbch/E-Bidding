@@ -21,6 +21,7 @@ const {
   getAuctionItems,
   createAuctionBid,
   getAuctionBids,
+  updateAuctionStatus,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -962,6 +963,59 @@ router.get('/:id/items', async (req, res) => {
       res.status(200).json({
         success: true,
         data: result.data,
+        message: null,
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
+      error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/update-status/:id - อัพเดทสถานะประมูล
+router.post('/update-status/:id', async (req, res) => {
+  try {
+    const auctionId = parseInt(req.params.id);
+
+    if (isNaN(auctionId)) {
+      return res.status(200).json({
+        success: true,
+        message: 'รหัสประมูลไม่ถูกต้อง',
+      });
+    }
+
+    const { status } = req.body;
+
+    if (typeof status !== 'number' || status < 1 || status > 6) {
+      return res.status(200).json({
+        success: true,
+        message: 'สถานะต้องเป็นตัวเลข 1-6',
+      });
+    }
+
+    // ใช้ updateAuctionStatus function แทน
+    const result = await updateAuctionStatus(auctionId, status);
+
+    if (result.success) {
+      // Broadcast สถานะใหม่ผ่าน Socket.IO
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('auctionStatusUpdate', {
+          auctionId,
+          status,
+        });
+      }
+
+      res.status(200).json({
+        success: true,
         message: null,
       });
     } else {

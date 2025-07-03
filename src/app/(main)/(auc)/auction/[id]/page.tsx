@@ -26,6 +26,11 @@ import {
   StatusCancelledIcon,
   StatusPendingIcon,
   AucOpenIcon,
+  AucPendingIcon,
+  AucBiddingIcon,
+  AucEndingSoonIcon,
+  AucEndedIcon,
+  AucCancelledIcon,
 } from '@/app/components/ui/Icons';
 import {
   auctionsService,
@@ -61,6 +66,8 @@ import {
   unsubscribeFromAuctionJoined,
   subscribeToBidUpdates,
   unsubscribeFromBidUpdates,
+  subscribeToAuctionStatusUpdates,
+  unsubscribeFromAuctionStatusUpdates,
 } from '@/app/services/socketService';
 import { useAuth } from '@/app/contexts/AuthContext';
 
@@ -158,6 +165,17 @@ export default function AuctionDetailPage() {
         }
       });
 
+      // รับฟังการอัปเดทสถานะประมูล
+      const unsubscribeFromStatusUpdates = subscribeToAuctionStatusUpdates(
+        (data: { auctionId: number; status: number }) => {
+          if (data.auctionId === auctionId) {
+            setAuction((prev) =>
+              prev ? { ...prev, status: data.status } : null
+            );
+          }
+        }
+      );
+
       // หาข้อมูล company ของ user (ถ้ามี)
       const participantData = participants.find(
         (p) => p.user_id === user.user_id
@@ -178,6 +196,7 @@ export default function AuctionDetailPage() {
         unsubscribeFromAuctionUpdates();
         unsubscribeFromAuctionJoined();
         unsubscribeFromBidUpdates();
+        unsubscribeFromAuctionStatusUpdates();
         setIsSocketConnected(false);
       };
     }
@@ -273,6 +292,10 @@ export default function AuctionDetailPage() {
     // ถ้าสิ้นสุดแล้ว
     if (currentTime >= endTime) {
       setTimeRemaining('สิ้นสุดแล้ว');
+      // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
+      if (auction.status == 4) {
+        updateAuctionStatusToEndingSoon(5);
+      }
       return;
     }
 
@@ -282,11 +305,37 @@ export default function AuctionDetailPage() {
     const minutes = totalMinutes % 60;
     const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
 
+    // การเข้าฟังก์ชันนี้ได้ แสดงว่าอยู่ในช่วงประมูล
+    // หากสถานะ = 2 (รอการประมูล) ให้อัปเดทเป็น 3 (กำลังประมูล)
+    if (auction.status === 2) {
+      updateAuctionStatusToEndingSoon(3);
+    }
+    // เช็คว่าเหลือเวลา 3 นาทีหรือไม่ และสถานะเป็น 3
+    else if (totalMinutes <= 2 && auction.status === 3) {
+      updateAuctionStatusToEndingSoon(4);
+    }
+
     setTimeRemaining(
       `${minutes.toString().padStart(2, '0')}:${seconds
         .toString()
         .padStart(2, '0')}`
     );
+  };
+
+  // ฟังก์ชันอัปเดทสถานะประมูล
+  const updateAuctionStatusToEndingSoon = async (newStatus: number) => {
+    try {
+      const response = await auctionsService.updateAuctionStatus(
+        auctionId,
+        newStatus
+      );
+      if (response.success && response.message === null) {
+        // อัปเดท auction state local
+        setAuction((prev) => (prev ? { ...prev, status: newStatus } : null));
+      }
+    } catch (error) {
+      console.error('Error updating auction status:', error);
+    }
   };
 
   // ใช้ statusConfig แทน getStatusInfo function เดิม
@@ -358,21 +407,24 @@ export default function AuctionDetailPage() {
   };
 
   const getStatusIcon = (status: number) => {
+    const statusDisplay = getStatusDisplay(status);
+    const iconClass = statusDisplay.color; // ใช้สีจาก getStatusDisplay
+
     switch (status) {
       case 1:
-        return <StatusPendingIcon />;
+        return <AucPendingIcon className={iconClass} />;
       case 2:
-        return <AucOpenIcon />;
+        return <AucOpenIcon className={iconClass} />;
       case 3:
-        return <StatusBiddingIcon />;
+        return <AucBiddingIcon className={iconClass} />;
       case 4:
-        return <StatusEndingSoonIcon />;
+        return <AucEndingSoonIcon className={iconClass} />;
       case 5:
-        return <StatusEndedIcon />;
+        return <AucEndedIcon className={iconClass} />;
       case 6:
-        return <StatusCancelledIcon />;
+        return <AucCancelledIcon className={iconClass} />;
       default:
-        return <StatusPendingIcon />;
+        return <AucPendingIcon className={iconClass} />;
     }
   };
 
@@ -962,6 +1014,12 @@ export default function AuctionDetailPage() {
           auctionId={auctionId}
           reservePrice={auction.reserve_price}
           auction={auction}
+          user={user}
+          userCompanyId={
+            user
+              ? participants.find((p) => p.user_id === user.user_id)?.company_id
+              : undefined
+          }
           onClose={() => setShowHistoryPopup(false)}
         />
       )}

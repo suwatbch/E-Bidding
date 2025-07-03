@@ -18,6 +18,13 @@ interface BidHistoryProps {
     currency: number;
     name?: string;
   };
+  user?: {
+    user_id: number;
+    type?: string;
+    fullname?: string;
+    username?: string;
+  } | null;
+  userCompanyId?: number;
 }
 
 export default function BidHistory({
@@ -26,6 +33,8 @@ export default function BidHistory({
   auctionId,
   reservePrice,
   auction,
+  user,
+  userCompanyId,
 }: BidHistoryProps) {
   const [bidHistory, setBidHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +52,26 @@ export default function BidHistory({
       setIsLoading(true);
       try {
         const data = await getBidHistoryData(auctionId, reservePrice);
-        setBidHistory(data);
+
+        // กรองข้อมูลตามสิทธิ์ผู้ใช้
+        let filteredData = data;
+
+        if (user && user.type !== 'admin') {
+          // User ทั่วไป: เห็นเฉพาะการเสนอราคาของบริษัทที่ตัวเองสังกัด
+          if (userCompanyId) {
+            filteredData = data.filter(
+              (bid: any) => bid.companyId === userCompanyId
+            );
+          } else {
+            // Fallback: ถ้าไม่มี companyId ให้กรองตาม userId
+            filteredData = data.filter(
+              (bid: any) => bid.userId === user.user_id
+            );
+          }
+        }
+        // Admin: เห็นทั้งหมด (ไม่ต้องกรอง)
+
+        setBidHistory(filteredData);
       } catch (error) {
         console.error('Error loading bid history:', error);
         setBidHistory([]);
@@ -213,10 +241,14 @@ export default function BidHistory({
                     />
                   </svg>
                   <p className="text-lg text-gray-500 font-medium">
-                    ยังไม่มีประวัติการเสนอราคา
+                    {user && user.type !== 'admin'
+                      ? 'บริษัทของคุณยังไม่ได้เสนอราคา'
+                      : 'ยังไม่มีประวัติการเสนอราคา'}
                   </p>
                   <p className="text-sm text-gray-400 mt-1">
-                    เมื่อมีการเสนอราคาในการประมูลนี้ จะแสดงที่นี่
+                    {user && user.type !== 'admin'
+                      ? 'เมื่อบริษัทของคุณเสนอราคาในการประมูลนี้ จะแสดงประวัติที่นี่'
+                      : 'เมื่อมีการเสนอราคาในการประมูลนี้ จะแสดงที่นี่'}
                   </p>
                 </div>
               )}
@@ -230,9 +262,9 @@ export default function BidHistory({
             {bidHistory.length > 0 ? (
               <>
                 <div>
-                  ทั้งหมด{' '}
-                  <span className="font-medium">{bidHistory.length}</span>{' '}
-                  รายการ
+                  {user && user.type !== 'admin'
+                    ? `การเสนอราคาของบริษัท ${bidHistory.length} ครั้ง`
+                    : `ทั้งหมด ${bidHistory.length} รายการ`}
                   <span className="ml-2">
                     • ราคาประกัน:{' '}
                     <span className="font-medium text-blue-600">
@@ -251,7 +283,11 @@ export default function BidHistory({
               </>
             ) : (
               <>
-                <div>ไม่มีข้อมูลการเสนอราคา</div>
+                <div>
+                  {user && user.type !== 'admin'
+                    ? 'บริษัทของคุณยังไม่ได้เสนอราคา'
+                    : 'ไม่มีข้อมูลการเสนอราคา'}
+                </div>
                 <div>
                   ราคาประกัน:{' '}
                   <span className="font-medium text-blue-600">

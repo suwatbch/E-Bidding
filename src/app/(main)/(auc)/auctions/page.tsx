@@ -41,6 +41,11 @@ import {
   formatAuctionId,
 } from '@/app/utils/globalFunction';
 import Link from 'next/link';
+import {
+  connectSocket,
+  subscribeToAuctionStatusUpdates,
+  unsubscribeFromAuctionStatusUpdates,
+} from '@/app/services/socketService';
 
 interface AuctionItem {
   no: number;
@@ -232,6 +237,34 @@ export default function AuctionsPage() {
 
   useEffect(() => {
     loadAuctions();
+  }, []);
+
+  // Socket connection สำหรับรับ real-time status updates
+  useEffect(() => {
+    // เชื่อมต่อ Socket
+    connectSocket();
+
+    // รับฟังการอัปเดทสถานะประมูล
+    const unsubscribeFromStatusUpdates = subscribeToAuctionStatusUpdates(
+      (data: { auctionId: number; status: number; timestamp: string }) => {
+        // อัปเดทสถานะใน auctions array หาก auction อยู่ใน currentItems
+        setAuctions((prevAuctions) =>
+          prevAuctions.map((auction) =>
+            auction.auction_id === data.auctionId
+              ? { ...auction, status: data.status }
+              : auction
+          )
+        );
+        console.log(
+          `Auction ${data.auctionId} status updated to ${data.status} in auctions list`
+        );
+      }
+    );
+
+    // Cleanup function
+    return () => {
+      unsubscribeFromAuctionStatusUpdates();
+    };
   }, []);
 
   // Reset current page เมื่อมีการเปลี่ยน filter
