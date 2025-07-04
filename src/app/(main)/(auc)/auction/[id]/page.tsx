@@ -156,7 +156,7 @@ export default function AuctionDetailPage() {
           setBids((prevBids) => {
             const newBid = {
               ...data.bidData,
-              bid_id: Date.now(),
+              // ใช้ bid_id จาก server ไม่ต้องสร้างใหม่
             };
             return [newBid, ...prevBids];
           });
@@ -167,11 +167,14 @@ export default function AuctionDetailPage() {
       subscribeToBidStatusUpdates((data) => {
         if (data.auctionId === auctionId) {
           // อัปเดทสถานะ bid ที่ถูก reject
-          setBids((prevBids) =>
-            prevBids.map((bid) =>
-              bid.bid_id === data.bidId ? { ...bid, status: data.status } : bid
-            )
-          );
+          setBids((prevBids) => {
+            return prevBids.map((bid) => {
+              if (bid.bid_id === data.bidId) {
+                return { ...bid, status: data.status };
+              }
+              return bid;
+            });
+          });
         }
       });
 
@@ -470,17 +473,17 @@ export default function AuctionDetailPage() {
     const latestBidsByUser: { [userId: number]: AuctionBid } = {};
 
     // กรองเฉพาะสถานะ accept และจัดกลุ่มตาม user_id
-    bids
-      .filter((bid) => bid.status === 'accept')
-      .forEach((bid) => {
-        const userId = bid.user_id;
-        if (
-          !latestBidsByUser[userId] ||
-          new Date(bid.bid_time) > new Date(latestBidsByUser[userId].bid_time)
-        ) {
-          latestBidsByUser[userId] = bid;
-        }
-      });
+    const acceptedBids = bids.filter((bid) => bid.status === 'accept');
+
+    acceptedBids.forEach((bid) => {
+      const userId = bid.user_id;
+      if (
+        !latestBidsByUser[userId] ||
+        bid.bid_id > latestBidsByUser[userId].bid_id
+      ) {
+        latestBidsByUser[userId] = bid;
+      }
+    });
 
     // หาราคาต่ำสุดจาก bid ล่าสุดของแต่ละคน
     const latestAcceptedBids = Object.values(latestBidsByUser);
@@ -548,18 +551,28 @@ export default function AuctionDetailPage() {
     // หาข้อมูลการเสนอราคาล่าสุดที่ยัง accept อยู่ของแต่ละคน (user_id)
     const latestAcceptedBidsByUser: { [userId: number]: AuctionBid } = {};
 
-    // เรียงลำดับ bid ตามเวลาจากใหม่ไปเก่า แล้วหา bid ที่ accept ล่าสุดของแต่ละ user
-    const sortedBids = [...bids].sort(
-      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
-    );
+    // กรองเฉพาะ bid ที่ accept ก่อน
+    const acceptedBids = bids.filter((bid) => bid.status === 'accept');
 
-    sortedBids.forEach((bid) => {
+    // จากข้อมุล accepted bids หา bid ที่มี bid_id ล่าสุดของแต่ละ user
+    acceptedBids.forEach((bid) => {
       const userId = bid.user_id;
-      // ถ้ายังไม่มี bid ที่ accept สำหรับ user นี้ และ bid นี้มีสถานะ accept
-      if (!latestAcceptedBidsByUser[userId] && bid.status === 'accept') {
+      if (
+        !latestAcceptedBidsByUser[userId] ||
+        bid.bid_id > latestAcceptedBidsByUser[userId].bid_id
+      ) {
         latestAcceptedBidsByUser[userId] = bid;
       }
     });
+
+    // TEST: ตรวจสอบ logic สำหรับ User ID 12 เฉพาะครั้งแรก
+    if (Object.keys(latestAcceptedBidsByUser).length > 0) {
+      const user12Bids = bids.filter((b) => b.user_id === 12);
+      const user12AcceptedBids = user12Bids.filter(
+        (b) => b.status === 'accept'
+      );
+      const user12LatestAccepted = latestAcceptedBidsByUser[12];
+    }
 
     // ใช้ getBestBidInfo() เพื่อหาราคาที่ดีที่สุด
     const bestBidInfo = getBestBidInfo();

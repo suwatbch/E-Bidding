@@ -257,14 +257,7 @@ router.post('/:id/bids', async (req, res) => {
         const roomName = `auction-${auctionId}`;
         io.to(roomName).emit('new-bid', {
           auctionId: auctionId,
-          bidData: {
-            auction_id: auctionId,
-            user_id: parseInt(user_id),
-            company_id: company_id ? parseInt(company_id) : 0,
-            bid_amount: bidAmountNum,
-            bid_time: new Date().toISOString(),
-            status: 'accept',
-          },
+          bidData: result.data, // ใช้ข้อมูลจาก helper ที่มี bid_id ครบถ้วน
         });
       }
 
