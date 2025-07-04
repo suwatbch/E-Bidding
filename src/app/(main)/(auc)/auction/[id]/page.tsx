@@ -21,11 +21,6 @@ import {
   AucEndTimeIcon,
   AucOfferIcon,
   AucBalanceIcon,
-  StatusBiddingIcon,
-  StatusEndingSoonIcon,
-  StatusEndedIcon,
-  StatusCancelledIcon,
-  StatusPendingIcon,
   AucOpenIcon,
   AucPendingIcon,
   AucBiddingIcon,
@@ -44,17 +39,11 @@ import {
   auctionTypeService,
   type AuctionType,
 } from '@/app/services/auctionTypeService';
-import {
-  statusConfig,
-  getStatusById,
-  currencyConfig,
-} from '@/app/model/config';
+import { getStatusById, currencyConfig } from '@/app/model/config';
 import {
   decodeAuctionId,
   formatAuctionId,
   formatPriceForDisplay,
-  calculateTimeRemaining,
-  formatTimeRemaining,
   formatDateTime,
   getPriceColor,
 } from '@/app/utils/globalFunction';
@@ -102,11 +91,6 @@ export default function AuctionDetailPage() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
-
-  // Track alert states เพื่อไม่ให้แสดง alert ซ้ำ
-  const [hasShownStartAlert, setHasShownStartAlert] = useState(false);
-  const [hasShownEndingSoonAlert, setHasShownEndingSoonAlert] = useState(false);
-  const [hasShownEndedAlert, setHasShownEndedAlert] = useState(false);
 
   // Socket states
   const [realTimeOnlineCount, setRealTimeOnlineCount] = useState(0);
@@ -541,10 +525,6 @@ export default function AuctionDetailPage() {
       reservePrice: auction.reserve_price,
       bidData: lowestBid,
     };
-  };
-
-  const getBidCount = () => {
-    return bids.filter((bid) => bid.status === 'accept').length;
   };
 
   const getParticipantCount = () => {
