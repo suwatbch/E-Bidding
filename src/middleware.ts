@@ -7,8 +7,6 @@ const PROTECTED_ROUTES = [
   '/auctions',
   '/auction',
   '/auctionform',
-  '/my-auctions',
-  '/alerts',
   '/company',
   '/language',
   '/user',

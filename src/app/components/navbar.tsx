@@ -293,11 +293,6 @@ export default function Navbar() {
       icon: <NavAuctionIcon />,
     },
     {
-      name: t('my_auctions'),
-      href: '/my-auctions',
-      icon: <NavMyAuctionIcon />,
-    },
-    {
       name: t('notifications'),
       href: '/notifications',
       icon: <NavNotificationIcon />,
@@ -495,24 +490,6 @@ export default function Navbar() {
                   {t('auctions')}
                 </span>
               </Link>
-              <Link
-                href="/my-auctions"
-                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                  isActivePage('/my-auctions')
-                    ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <div className="transform group-hover:scale-110 transition duration-300">
-                  <NavMyAuctionIcon />
-                </div>
-                <span className="transform group-hover:scale-105">
-                  {t('my_auctions')}
-                </span>
-              </Link>
-
-              {/* Language Switcher */}
-              <LanguageSwitcher variant="navbar" />
 
               {/* Data Management Dropdown */}
               <Dropdown
@@ -652,25 +629,8 @@ export default function Navbar() {
                 </div>
               </Dropdown>
 
-              {/* <Link 
-                href="/alerts" 
-                className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                  isActivePage('/alerts') 
-                    ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5' 
-                    : 'text-white hover:bg-white/10'
-                } relative`}
-                onClick={() => setNotificationCount(0)}
-              >
-                <div className="transform group-hover:scale-110 transition duration-300">
-                  <NavNotificationIcon />
-                </div>
-                <span className="transform group-hover:scale-105">{t('notifications')}</span>
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center shadow-md animate-pulse">
-                    {notificationCount}
-                  </span>
-                )}
-              </Link> */}
+              {/* Language Switcher */}
+              <LanguageSwitcher variant="navbar" />
 
               {/* Profile Dropdown */}
               <Dropdown
@@ -743,17 +703,6 @@ export default function Navbar() {
               >
                 <div className="py-1">
                   <button
-                    onClick={handleEditProfile}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                      <NavEditIcon className="text-gray-700 group-hover:text-blue-600" />
-                    </div>
-                    <span className="transform group-hover:scale-105 text-gray-700 group-hover:text-blue-600">
-                      {t('edit_profile')}
-                    </span>
-                  </button>
-                  <button
                     onClick={handleLogout}
                     className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-red-50/50"
                   >
@@ -799,38 +748,6 @@ export default function Navbar() {
                 >
                   <NavHomeIcon className="w-5 h-5" />
                   {t('auctions')}
-                </Link>
-                <Link
-                  href="/my-auctions"
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${
-                    isActivePage('/my-auctions')
-                      ? 'text-blue-700 bg-blue-50/80 font-medium'
-                      : 'text-gray-700 hover:bg-blue-50/50'
-                  }`}
-                  onClick={() => setIsOpen(false)}
-                >
-                  <NavMyAuctionIcon className="w-5 h-5" />
-                  {t('my_auctions')}
-                </Link>
-                <Link
-                  href="/alerts"
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg ${
-                    isActivePage('/alerts')
-                      ? 'text-blue-700 bg-blue-50/80 font-medium'
-                      : 'text-gray-700 hover:bg-blue-50/50'
-                  } relative`}
-                  onClick={() => {
-                    setIsOpen(false);
-                    setNotificationCount(0);
-                  }}
-                >
-                  <NavNotificationIcon className="w-5 h-5" />
-                  {t('notifications')}
-                  {notificationCount > 0 && (
-                    <span className="absolute top-2 left-7 bg-red-500 text-white text-xs font-medium rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                      {notificationCount}
-                    </span>
-                  )}
                 </Link>
 
                 {/* Data Management Mobile */}
@@ -899,16 +816,6 @@ export default function Navbar() {
                 </div>
 
                 <div className="border-t border-gray-100 pt-2">
-                  <button
-                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                      isActivePage('/profile')
-                        ? 'text-blue-700 bg-blue-50/80 font-medium'
-                        : 'text-gray-700 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <NavEditIcon className="w-5 h-5 mr-2" />
-                    {t('edit_profile')}
-                  </button>
                   <button
                     onClick={() => {
                       setIsOpen(false);
