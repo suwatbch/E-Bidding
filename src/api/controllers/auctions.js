@@ -100,7 +100,7 @@ router.get('/', async (req, res) => {
     const { active_only, search, start_date, end_date } = req.query;
 
     // ดึงข้อมูล user จาก middleware (ถ้ามี)
-    const userId = req.user?.id || null;
+    const userId = req.user?.user_id || null;
     const userType = req.user?.type || null;
 
     let result;
