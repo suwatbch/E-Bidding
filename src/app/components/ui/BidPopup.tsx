@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   handlePriceFocus,
   handlePriceBlur,
@@ -22,6 +22,16 @@ const BidPopup: React.FC<BidPopupProps> = ({
   const [bidAmountDisplay, setBidAmountDisplay] = useState<string>('0.00');
   const [bidAmountFocused, setBidAmountFocused] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+
+  // Reset ค่าเป็น 0.00 ทุกครั้งที่เปิด popup
+  useEffect(() => {
+    if (isOpen) {
+      setBidAmount('0.00');
+      setBidAmountDisplay('0.00');
+      setBidAmountFocused(false);
+      setError('');
+    }
+  }, [isOpen]);
 
   const handleSubmit = () => {
     const amount = parseFloat(bidAmountDisplay.replace(/,/g, ''));
