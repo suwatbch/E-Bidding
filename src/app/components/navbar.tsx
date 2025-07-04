@@ -491,143 +491,145 @@ export default function Navbar() {
                 </span>
               </Link>
 
-              {/* Data Management Dropdown */}
-              <Dropdown
-                isOpen={isDataOpen}
-                onClose={() => setIsDataOpen(false)}
-                variant="navbar"
-                trigger={
-                  <button
-                    onClick={() => setIsDataOpen(!isDataOpen)}
-                    className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
-                      isActivePage('/company') || isActivePage('/user')
-                        ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
-                        : 'text-white hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300">
-                      <NavDataIcon />
-                    </div>
-                    <span className="transform group-hover:scale-105">
-                      {t('data_management')}
-                    </span>
-                    <div className="transform group-hover:scale-110 transition duration-300">
-                      <NavArrowDownIcon
-                        className={`transition-transform duration-200 ${
-                          isDataOpen ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </div>
-                  </button>
-                }
-              >
-                <div className="py-1">
-                  <button
-                    onClick={() => {
-                      setIsDataOpen(false);
-                      router.push('/company');
-                    }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                      <NavCompanyIcon
-                        className={
+              {/* Data Management Dropdown - เฉพาะ Admin เท่านั้น */}
+              {user && user.type === 'admin' && (
+                <Dropdown
+                  isOpen={isDataOpen}
+                  onClose={() => setIsDataOpen(false)}
+                  variant="navbar"
+                  trigger={
+                    <button
+                      onClick={() => setIsDataOpen(!isDataOpen)}
+                      className={`group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 ${
+                        isActivePage('/company') || isActivePage('/user')
+                          ? 'text-blue-800 bg-white font-medium shadow-md transform -translate-y-0.5'
+                          : 'text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <div className="transform group-hover:scale-110 transition duration-300">
+                        <NavDataIcon />
+                      </div>
+                      <span className="transform group-hover:scale-105">
+                        {t('data_management')}
+                      </span>
+                      <div className="transform group-hover:scale-110 transition duration-300">
+                        <NavArrowDownIcon
+                          className={`transition-transform duration-200 ${
+                            isDataOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </div>
+                    </button>
+                  }
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/company');
+                      }}
+                      className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
+                    >
+                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                        <NavCompanyIcon
+                          className={
+                            isActivePage('/company')
+                              ? 'text-blue-700'
+                              : 'text-gray-700 group-hover:text-blue-600'
+                          }
+                        />
+                      </div>
+                      <span
+                        className={`transform group-hover:scale-105 ${
                           isActivePage('/company')
-                            ? 'text-blue-700'
+                            ? 'text-blue-700 font-medium'
                             : 'text-gray-700 group-hover:text-blue-600'
-                        }
-                      />
-                    </div>
-                    <span
-                      className={`transform group-hover:scale-105 ${
-                        isActivePage('/company')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}
+                        }`}
+                      >
+                        {t('company_info')}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/user');
+                      }}
+                      className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                     >
-                      {t('company_info')}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsDataOpen(false);
-                      router.push('/user');
-                    }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                      <NavUserIcon
-                        className={
+                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                        <NavUserIcon
+                          className={
+                            isActivePage('/user')
+                              ? 'text-blue-700'
+                              : 'text-gray-700 group-hover:text-blue-600'
+                          }
+                        />
+                      </div>
+                      <span
+                        className={`transform group-hover:scale-105 ${
                           isActivePage('/user')
-                            ? 'text-blue-700'
+                            ? 'text-blue-700 font-medium'
                             : 'text-gray-700 group-hover:text-blue-600'
-                        }
-                      />
-                    </div>
-                    <span
-                      className={`transform group-hover:scale-105 ${
-                        isActivePage('/user')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}
+                        }`}
+                      >
+                        {t('user_info')}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/auctionType');
+                      }}
+                      className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                     >
-                      {t('user_info')}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsDataOpen(false);
-                      router.push('/auctionType');
-                    }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                      <NavAuctionTypeIcon
-                        className={
+                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                        <NavAuctionTypeIcon
+                          className={
+                            isActivePage('/auctionType')
+                              ? 'text-blue-700'
+                              : 'text-gray-700 group-hover:text-blue-600'
+                          }
+                        />
+                      </div>
+                      <span
+                        className={`transform group-hover:scale-105 ${
                           isActivePage('/auctionType')
-                            ? 'text-blue-700'
+                            ? 'text-blue-700 font-medium'
                             : 'text-gray-700 group-hover:text-blue-600'
-                        }
-                      />
-                    </div>
-                    <span
-                      className={`transform group-hover:scale-105 ${
-                        isActivePage('/auctionType')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}
+                        }`}
+                      >
+                        {t('auction_type_info')}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsDataOpen(false);
+                        router.push('/language');
+                      }}
+                      className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
                     >
-                      {t('auction_type_info')}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsDataOpen(false);
-                      router.push('/language');
-                    }}
-                    className="group flex items-center w-full px-4 py-2.5 text-sm transition-all duration-300 hover:bg-blue-50/50"
-                  >
-                    <div className="transform group-hover:scale-110 transition duration-300 mr-2">
-                      <NavLanguageManageIcon
-                        className={
+                      <div className="transform group-hover:scale-110 transition duration-300 mr-2">
+                        <NavLanguageManageIcon
+                          className={
+                            isActivePage('/language')
+                              ? 'text-blue-700'
+                              : 'text-gray-700 group-hover:text-blue-600'
+                          }
+                        />
+                      </div>
+                      <span
+                        className={`transform group-hover:scale-105 ${
                           isActivePage('/language')
-                            ? 'text-blue-700'
+                            ? 'text-blue-700 font-medium'
                             : 'text-gray-700 group-hover:text-blue-600'
-                        }
-                      />
-                    </div>
-                    <span
-                      className={`transform group-hover:scale-105 ${
-                        isActivePage('/language')
-                          ? 'text-blue-700 font-medium'
-                          : 'text-gray-700 group-hover:text-blue-600'
-                      }`}
-                    >
-                      {t('language_info')}
-                    </span>
-                  </button>
-                </div>
-              </Dropdown>
+                        }`}
+                      >
+                        {t('language_info')}
+                      </span>
+                    </button>
+                  </div>
+                </Dropdown>
+              )}
 
               {/* Language Switcher */}
               <LanguageSwitcher variant="navbar" />
@@ -750,65 +752,67 @@ export default function Navbar() {
                   {t('auctions')}
                 </Link>
 
-                {/* Data Management Mobile */}
-                <div className="border-t border-gray-100 pt-2">
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/company');
-                    }}
-                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                      isActivePage('/company')
-                        ? 'text-blue-700 bg-blue-50/80 font-medium'
-                        : 'text-gray-700 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <NavCompanyIcon className="w-5 h-5 mr-2" />
-                    {t('company_info')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/user');
-                    }}
-                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                      isActivePage('/user')
-                        ? 'text-blue-700 bg-blue-50/80 font-medium'
-                        : 'text-gray-700 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <NavUserIcon className="w-5 h-5 mr-2" />
-                    {t('user_info')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/auctionType');
-                    }}
-                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                      isActivePage('/auctionType')
-                        ? 'text-blue-700 bg-blue-50/80 font-medium'
-                        : 'text-gray-700 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <NavAuctionTypeIcon className="w-5 h-5 mr-2" />
-                    {t('auction_type_info')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      router.push('/language');
-                    }}
-                    className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
-                      isActivePage('/language')
-                        ? 'text-blue-700 bg-blue-50/80 font-medium'
-                        : 'text-gray-700 hover:bg-blue-50/50'
-                    }`}
-                  >
-                    <NavLanguageManageIcon className="w-5 h-5 mr-2" />
-                    {t('language_info')}
-                  </button>
-                </div>
+                {/* Data Management Mobile - เฉพาะ Admin เท่านั้น */}
+                {user && user.type === 'admin' && (
+                  <div className="border-t border-gray-100 pt-2">
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/company');
+                      }}
+                      className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                        isActivePage('/company')
+                          ? 'text-blue-700 bg-blue-50/80 font-medium'
+                          : 'text-gray-700 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <NavCompanyIcon className="w-5 h-5 mr-2" />
+                      {t('company_info')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/user');
+                      }}
+                      className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                        isActivePage('/user')
+                          ? 'text-blue-700 bg-blue-50/80 font-medium'
+                          : 'text-gray-700 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <NavUserIcon className="w-5 h-5 mr-2" />
+                      {t('user_info')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/auctionType');
+                      }}
+                      className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                        isActivePage('/auctionType')
+                          ? 'text-blue-700 bg-blue-50/80 font-medium'
+                          : 'text-gray-700 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <NavAuctionTypeIcon className="w-5 h-5 mr-2" />
+                      {t('auction_type_info')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push('/language');
+                      }}
+                      className={`flex items-center w-full px-4 py-2.5 rounded-lg ${
+                        isActivePage('/language')
+                          ? 'text-blue-700 bg-blue-50/80 font-medium'
+                          : 'text-gray-700 hover:bg-blue-50/50'
+                      }`}
+                    >
+                      <NavLanguageManageIcon className="w-5 h-5 mr-2" />
+                      {t('language_info')}
+                    </button>
+                  </div>
+                )}
 
                 {/* Language Selector Mobile */}
                 <div className="border-t border-gray-100 pt-2">
