@@ -92,18 +92,6 @@ export const getPriceColor = (
   bidAmount: number,
   reservePrice: number
 ): string => {
-  // Debug logging
-  console.log('🔍 getPriceColor Debug:', {
-    bidAmount,
-    reservePrice,
-    bidAmountType: typeof bidAmount,
-    reservePriceType: typeof reservePrice,
-    comparison: bidAmount < reservePrice,
-    bidAmountNumber: Number(bidAmount),
-    reservePriceNumber: Number(reservePrice),
-    comparisonAfterConversion: Number(bidAmount) < Number(reservePrice),
-  });
-
   // Convert to numbers to ensure proper comparison
   const bidAmountNum = Number(bidAmount);
   const reservePriceNum = Number(reservePrice);

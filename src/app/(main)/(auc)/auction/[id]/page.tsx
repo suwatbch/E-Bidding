@@ -319,15 +319,6 @@ export default function AuctionDetailPage() {
     // ถ้าสิ้นสุดแล้ว
     if (currentTime >= endTime) {
       setTimeRemaining('สิ้นสุดแล้ว');
-
-      // แจ้งเตือนสิ้นสุดการประมูล (ครั้งเดียว)
-      // if (!hasShownEndedAlert && user && user.type !== 'admin') {
-      //   setAlertTitle('แจ้งเตือน');
-      //   setAlertMessage('สิ้นสุดการประมูล');
-      //   setShowAlert(true);
-      //   setHasShownEndedAlert(true);
-      // }
-
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
       if (auction.status == 4) {
         updateAuctionStatusToEndingSoon(5);

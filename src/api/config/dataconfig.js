@@ -14,15 +14,6 @@ const dbConfig = {
   reconnect: true,
 };
 
-// Log database configuration (without password)
-console.log('🔗 Database Configuration:', {
-  host: dbConfig.host,
-  port: dbConfig.port,
-  user: dbConfig.user,
-  database: dbConfig.database,
-  environment: process.env.NODE_ENV || 'development',
-});
-
 // Create connection pool for better performance
 const pool = mysql.createPool({
   ...dbConfig,

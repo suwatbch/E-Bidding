@@ -255,9 +255,6 @@ export default function AuctionsPage() {
               : auction
           )
         );
-        console.log(
-          `Auction ${data.auctionId} status updated to ${data.status} in auctions list`
-        );
       }
     );
 
