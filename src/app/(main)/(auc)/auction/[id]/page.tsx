@@ -100,6 +100,8 @@ export default function AuctionDetailPage() {
   // Alert states for auction notifications
   const [hasShownStartAlert, setHasShownStartAlert] = useState(false);
   const [hasShownEndingSoonAlert, setHasShownEndingSoonAlert] = useState(false);
+  const [isCountingDown, setIsCountingDown] = useState(false);
+  const [initialStatus, setInitialStatus] = useState<number | null>(null);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -109,9 +111,35 @@ export default function AuctionDetailPage() {
     // รีเซ็ต alert states เมื่อเปลี่ยนประมูล
     setHasShownStartAlert(false);
     setHasShownEndingSoonAlert(false);
+    setIsCountingDown(false);
+    setInitialStatus(null);
 
     initializeData();
   }, [auctionId]);
+
+  // useEffect สำหรับ alert เมื่อสถานะเปลี่ยน
+  useEffect(() => {
+    if (!auction || !user || user.type === 'admin' || initialStatus === null)
+      return;
+
+    // แจ้งเตือนเริ่มประมูล (เฉพาะคนที่เข้ามาตอนสถานะ 2)
+    if (auction.status === 3 && !hasShownStartAlert && initialStatus === 2) {
+      alert('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
+      setHasShownStartAlert(true);
+    }
+
+    // แจ้งเตือนใกล้สิ้นสุด (เฉพาะคนที่เข้ามาก่อนสถานะ 4)
+    if (auction.status === 4 && !hasShownEndingSoonAlert && initialStatus < 4) {
+      alert('การประมูลใกล้จะสิ้นสุดแล้ว');
+      setHasShownEndingSoonAlert(true);
+    }
+  }, [
+    auction?.status,
+    user,
+    initialStatus,
+    hasShownStartAlert,
+    hasShownEndingSoonAlert,
+  ]);
 
   useEffect(() => {
     if (auction) {
@@ -277,6 +305,11 @@ export default function AuctionDetailPage() {
 
       setAuction(auctionData);
 
+      // บันทึกสถานะเริ่มต้นเพื่อใช้ในการเช็ค alert
+      if (initialStatus === null) {
+        setInitialStatus(auctionData.status);
+      }
+
       // ตั้งค่าข้อมูลอื่นๆ
       if (participantsResponse.success) {
         setParticipants(participantsResponse.data);
@@ -308,12 +341,14 @@ export default function AuctionDetailPage() {
     // ถ้ายังไม่เริ่ม
     if (currentTime < startTime) {
       setTimeRemaining(`ยังไม่เริ่ม`);
+      setIsCountingDown(false);
       return;
     }
 
     // ถ้าสิ้นสุดแล้ว
     if (currentTime >= endTime) {
       setTimeRemaining('สิ้นสุดแล้ว');
+      setIsCountingDown(false);
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
       if (auction.status == 4) {
         updateAuctionStatusToEndingSoon(5);
@@ -323,6 +358,7 @@ export default function AuctionDetailPage() {
 
     // ถ้ากำลังประมูล - แสดงเวลาที่เหลือ
     const diffMs = endTime.getTime() - currentTime.getTime();
+    setIsCountingDown(true); // ตั้งค่าว่ากำลังนับถอยหลัง
 
     // คำนวณหน่วยเวลาต่างๆ
     const totalSeconds = Math.floor(diffMs / 1000);
@@ -333,23 +369,6 @@ export default function AuctionDetailPage() {
     const seconds = totalSeconds % 60;
     const minutes = totalMinutes % 60;
     const hours = totalHours % 24;
-
-    // แจ้งเตือนเริ่มประมูล (ครั้งเดียวเมื่อเริ่มนับถอยหลัง)
-    if (!hasShownStartAlert && user && user.type !== 'admin') {
-      alert('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
-      setHasShownStartAlert(true);
-    }
-
-    // แจ้งเตือนใกล้สิ้นสุด (ครั้งเดียวเมื่อเหลือ 2 นาที)
-    if (
-      totalMinutes <= 2 &&
-      !hasShownEndingSoonAlert &&
-      user &&
-      user.type !== 'admin'
-    ) {
-      alert('การประมูลใกล้จะสิ้นสุดแล้ว');
-      setHasShownEndingSoonAlert(true);
-    }
 
     // การเข้าฟังก์ชันนี้ได้ แสดงว่าอยู่ในช่วงประมูล
     // หากสถานะ = 2 (รอการประมูล) ให้อัปเดทเป็น 3 (กำลังประมูล)
