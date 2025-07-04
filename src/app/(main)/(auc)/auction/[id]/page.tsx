@@ -565,21 +565,21 @@ export default function AuctionDetailPage() {
   const getTableData = () => {
     if (!auction) return [];
 
-    // หาข้อมูลการเสนอราคาล่าสุดของแต่ละคน (user_id)
-    const latestBidsByUser: { [userId: number]: AuctionBid } = {};
+    // หาข้อมูลการเสนอราคาล่าสุดที่ยัง accept อยู่ของแต่ละคน (user_id)
+    const latestAcceptedBidsByUser: { [userId: number]: AuctionBid } = {};
 
-    // กรองเฉพาะสถานะ accept และจัดกลุ่มตาม user_id
-    bids
-      .filter((bid) => bid.status === 'accept')
-      .forEach((bid) => {
-        const userId = bid.user_id;
-        if (
-          !latestBidsByUser[userId] ||
-          new Date(bid.bid_time) > new Date(latestBidsByUser[userId].bid_time)
-        ) {
-          latestBidsByUser[userId] = bid;
-        }
-      });
+    // เรียงลำดับ bid ตามเวลาจากใหม่ไปเก่า แล้วหา bid ที่ accept ล่าสุดของแต่ละ user
+    const sortedBids = [...bids].sort(
+      (a, b) => new Date(b.bid_time).getTime() - new Date(a.bid_time).getTime()
+    );
+
+    sortedBids.forEach((bid) => {
+      const userId = bid.user_id;
+      // ถ้ายังไม่มี bid ที่ accept สำหรับ user นี้ และ bid นี้มีสถานะ accept
+      if (!latestAcceptedBidsByUser[userId] && bid.status === 'accept') {
+        latestAcceptedBidsByUser[userId] = bid;
+      }
+    });
 
     // ใช้ getBestBidInfo() เพื่อหาราคาที่ดีที่สุด
     const bestBidInfo = getBestBidInfo();
@@ -587,7 +587,7 @@ export default function AuctionDetailPage() {
 
     // สร้างข้อมูลสำหรับแสดงในตาราง - แสดงทุกคนที่เข้าร่วมประมูล
     const tableData = participants.map((participant, index) => {
-      const latestBid = latestBidsByUser[participant.user_id];
+      const latestAcceptedBid = latestAcceptedBidsByUser[participant.user_id];
 
       let price = null;
       let saving = null;
@@ -595,12 +595,12 @@ export default function AuctionDetailPage() {
       let status = null;
       let bidTime = null;
 
-      if (latestBid && auction) {
-        price = latestBid.bid_amount;
+      if (latestAcceptedBid && auction) {
+        price = latestAcceptedBid.bid_amount;
         saving = auction.reserve_price - price;
         savingRate = ((saving / auction.reserve_price) * 100).toFixed(2);
-        status = latestBid.status;
-        bidTime = latestBid.bid_time;
+        status = latestAcceptedBid.status;
+        bidTime = latestAcceptedBid.bid_time;
 
         // ถ้าราคาเท่ากับราคาประกัน ให้ saving = 0
         if (price === auction.reserve_price) {
@@ -610,7 +610,7 @@ export default function AuctionDetailPage() {
       }
 
       const isWinning =
-        latestBid &&
+        latestAcceptedBid &&
         lowestPrice !== null &&
         Number(price) === Number(lowestPrice);
 
