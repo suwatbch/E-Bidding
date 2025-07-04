@@ -18,6 +18,8 @@ interface BidHistoryProps {
   auction?: {
     currency: number;
     name?: string;
+    start_dt?: string;
+    end_dt?: string;
   };
   user?: {
     user_id: number;
@@ -39,6 +41,16 @@ export default function BidHistory({
 }: BidHistoryProps) {
   const [bidHistory, setBidHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Real-time clock update for reject button availability
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // ฟังก์ชันสำหรับดึงชื่อ currency
   const getCurrencyName = (currencyId: number): string => {
@@ -46,8 +58,25 @@ export default function BidHistory({
     return currency ? currency.code : 'THB';
   };
 
+  // ฟังก์ชันตรวจสอบว่าสามารถ reject bid ได้หรือไม่ (ใช้ logic เดียวกับ canPlaceBid)
+  const canRejectBid = (): boolean => {
+    if (!auction || !user) return false;
+
+    // ตรวจสอบช่วงเวลาการประมูล (ใช้ currentTime state ที่ update ทุกวินาที)
+    const startTime = new Date(auction.start_dt || '');
+    const endTime = new Date(auction.end_dt || '');
+
+    // เวลาปัจจุบันต้องมากกว่าเวลาเริ่มต้นและน้อยกว่าเวลาสิ้นสุด
+    if (currentTime < startTime || currentTime >= endTime) return false;
+
+    return true;
+  };
+
   // ฟังก์ชันสำหรับตรวจสอบว่าควรแสดงปุ่ม Reject หรือไม่
   const shouldShowRejectButton = (bid: any, index: number): boolean => {
+    // ตรวจสอบเวลาก่อน - ถ้าไม่ได้อยู่ในช่วงประมูลแล้วไม่แสดงปุ่ม
+    if (!canRejectBid()) return false;
+
     // แสดงเฉพาะถ้าเป็น user ปัจจุบัน
     if (!user || bid.userId !== user.user_id) return false;
 

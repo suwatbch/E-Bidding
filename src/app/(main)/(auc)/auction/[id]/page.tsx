@@ -1118,26 +1118,14 @@ export default function AuctionDetailPage() {
                           </span>
                         </TableCell>
                         <TableCell className="py-3 px-4 text-center">
-                          <span
-                            className={`${
-                              price && price < auction.reserve_price
-                                ? 'text-green-600'
-                                : ''
-                            }`}
-                          >
+                          <span>
                             {saving !== null
                               ? formatPriceForDisplay(saving)
                               : ''}
                           </span>
                         </TableCell>
                         <TableCell className="py-3 px-4 text-center">
-                          <span
-                            className={`${
-                              price && price < auction.reserve_price
-                                ? 'text-green-600'
-                                : ''
-                            }`}
-                          >
+                          <span>
                             {savingRate !== null ? `${savingRate}%` : ''}
                           </span>
                         </TableCell>
@@ -1181,7 +1169,12 @@ export default function AuctionDetailPage() {
           isOpen={showHistoryPopup}
           auctionId={auctionId}
           reservePrice={auction.reserve_price}
-          auction={auction}
+          auction={{
+            currency: auction.currency,
+            name: auction.name,
+            start_dt: auction.start_dt,
+            end_dt: auction.end_dt,
+          }}
           user={user}
           userCompanyId={
             user
