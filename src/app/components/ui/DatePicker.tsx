@@ -350,6 +350,7 @@ interface CustomInputProps {
   label: string;
   placeholder?: string;
   icon?: React.ReactNode;
+  disabled?: boolean;
 }
 
 interface ThaiDatePickerProps {
@@ -424,7 +425,7 @@ const formatDateOnlyForData = (date: Date) => {
 };
 
 const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(
-  ({ value, onClick, label, placeholder, icon }, ref) => {
+  ({ value, onClick, label, placeholder, icon, disabled = false }, ref) => {
     const defaultIcon = (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -451,11 +452,19 @@ const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(
           </div>
         </label>
         <div
-          className="relative w-full h-[42px] rounded-lg border border-gray-300 pl-3 pr-3 text-sm cursor-pointer bg-white flex items-center justify-between hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20"
-          onClick={onClick}
-          style={{ minHeight: '42px', maxHeight: '42px' }}
+          className={`relative w-full rounded-lg border pl-3 pr-3 py-2 text-sm flex items-center justify-between ${
+            disabled
+              ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
+              : 'border-gray-300 bg-white cursor-pointer hover:border-blue-500 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-20'
+          }`}
+          onClick={disabled ? undefined : onClick}
+          title={disabled ? 'ไม่สามารถเปลี่ยนแปลงวันที่ได้' : undefined}
         >
-          <span className="flex-1 text-left text-gray-900">
+          <span
+            className={`flex-1 text-left ${
+              disabled ? 'text-gray-400' : 'text-gray-900'
+            }`}
+          >
             {value || placeholder}
           </span>
           <div className="flex items-center justify-center">
@@ -465,7 +474,9 @@ const CustomDateInput = forwardRef<HTMLDivElement, CustomInputProps>(
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-4 h-4 text-gray-400"
+              className={`w-4 h-4 ${
+                disabled ? 'text-gray-300' : 'text-gray-400'
+              }`}
             >
               <path
                 strokeLinecap="round"
@@ -552,6 +563,7 @@ const ThaiDatePicker: React.FC<ThaiDatePickerProps> = ({
             label={label}
             placeholder={placeholder}
             icon={showTimeSelect ? timeIcon : undefined}
+            disabled={disabled}
           />
         }
         wrapperClassName="w-full"

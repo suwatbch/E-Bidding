@@ -24,6 +24,7 @@ import {
 } from '@/app/components/ui/Icons';
 import Container from '@/app/components/ui/Container';
 import { statusConfig, getStatusById } from '@/app/model/config';
+import { useAuth } from '@/app/contexts/AuthContext';
 import {
   auctionsService,
   Auction,
@@ -67,13 +68,56 @@ export default function AuctionsPage() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return today;
+    if (typeof window !== 'undefined') {
+      // ตรวจสอบ user type จาก localStorage หรือ context
+      const authData = localStorage.getItem('auth_user');
+      const userType = authData ? JSON.parse(authData)?.type : null;
+
+      if (userType === 'user') {
+        // User: ใช้วันที่ปัจจุบัน
+        const todayStart = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        todayStart.setHours(0, 0, 0, 0);
+        return todayStart;
+      }
+    }
+
+    // Admin: ใช้วันที่ 1 ของเดือนปัจจุบัน
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    firstDayOfMonth.setHours(0, 0, 0, 0);
+    return firstDayOfMonth;
   });
+
   const [endDate, setEndDate] = useState(() => {
     const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    return today;
+    if (typeof window !== 'undefined') {
+      // ตรวจสอบ user type จาก localStorage หรือ context
+      const authData = localStorage.getItem('auth_user');
+      const userType = authData ? JSON.parse(authData)?.type : null;
+
+      if (userType === 'user') {
+        // User: ใช้วันที่ปัจจุบัน
+        const todayEnd = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        todayEnd.setHours(23, 59, 59, 999);
+        return todayEnd;
+      }
+    }
+
+    // Admin: ใช้วันสุดท้ายของเดือนปัจจุบัน
+    const lastDayOfMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      0
+    );
+    lastDayOfMonth.setHours(23, 59, 59, 999);
+    return lastDayOfMonth;
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [isFiltering, setIsFiltering] = useState(false);
@@ -82,6 +126,8 @@ export default function AuctionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 10);
   const [mounted, setMounted] = useState(false);
+
+  const { user } = useAuth();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('th-TH', {
@@ -142,9 +188,9 @@ export default function AuctionsPage() {
     const matchesStatus =
       selectedStatus === 'all' || item.status === parseInt(selectedStatus);
 
-    // กรองตามช่วงวันที่ - ใช้เฉพาะเมื่อกดค้นหา
+    // กรองตามช่วงวันที่ - ใช้เฉพาะเมื่อกดค้นหาและเป็น Admin (User ข้อมูลกรองที่ backend แล้ว)
     let matchesDate = true;
-    if (isFiltering) {
+    if (isFiltering && user?.type === 'admin') {
       const itemDate = safeParseDate(item.startTime);
       const filterStartDate = safeParseDate(startDate.toISOString());
       const filterEndDate = safeParseDate(endDate.toISOString());
@@ -156,16 +202,42 @@ export default function AuctionsPage() {
 
   const handleSearch = () => {
     setIsFiltering(true);
+    loadAuctions(); // โหลดข้อมูลใหม่จากฐานข้อมูล (Admin ตามวันที่ที่เลือก, User ตามวันที่ปัจจุบัน)
   };
 
   const handleReset = () => {
     setSelectedCategory('ทั้งหมด');
     setSelectedStatus('all');
-    const today = new Date();
-    setStartDate(today);
-    setEndDate(today);
+
+    // เฉพาะ Admin เท่านั้นที่รีเซ็ตวันที่
+    if (user?.type === 'admin') {
+      const today = new Date();
+      // รีเซ็ตเป็นวันที่ 1 ของเดือนปัจจุบัน
+      const firstDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+      setStartDate(firstDayOfMonth);
+
+      // รีเซ็ตเป็นวันสุดท้ายของเดือนปัจจุบัน
+      const lastDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      );
+      lastDayOfMonth.setHours(23, 59, 59, 999);
+      setEndDate(lastDayOfMonth);
+    }
+
     setSearchQuery('');
     setIsFiltering(false);
+
+    // โหลดข้อมูลใหม่ (Admin ตามวันที่ที่รีเซ็ต, User ตามวันที่ปัจจุบัน)
+    setTimeout(() => {
+      loadAuctions();
+    }, 100); // ใช้ setTimeout เล็กน้อยเพื่อให้ state update เสร็จก่อน
   };
 
   // Pagination handlers
@@ -178,9 +250,39 @@ export default function AuctionsPage() {
   // โหลดข้อมูลจากฐานข้อมูล
   const loadAuctions = async () => {
     try {
+      let startDateStr, endDateStr;
+
+      if (user?.type === 'admin') {
+        // Admin ใช้วันที่ที่เลือก
+        startDateStr = startDate.toISOString().slice(0, 19).replace('T', ' ');
+        endDateStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
+      } else {
+        // User ใช้วันที่ปัจจุบัน (00:00:00 - 23:59:59)
+        const today = new Date();
+        const todayStart = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          0,
+          0,
+          0
+        );
+        const todayEnd = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+
+        startDateStr = todayStart.toISOString().slice(0, 19).replace('T', ' ');
+        endDateStr = todayEnd.toISOString().slice(0, 19).replace('T', ' ');
+      }
+
       const [auctionsResult, typesResult, participantsResult] =
         await Promise.all([
-          auctionsService.getAllAuctions(),
+          auctionsService.getAllAuctions(startDateStr, endDateStr),
           auctionsService.getAuctionTypes(),
           auctionsService.getAuctionParticipants(),
         ]);
@@ -238,6 +340,57 @@ export default function AuctionsPage() {
   useEffect(() => {
     loadAuctions();
   }, []);
+
+  // อัปเดตวันที่เมื่อ user type เปลี่ยน
+  useEffect(() => {
+    if (user?.type === 'user') {
+      // User: ตั้งค่าเป็นวันที่ปัจจุบัน
+      const today = new Date();
+      const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+      todayStart.setHours(0, 0, 0, 0);
+      setStartDate(todayStart);
+
+      const todayEnd = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+      todayEnd.setHours(23, 59, 59, 999);
+      setEndDate(todayEnd);
+    } else if (user?.type === 'admin') {
+      // Admin: ตั้งค่าเป็นช่วงเดือน (เฉพาะถ้ายังไม่ได้ตั้งค่า)
+      const today = new Date();
+      const firstDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+
+      const lastDayOfMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      );
+      lastDayOfMonth.setHours(23, 59, 59, 999);
+
+      // ตั้งค่าเฉพาะเมื่อ startDate ยังเป็นวันที่ปัจจุบัน (แปลว่าเพิ่งเปลี่ยนจาก user มาเป็น admin)
+      const currentStart = new Date(startDate);
+      const todayStart = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+      if (currentStart.getTime() === todayStart.getTime()) {
+        setStartDate(firstDayOfMonth);
+        setEndDate(lastDayOfMonth);
+      }
+    }
+  }, [user?.type]);
 
   // Socket connection สำหรับรับ real-time status updates
   useEffect(() => {
@@ -445,9 +598,15 @@ export default function AuctionsPage() {
             <div className="relative w-full">
               <ThaiDatePicker
                 selected={startDate}
-                onChange={(date) => date && setStartDate(date)}
+                onChange={(date) => {
+                  // เฉพาะ Admin เท่านั้นที่เปลี่ยนวันที่ได้
+                  if (user?.type === 'admin' && date) {
+                    setStartDate(date);
+                  }
+                }}
                 label="วันที่เริ่มต้น"
                 placeholder="เลือกวันที่เริ่มต้น"
+                disabled={user?.type !== 'admin'}
               />
             </div>
 
@@ -455,9 +614,15 @@ export default function AuctionsPage() {
             <div className="relative">
               <ThaiDatePicker
                 selected={endDate}
-                onChange={(date) => date && setEndDate(date)}
+                onChange={(date) => {
+                  // เฉพาะ Admin เท่านั้นที่เปลี่ยนวันที่ได้
+                  if (user?.type === 'admin' && date) {
+                    setEndDate(date);
+                  }
+                }}
                 label="วันที่สิ้นสุด"
                 placeholder="เลือกวันที่สิ้นสุด"
+                disabled={user?.type !== 'admin'}
               />
             </div>
           </div>
@@ -513,30 +678,32 @@ export default function AuctionsPage() {
           </div>
         </div>
 
-        <div className="flex justify-between items-center m-4">
-          <div className="flex"></div>
-          <Link
-            href={createSecureUrl('/auctionform?id=', 0)}
-            prefetch={false}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4"
+        {user?.type === 'admin' && (
+          <div className="flex justify-between items-center m-4">
+            <div className="flex"></div>
+            <Link
+              href={createSecureUrl('/auctionform?id=', 0)}
+              prefetch={false}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
-            เพิ่มตลาด
-          </Link>
-        </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+              เพิ่มตลาด
+            </Link>
+          </div>
+        )}
 
         {/* Table Info Section */}
         <Pagination
@@ -674,24 +841,27 @@ export default function AuctionsPage() {
                     สถานะ
                   </div>
                 </TableHead>
-                <TableHead className="w-[10%] min-w-[90px] max-w-[130px] text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                      />
-                    </svg>
-                    จัดการ
-                  </div>
-                </TableHead>
+                {/* คอลัมน์จัดการ - แสดงเฉพาะ Admin */}
+                {user?.type === 'admin' && (
+                  <TableHead className="w-[10%] min-w-[90px] max-w-[130px] text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                        />
+                      </svg>
+                      จัดการ
+                    </div>
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -699,7 +869,7 @@ export default function AuctionsPage() {
                 <EmptyState
                   title="ไม่พบข้อมูล"
                   description="ไม่พบข้อมูลที่ตรงกับการค้นหา"
-                  colSpan={8}
+                  colSpan={user?.type === 'admin' ? 8 : 7}
                 />
               ) : (
                 currentItems.map((item, index) => {
@@ -794,46 +964,18 @@ export default function AuctionsPage() {
                           })()}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Link
-                            href={createSecureUrl(
-                              '/auctionform?id=',
-                              (item as any).auction_id || 0
-                            )}
-                            prefetch={false}
-                            className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="แก้ไข"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-4 h-4"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-                              />
-                            </svg>
-                          </Link>
-                          {/* แสดงปุ่มลบเฉพาะสถานะ 1, 2, และ 6 เท่านั้น */}
-                          {[1, 2, 6].includes(item.status) && (
-                            <button
-                              onClick={() => {
-                                if (
-                                  confirm(
-                                    `คุณต้องการลบตลาด "${item.title}" หรือไม่?`
-                                  )
-                                ) {
-                                  handleDelete((item as any).auction_id);
-                                }
-                              }}
-                              className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
-                              title="ลบ"
+                      {/* คอลัมน์จัดการ - แสดงเฉพาะ Admin */}
+                      {user?.type === 'admin' && (
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <Link
+                              href={createSecureUrl(
+                                '/auctionform?id=',
+                                (item as any).auction_id || 0
+                              )}
+                              prefetch={false}
+                              className="inline-flex items-center justify-center w-8 h-8 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors"
+                              title="แก้ไข"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -846,13 +988,44 @@ export default function AuctionsPage() {
                                 <path
                                   strokeLinecap="round"
                                   strokeLinejoin="round"
-                                  d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                  d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
                                 />
                               </svg>
-                            </button>
-                          )}
-                        </div>
-                      </TableCell>
+                            </Link>
+                            {/* แสดงปุ่มลบเฉพาะสถานะ 1, 2, และ 6 เท่านั้น */}
+                            {[1, 2, 6].includes(item.status) && (
+                              <button
+                                onClick={() => {
+                                  if (
+                                    confirm(
+                                      `คุณต้องการลบตลาด "${item.title}" หรือไม่?`
+                                    )
+                                  ) {
+                                    handleDelete((item as any).auction_id);
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                                title="ลบ"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.5}
+                                  stroke="currentColor"
+                                  className="w-4 h-4"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })

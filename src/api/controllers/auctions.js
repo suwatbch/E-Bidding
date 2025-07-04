@@ -97,7 +97,11 @@ router.get('/participants', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // ตรวจสอบ query parameters
-    const { active_only, search } = req.query;
+    const { active_only, search, start_date, end_date } = req.query;
+
+    // ดึงข้อมูล user จาก middleware (ถ้ามี)
+    const userId = req.user?.id || null;
+    const userType = req.user?.type || null;
 
     let result;
 
@@ -107,8 +111,8 @@ router.get('/', async (req, res) => {
       // ดึงเฉพาะประมูลที่เปิดใช้งาน
       result = await getActiveAuctions();
     } else {
-      // ดึงประมูลทั้งหมด
-      result = await getAllAuctions();
+      // ดึงประมูลทั้งหมด (รองรับการกรองตามวันที่และ user role)
+      result = await getAllAuctions(start_date, end_date, userId, userType);
     }
 
     if (result.success) {

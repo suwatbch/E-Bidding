@@ -375,12 +375,20 @@ const handleBidsApiError = (
 // Auctions Service
 export const auctionsService = {
   /**
-   * ดึงข้อมูลประมูลทั้งหมด
+   * ดึงข้อมูลประมูลทั้งหมด (รองรับการกรองตามวันที่)
    */
-  getAllAuctions: async (): Promise<AuctionsResponse> => {
+  getAllAuctions: async (
+    startDate?: string,
+    endDate?: string
+  ): Promise<AuctionsResponse> => {
     try {
+      const params: any = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+
       const response: AxiosResponse<AuctionsResponse> = await auctionsApi.get(
-        '/'
+        '/',
+        { params }
       );
       return response.data;
     } catch (error: any) {

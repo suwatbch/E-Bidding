@@ -4,28 +4,57 @@ const {
   getDateTimeUTCNow,
 } = require('../globalFunction');
 
-// ดึงข้อมูลประมูลทั้งหมด
-async function getAllAuctions() {
+// ดึงข้อมูลประมูลทั้งหมด (รองรับการกรองตามวันที่และ user role)
+async function getAllAuctions(
+  startDate = null,
+  endDate = null,
+  userId = null,
+  userType = null
+) {
+  let whereConditions = ['a.is_deleted = 0'];
+  let queryParams = [];
+  let joinClause = '';
+
+  // เพิ่มเงื่อนไขวันที่ถ้ามี
+  if (startDate) {
+    whereConditions.push('a.start_dt >= ?');
+    queryParams.push(startDate);
+  }
+
+  if (endDate) {
+    whereConditions.push('a.start_dt <= ?');
+    queryParams.push(endDate);
+  }
+
+  // ถ้าเป็น user ธรรมดา ให้แสดงเฉพาะตลาดที่เข้าร่วม
+  if (userType === 'user' && userId) {
+    joinClause =
+      'INNER JOIN auction_participant ap ON a.auction_id = ap.auction_id';
+    whereConditions.push('ap.user_id = ?');
+    queryParams.push(userId);
+  }
+
   const query = `
     SELECT 
-      auction_id,
-      name,
-      auction_type_id,
-      start_dt,
-      end_dt,
-      reserve_price,
-      currency,
-      status,
-      is_deleted,
-      remark,
-      created_dt,
-      updated_dt
-    FROM auction 
-    WHERE is_deleted = 0
-    ORDER BY auction_id DESC
+      a.auction_id,
+      a.name,
+      a.auction_type_id,
+      a.start_dt,
+      a.end_dt,
+      a.reserve_price,
+      a.currency,
+      a.status,
+      a.is_deleted,
+      a.remark,
+      a.created_dt,
+      a.updated_dt
+    FROM auction a
+    ${joinClause}
+    WHERE ${whereConditions.join(' AND ')}
+    ORDER BY a.auction_id DESC
   `;
 
-  return await executeQuery(query);
+  return await executeQuery(query, queryParams);
 }
 
 // ดึงข้อมูลประมูลตาม ID
