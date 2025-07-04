@@ -161,7 +161,7 @@ async function deleteCompany(companyId) {
       WHERE company_id = ?
     `;
 
-    return await executeQuery(query, companyId);
+    return await executeQuery(query, [companyId]);
   } catch (error) {
     return {
       success: false,

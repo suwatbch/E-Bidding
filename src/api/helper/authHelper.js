@@ -87,7 +87,7 @@ async function resetLoginCount(username) {
     WHERE username = ?
   `;
 
-  return await executeQuery(query, username);
+  return await executeQuery(query, [username]);
 }
 
 // เข้าสู่ระบบ

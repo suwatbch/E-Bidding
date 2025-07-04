@@ -354,6 +354,23 @@ async function deleteUser(userId) {
       };
     }
 
+    // เช็คก่อนว่าผู้ใช้งานมีการใช้งานในระบบหรือไม่
+    const checkUsageResult = await checkUserInUse(userId);
+
+    if (!checkUsageResult.success) {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการตรวจสอบการใช้งาน',
+      };
+    }
+
+    if (checkUsageResult.isInUse) {
+      return {
+        success: false,
+        error: `ไม่สามารถลบผู้ใช้งานได้ เนื่องจาก${checkUsageResult.reason}`,
+      };
+    }
+
     // Soft delete - เปลี่ยน status เป็น 0
     const query = `
       UPDATE users 
@@ -361,7 +378,7 @@ async function deleteUser(userId) {
       WHERE user_id = ?
     `;
 
-    return await executeQuery(query, userId);
+    return await executeQuery(query, [userId]);
   } catch (error) {
     console.error('Error in deleteUser:', error);
     return {
@@ -651,6 +668,27 @@ async function updateUserWithCompanies(userId, userData, companies) {
       params.push(userData.image || null);
     }
     if (userData.status !== undefined) {
+      // ถ้ามีการปิดใช้งานผู้ใช้ (status = 0) ให้ตรวจสอบการใช้งานก่อน
+      if (userData.status === 0 || userData.status === false) {
+        const checkUsageResult = await checkUserInUse(userId);
+
+        if (!checkUsageResult.success) {
+          await connection.rollback();
+          return {
+            success: false,
+            error: 'เกิดข้อผิดพลาดในการตรวจสอบการใช้งาน',
+          };
+        }
+
+        if (checkUsageResult.isInUse) {
+          await connection.rollback();
+          return {
+            success: false,
+            error: `ไม่สามารถปิดใช้งานผู้ใช้งานได้ เนื่องจาก${checkUsageResult.reason}`,
+          };
+        }
+      }
+
       updateFields.push('status = ?');
       params.push(userData.status ? 1 : 0);
     }
@@ -784,6 +822,50 @@ async function updateUserWithCompanies(userId, userData, companies) {
   }
 }
 
+// ตรวจสอบว่าผู้ใช้งานมีการใช้งานในระบบหรือไม่
+async function checkUserInUse(userId) {
+  try {
+    // เช็คในตาราง auction_participant
+    const participantQuery = `SELECT COUNT(*) as count FROM auction_participant WHERE user_id = ?`;
+    const participantResult = await executeQuery(participantQuery, [userId]);
+
+    if (participantResult.success && participantResult.data[0].count > 0) {
+      return {
+        success: true,
+        isInUse: true,
+        reason: 'มีประวัติการเข้าร่วมประมูล',
+        count: participantResult.data[0].count,
+      };
+    }
+
+    // เช็คในตาราง auction_bid
+    const bidQuery = `SELECT COUNT(*) as count FROM auction_bid WHERE user_id = ?`;
+    const bidResult = await executeQuery(bidQuery, [userId]);
+
+    if (bidResult.success && bidResult.data[0].count > 0) {
+      return {
+        success: true,
+        isInUse: true,
+        reason: 'มีประวัติการเสนอราคา',
+        count: bidResult.data[0].count,
+      };
+    }
+
+    return {
+      success: true,
+      isInUse: false,
+      reason: null,
+      count: 0,
+    };
+  } catch (error) {
+    console.error('Error in checkUserInUse:', error);
+    return {
+      success: false,
+      error: 'เกิดข้อผิดพลาดในการตรวจสอบการใช้งาน',
+    };
+  }
+}
+
 module.exports = {
   getAllUsers,
   getUserById,
@@ -797,4 +879,5 @@ module.exports = {
   updateUserLanguage,
   createUserWithCompanies,
   updateUserWithCompanies,
+  checkUserInUse,
 };
