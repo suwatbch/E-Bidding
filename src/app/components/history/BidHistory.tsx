@@ -276,7 +276,7 @@ export default function BidHistory({
                                   : 'text-red-600'
                               }`}
                             >
-                              {bid.priceDifference > 0 ? '-' : '+'}
+                              {bid.priceDifference > 0 ? '' : '-'}
                               {formatPriceForDisplay(
                                 Math.abs(bid.priceDifference)
                               )}{' '}

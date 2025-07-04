@@ -92,9 +92,25 @@ export const getPriceColor = (
   bidAmount: number,
   reservePrice: number
 ): string => {
-  if (bidAmount < reservePrice) {
+  // Debug logging
+  console.log('🔍 getPriceColor Debug:', {
+    bidAmount,
+    reservePrice,
+    bidAmountType: typeof bidAmount,
+    reservePriceType: typeof reservePrice,
+    comparison: bidAmount < reservePrice,
+    bidAmountNumber: Number(bidAmount),
+    reservePriceNumber: Number(reservePrice),
+    comparisonAfterConversion: Number(bidAmount) < Number(reservePrice),
+  });
+
+  // Convert to numbers to ensure proper comparison
+  const bidAmountNum = Number(bidAmount);
+  const reservePriceNum = Number(reservePrice);
+
+  if (bidAmountNum < reservePriceNum) {
     return 'text-green-600'; // ราคาต่ำกว่าราคาประกัน (ประหยัด)
-  } else if (bidAmount === reservePrice) {
+  } else if (bidAmountNum === reservePriceNum) {
     return 'text-gray-600'; // ราคาเท่าราคาประกัน
   } else {
     return 'text-red-600'; // ราคาสูงกว่าราคาประกัน (แพง)
