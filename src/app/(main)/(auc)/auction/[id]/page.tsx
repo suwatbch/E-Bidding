@@ -97,10 +97,18 @@ export default function AuctionDetailPage() {
   const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
 
+  // Alert states for auction notifications
+  const [hasShownStartAlert, setHasShownStartAlert] = useState(false);
+  const [hasShownEndingSoonAlert, setHasShownEndingSoonAlert] = useState(false);
+
   useEffect(() => {
     const initializeData = async () => {
       await Promise.all([loadAuctionTypes(), loadAuctionData()]);
     };
+
+    // รีเซ็ต alert states เมื่อเปลี่ยนประมูล
+    setHasShownStartAlert(false);
+    setHasShownEndingSoonAlert(false);
 
     initializeData();
   }, [auctionId]);
@@ -315,30 +323,33 @@ export default function AuctionDetailPage() {
 
     // ถ้ากำลังประมูล - แสดงเวลาที่เหลือ
     const diffMs = endTime.getTime() - currentTime.getTime();
-    const totalMinutes = Math.floor(diffMs / (1000 * 60));
+
+    // คำนวณหน่วยเวลาต่างๆ
+    const totalSeconds = Math.floor(diffMs / 1000);
+    const totalMinutes = Math.floor(totalSeconds / 60);
+    const totalHours = Math.floor(totalMinutes / 60);
+    const totalDays = Math.floor(totalHours / 24);
+
+    const seconds = totalSeconds % 60;
     const minutes = totalMinutes % 60;
-    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+    const hours = totalHours % 24;
 
     // แจ้งเตือนเริ่มประมูล (ครั้งเดียวเมื่อเริ่มนับถอยหลัง)
-    // if (!hasShownStartAlert && user && user.type !== 'admin') {
-    //   setAlertTitle('แจ้งเตือน');
-    //   setAlertMessage('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
-    //   setShowAlert(true);
-    //   setHasShownStartAlert(true);
-    // }
+    if (!hasShownStartAlert && user && user.type !== 'admin') {
+      alert('การประมูลได้เริ่มต้นแล้ว สามารถเสนอราคาได้เลย');
+      setHasShownStartAlert(true);
+    }
 
-    // แจ้งเตือนใกล้สิ้นสุด (ครั้งเดียวเมื่อเหลือ 3 นาที)
-    // if (
-    //   totalMinutes <= 2 &&
-    //   !hasShownEndingSoonAlert &&
-    //   user &&
-    //   user.type !== 'admin'
-    // ) {
-    //   setAlertTitle('แจ้งเตือน');
-    //   setAlertMessage('การประมูลใกล้จะสิ้นสุดแล้ว');
-    //   setShowAlert(true);
-    //   setHasShownEndingSoonAlert(true);
-    // }
+    // แจ้งเตือนใกล้สิ้นสุด (ครั้งเดียวเมื่อเหลือ 2 นาที)
+    if (
+      totalMinutes <= 2 &&
+      !hasShownEndingSoonAlert &&
+      user &&
+      user.type !== 'admin'
+    ) {
+      alert('การประมูลใกล้จะสิ้นสุดแล้ว');
+      setHasShownEndingSoonAlert(true);
+    }
 
     // การเข้าฟังก์ชันนี้ได้ แสดงว่าอยู่ในช่วงประมูล
     // หากสถานะ = 2 (รอการประมูล) ให้อัปเดทเป็น 3 (กำลังประมูล)
@@ -350,11 +361,32 @@ export default function AuctionDetailPage() {
       updateAuctionStatusToEndingSoon(4);
     }
 
-    setTimeRemaining(
-      `${minutes.toString().padStart(2, '0')}:${seconds
+    // จัดรูปแบบการแสดงเวลา
+    let timeDisplay = '';
+
+    if (totalDays > 30) {
+      // มากกว่า 30 วัน - แสดงแค่วัน
+      timeDisplay = `${totalDays} วัน`;
+    } else if (totalDays > 0) {
+      // 1-30 วัน - แสดงวัน + ชั่วโมง:นาที:วินาที
+      timeDisplay = `${totalDays} วัน ${hours
         .toString()
-        .padStart(2, '0')}`
-    );
+        .padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds
+        .toString()
+        .padStart(2, '0')}`;
+    } else if (totalHours > 0) {
+      // มีชั่วโมง - แสดง ชั่วโมง:นาที:วินาที
+      timeDisplay = `${hours.toString().padStart(2, '0')}:${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    } else {
+      // น้อยกว่าชั่วโมง - แสดง นาที:วินาที
+      timeDisplay = `${minutes.toString().padStart(2, '0')}:${seconds
+        .toString()
+        .padStart(2, '0')}`;
+    }
+
+    setTimeRemaining(timeDisplay);
   };
 
   // ฟังก์ชันอัปเดทสถานะประมูล
