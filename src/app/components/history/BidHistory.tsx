@@ -399,29 +399,43 @@ export default function BidHistory({
                       {formatPriceForDisplay(reservePrice)}{' '}
                       {getCurrencyName(auction?.currency || 1)}{' '}
                     </span>
-                    • ราคาต่ำสุด:{' '}
+                    • ราคาล่าสุด:{' '}
                     <span
                       className={`font-medium ${(() => {
                         const acceptedBids = bidHistory.filter(
                           (b) => b.status === 'accept'
                         );
-                        return acceptedBids.length > 0
-                          ? getPriceColor(
-                              Math.min(...acceptedBids.map((b) => b.bidAmount)),
-                              reservePrice
-                            )
-                          : 'text-gray-500';
+                        if (acceptedBids.length === 0) return 'text-gray-500';
+
+                        // หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
+                        const latestAcceptedBid = acceptedBids.sort(
+                          (a, b) =>
+                            new Date(b.bidTime).getTime() -
+                            new Date(a.bidTime).getTime()
+                        )[0];
+
+                        return getPriceColor(
+                          latestAcceptedBid.bidAmount,
+                          reservePrice
+                        );
                       })()}`}
                     >
                       {(() => {
                         const acceptedBids = bidHistory.filter(
                           (b) => b.status === 'accept'
                         );
-                        return acceptedBids.length > 0
-                          ? formatPriceForDisplay(
-                              Math.min(...acceptedBids.map((b) => b.bidAmount))
-                            )
-                          : 'ยังไม่มี';
+                        if (acceptedBids.length === 0) return 'ยังไม่มี';
+
+                        // หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
+                        const latestAcceptedBid = acceptedBids.sort(
+                          (a, b) =>
+                            new Date(b.bidTime).getTime() -
+                            new Date(a.bidTime).getTime()
+                        )[0];
+
+                        return formatPriceForDisplay(
+                          latestAcceptedBid.bidAmount
+                        );
                       })()}{' '}
                       {bidHistory.filter((b) => b.status === 'accept').length >
                         0 && getCurrencyName(auction?.currency || 1)}
