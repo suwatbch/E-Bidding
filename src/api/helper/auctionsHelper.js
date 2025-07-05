@@ -216,7 +216,14 @@ async function deleteAuction(auctionId) {
     `;
     await connection.execute(deleteParticipantsQuery, [auctionId]);
 
-    // 3. ลบตลาดประมูล (auction)
+    // 3. ลบรายการประมูล (auction_bid)
+    const deleteBidsQuery = `
+      DELETE FROM auction_bid 
+      WHERE auction_id = ?
+    `;
+    await connection.execute(deleteBidsQuery, [auctionId]);
+
+    // 4. ลบตลาดประมูล (auction)
     const deleteAuctionQuery = `
       DELETE FROM auction 
       WHERE auction_id = ?
