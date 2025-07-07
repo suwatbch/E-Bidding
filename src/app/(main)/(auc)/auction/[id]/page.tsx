@@ -338,6 +338,20 @@ export default function AuctionDetailPage() {
     const startTime = new Date(auction.start_dt);
     const endTime = new Date(auction.end_dt);
 
+    // ถ้าเป็น status 1 (ดราฟ) ไม่ต้องนับถอยหลัง
+    if (auction.status === 1) {
+      setTimeRemaining('ยังไม่พร้อมประมูล');
+      setIsCountingDown(false);
+      return;
+    }
+
+    // ถ้าเป็น status 6 (ยกเลิก) ไม่ต้องนับถอยหลัง
+    if (auction.status === 6) {
+      setTimeRemaining('ยกเลิก');
+      setIsCountingDown(false);
+      return;
+    }
+
     // ถ้ายังไม่เริ่ม
     if (currentTime < startTime) {
       setTimeRemaining(`ยังไม่เริ่ม`);

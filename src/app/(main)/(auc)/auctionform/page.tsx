@@ -1247,11 +1247,14 @@ export default function AuctionFormPage() {
                     className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
                     required
                   >
-                    {Object.values(statusConfig).map((status) => (
-                      <option key={status.id} value={status.id}>
-                        {status.description}
-                      </option>
-                    ))}
+                    {/* แสดงเฉพาะสถานะที่อนุญาตให้เลือก: ดราฟ, รอการประมูล, ยกเลิกประมูล */}
+                    {Object.values(statusConfig)
+                      .filter((status) => [1, 2, 6].includes(status.id)) // 1=ดราฟ, 2=รอการประมูล, 6=ยกเลิกประมูล
+                      .map((status) => (
+                        <option key={status.id} value={status.id}>
+                          {status.description}
+                        </option>
+                      ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                     <svg
