@@ -1010,53 +1010,54 @@ export default function AuctionDetailPage() {
 
         {/* Bidding Results Table */}
         <div className="mt-6">
-          {/* Best Bid Display */}
-          {(() => {
-            const bestBidInfo = getBestBidInfo();
-            if (!bestBidInfo) return null;
+          {/* Best Bid Display - แสดงเฉพาะ admin */}
+          {user?.type === 'admin' &&
+            (() => {
+              const bestBidInfo = getBestBidInfo();
+              if (!bestBidInfo) return null;
 
-            return (
-              <div className="rounded-lg p-2 mt-4">
-                <div className="flex items-center gap-2">
-                  <div className="bg-yellow-100 p-2 rounded-full flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-yellow-600"
-                      fill="currentColor"
-                      viewBox="0 2 22 22"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-md font-semibold text-gray-700">
-                      ราคาที่ดีที่สุดขณะนี้:
-                    </span>
-                    <span
-                      className={`text-md font-semibold ${getPriceColor(
-                        bestBidInfo.amount,
-                        auction.reserve_price
-                      )}`}
-                    >
-                      {formatPriceForDisplay(bestBidInfo.amount)}{' '}
-                      {bestBidInfo.currency}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm text-gray-500">ประหยัด:</span>
-                    <span
-                      className={`text-md font-semibold ${getPriceColor(
-                        bestBidInfo.amount,
-                        auction.reserve_price
-                      )}`}
-                    >
-                      {formatPriceForDisplay(bestBidInfo.savingAmount)} (
-                      {bestBidInfo.savingPercentage}%)
-                    </span>
+              return (
+                <div className="rounded-lg p-2 mt-4">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-2 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-5 h-5 text-yellow-600"
+                        fill="currentColor"
+                        viewBox="0 2 22 22"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-md font-semibold text-gray-700">
+                        ราคาที่ดีที่สุดขณะนี้:
+                      </span>
+                      <span
+                        className={`text-md font-semibold ${getPriceColor(
+                          bestBidInfo.amount,
+                          auction.reserve_price
+                        )}`}
+                      >
+                        {formatPriceForDisplay(bestBidInfo.amount)}{' '}
+                        {bestBidInfo.currency}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-sm text-gray-500">ประหยัด:</span>
+                      <span
+                        className={`text-md font-semibold ${getPriceColor(
+                          bestBidInfo.amount,
+                          auction.reserve_price
+                        )}`}
+                      >
+                        {formatPriceForDisplay(bestBidInfo.savingAmount)} (
+                        {bestBidInfo.savingPercentage}%)
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })()}
+              );
+            })()}
 
           <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
             <Table className="table-fixed w-full">
