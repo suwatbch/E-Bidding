@@ -27,6 +27,7 @@ import {
   AucEndingSoonIcon,
   AucEndedIcon,
   AucCancelledIcon,
+  AuctionIcon,
 } from '@/app/components/ui/Icons';
 import {
   auctionsService,
@@ -102,6 +103,7 @@ export default function AuctionDetailPage() {
   const [hasShownEndingSoonAlert, setHasShownEndingSoonAlert] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [initialStatus, setInitialStatus] = useState<number | null>(null);
+  const [showWinningIcon, setShowWinningIcon] = useState<boolean>(true);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -362,6 +364,7 @@ export default function AuctionDetailPage() {
     // ถ้าสิ้นสุดแล้ว
     if (currentTime >= endTime) {
       setTimeRemaining('สิ้นสุดแล้ว');
+      setShowWinningIcon(true);
       setIsCountingDown(false);
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
       if (auction.status == 4) {
@@ -392,6 +395,12 @@ export default function AuctionDetailPage() {
     // เช็คว่าเหลือเวลา 2 นาทีหรือไม่ และสถานะเป็น 3
     else if (totalMinutes <= 2 && auction.status === 3) {
       updateAuctionStatusToEndingSoon(4);
+    }
+
+    if (user?.type === 'admin') {
+      setShowWinningIcon(true);
+    } else {
+      setShowWinningIcon(totalMinutes > 2);
     }
 
     // จัดรูปแบบการแสดงเวลา
@@ -643,8 +652,8 @@ export default function AuctionDetailPage() {
     const bestBidInfo = getBestBidInfo();
     const lowestPrice = bestBidInfo?.amount || null;
 
-    // สร้างข้อมูลสำหรับแสดงในตาราง - แสดงทุกคนที่เข้าร่วมประมูล
-    const tableData = participants.map((participant, index) => {
+    // สร้างข้อมูลสำหรับแสดงในตาราง
+    let tableData = participants.map((participant, index) => {
       const latestAcceptedBid = latestAcceptedBidsByUser[participant.user_id];
 
       let price = null;
@@ -1126,8 +1135,8 @@ export default function AuctionDetailPage() {
                       <TableRow key={participant.id}>
                         <TableCell className="py-3 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            {isWinning ? (
-                              <span className="text-yellow-500">🏆</span>
+                            {isWinning && showWinningIcon ? (
+                              <AuctionIcon className="text-blue-600 w-4 h-4" />
                             ) : (
                               ''
                             )}
@@ -1163,37 +1172,66 @@ export default function AuctionDetailPage() {
                           </div>
                         </TableCell>
                         <TableCell className="py-3 px-4 text-center">
-                          <span className="font-medium">
-                            {price ? formatPriceForDisplay(price) : ''}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <span>
-                            {saving !== null
-                              ? formatPriceForDisplay(saving)
-                              : ''}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          <span>
-                            {savingRate !== null ? `${savingRate}%` : ''}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-center">
-                          {status === 'accept' ? (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              {status || ''}
-                            </span>
-                          ) : status === 'reject' ? (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              {status || ''}
+                          {user?.user_id === participant.user_id ||
+                          user?.type === 'admin' ? (
+                            <span className="font-medium">
+                              {price ? formatPriceForDisplay(price) : ''}
                             </span>
                           ) : (
                             ''
                           )}
                         </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          {user?.user_id === participant.user_id ||
+                          user?.type === 'admin' ? (
+                            <span>
+                              {saving !== null
+                                ? formatPriceForDisplay(saving)
+                                : ''}
+                            </span>
+                          ) : (
+                            ''
+                          )}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          {user?.user_id === participant.user_id ||
+                          user?.type === 'admin' ? (
+                            <span>
+                              {savingRate !== null ? `${savingRate}%` : ''}
+                            </span>
+                          ) : (
+                            ''
+                          )}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-center">
+                          {user?.user_id === participant.user_id ||
+                          user?.type === 'admin' ? (
+                            <>
+                              {status === 'accept' ? (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  {status || ''}
+                                </span>
+                              ) : status === 'reject' ? (
+                                <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  {status || ''}
+                                </span>
+                              ) : (
+                                ''
+                              )}
+                            </>
+                          ) : (
+                            ''
+                          )}
+                        </TableCell>
                         <TableCell className="py-3 px-4 text-center text-sm text-gray-600">
-                          {bidTime ? formatDateTime(bidTime) : ''}
+                          {user?.user_id === participant.user_id ||
+                          user?.type === 'admin' ? (
+                            <span>
+                              {bidTime ? formatDateTime(bidTime) : ''}
+                            </span>
+                          ) : (
+                            ''
+                          )}
                         </TableCell>
                       </TableRow>
                     );

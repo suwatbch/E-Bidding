@@ -57,6 +57,10 @@ export const NavLogoIcon = ({ className }: IconProps) => (
   <GavelIcon style={{ width: '32px', height: '32px' }} className={className} />
 );
 
+export const AuctionIcon = ({ className }: IconProps) => (
+  <GavelIcon style={{ width: '24px', height: '24px' }} className={className} />
+);
+
 // Medium Icons (20px)
 export const FormEmailIcon = () => (
   <EmailIcon
