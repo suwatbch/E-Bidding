@@ -290,8 +290,7 @@ export default function Navbar() {
     if (user && user.type === 'admin') {
       try {
         const result = await authService.getActiveOtps();
-
-        if (result.success && result.data) {
+        if (result.success && result.message === null && result.data) {
           // แปลงข้อมูลจาก database เป็น format ที่ใช้ใน frontend
           const formattedNotifications = result.data.map((otp: any) => ({
             id: Date.now() + Math.random(), // สร้าง unique ID

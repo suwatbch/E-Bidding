@@ -153,9 +153,44 @@ export const authService = {
     data?: any[];
   }> => {
     try {
-      const token =
-        localStorage.getItem('auth_token') ||
-        sessionStorage.getItem('auth_token');
+      // ใช้วิธีเดียวกับ service อื่นๆ - อ่านจาก cookie ก่อน แล้ว fallback ไป localStorage
+      const getAuthTokenFromStorage = (): string | null => {
+        if (typeof window === 'undefined') return null;
+
+        try {
+          // 1. ลองดึงจาก cookie ก่อน (เพื่อความเร็วและความแม่นยำ)
+          const allCookies = document.cookie.split('; ');
+          const authTokenCookie = allCookies.find((row) =>
+            row.startsWith('auth_token=')
+          );
+          const cookieToken = authTokenCookie?.split('=')[1];
+
+          if (cookieToken) {
+            return cookieToken;
+          }
+
+          // 2. Fallback: ดึงจาก localStorage
+          const localToken = localStorage.getItem('auth_token');
+          if (localToken) return localToken;
+
+          // 3. Fallback: ดึงจาก sessionStorage
+          const sessionToken = sessionStorage.getItem('auth_token');
+          return sessionToken;
+        } catch (error) {
+          console.error('Error getting auth token:', error);
+          return null;
+        }
+      };
+
+      const token = getAuthTokenFromStorage();
+
+      if (!token) {
+        return {
+          success: false,
+          message: 'ไม่พบ token การเข้าสู่ระบบ',
+          data: [],
+        };
+      }
 
       const response = await authApi.get('/active-otps', {
         headers: {
