@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { setupSessionInterceptor } from '@/app/utils/apiInterceptor';
 
 // Base URL configuration
 const API_BASE_URL =
@@ -44,6 +45,7 @@ const getAuthTokenFromStorage = (): string | null => {
 auctionsApi.interceptors.request.use(
   (config) => {
     const token = getAuthTokenFromStorage();
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -55,7 +57,10 @@ auctionsApi.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle auth errors
+// Setup session interceptor สำหรับจัดการ concurrent login
+setupSessionInterceptor(auctionsApi);
+
+// Add response interceptor to handle general auth errors (รองจาก session interceptor)
 auctionsApi.interceptors.response.use(
   (response) => {
     return response;
@@ -65,8 +70,6 @@ auctionsApi.interceptors.response.use(
 
     if (status === 401) {
       console.error('🚫 Unauthorized: Please login again');
-    } else if (status === 403) {
-      console.error('🔒 Forbidden: Insufficient permissions');
     } else if (status >= 500) {
       console.error('🔥 Server Error:', error.response?.data?.message);
     }

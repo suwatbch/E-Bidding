@@ -178,6 +178,9 @@ async function loginUser(username, password) {
     // สร้าง JWT Token
     const token = jwt.sign(payload, JWT_SECRET);
 
+    // บันทึก session ใหม่
+    await saveUserSession(user.user_id, token, 'Web Browser');
+
     // ลบรหัสผ่านออกจากข้อมูลที่ส่งกลับและ map ฟิลด์ให้ตรงกับ frontend interface
     const { password: _, ...userData } = user;
 
@@ -470,7 +473,7 @@ async function resetPassword(username, otp, newPassword) {
 }
 
 // ตรวจสอบและถอดรหัส JWT Token
-function verifyToken(token) {
+async function verifyToken(token) {
   try {
     // ตรวจสอบว่า token ถูกส่งมาหรือไม่
     if (!token) {
@@ -489,6 +492,15 @@ function verifyToken(token) {
       return {
         success: false,
         error: 'Token หมดอายุ',
+      };
+    }
+
+    // **Session Override**: ตรวจสอบว่า session ยังอยู่ใน database หรือไม่
+    const sessionValid = await isValidSession(decoded.user_id, token);
+    if (!sessionValid) {
+      return {
+        success: false,
+        error: 'Session ไม่ถูกต้องหรือถูกยกเลิกแล้ว',
       };
     }
 
@@ -527,10 +539,71 @@ function verifyToken(token) {
   }
 }
 
+// ฟังก์ชันจัดการ Active Sessions
+
+async function saveUserSession(userId, token, deviceInfo = '') {
+  try {
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // เก็บแค่ hash ของ token เพื่อความปลอดภัย
+    const crypto = require('crypto');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    // ใช้ ON DUPLICATE KEY UPDATE เพื่อ reuse ID เดิม
+    const upsertSessionQuery = `
+      INSERT INTO user_sessions (
+        user_id, 
+        token_hash, 
+        device_info, 
+        created_at, 
+        expires_at
+      ) VALUES (?, ?, ?, NOW(), ?)
+      ON DUPLICATE KEY UPDATE
+        token_hash = VALUES(token_hash),
+        device_info = VALUES(device_info),
+        created_at = NOW(),
+        expires_at = VALUES(expires_at)
+    `;
+
+    return await executeQuery(upsertSessionQuery, [
+      userId,
+      tokenHash,
+      deviceInfo,
+      expiresAt,
+    ]);
+  } catch (error) {
+    console.error('Error in saveUserSession:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+async function isValidSession(userId, token) {
+  try {
+    const crypto = require('crypto');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const checkSessionQuery = `
+      SELECT id FROM user_sessions 
+      WHERE user_id = ? AND token_hash = ? AND expires_at > NOW()
+    `;
+
+    const result = await executeQuery(checkSessionQuery, [userId, tokenHash]);
+    return result.success && result.data.length > 0;
+  } catch (error) {
+    console.error('Error in isValidSession:', error);
+    return false;
+  }
+}
+
 module.exports = {
   loginUser,
   requestOtp,
   resetPassword,
   verifyToken,
   getActiveOtps,
+  saveUserSession,
+  isValidSession,
 };

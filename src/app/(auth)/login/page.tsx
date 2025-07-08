@@ -88,9 +88,13 @@ export default function LoginPage() {
         setReturnUrl(returnUrlParam);
       }
 
-      // แสดงข้อความเมื่อ token หมดอายุ
+      // แสดงข้อความเมื่อ token หมดอายุ หรือ session invalid
       if (reason === 'token_expired') {
         setTokenExpiredMessage('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+      } else if (reason === 'session_invalid') {
+        setTokenExpiredMessage(
+          'เซสชันถูกยกเลิกเนื่องจากมีการเข้าสู่ระบบจากอุปกรณ์อื่น กรุณาเข้าสู่ระบบใหม่'
+        );
       }
 
       // Load saved credentials if "Remember Me" was previously checked

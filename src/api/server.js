@@ -132,7 +132,6 @@ io.on('connection', (socket) => {
   // Handle OTP mark as read
   socket.on('otp-mark-read', (data) => {
     try {
-      console.log('📖 OTP marked as read:', data);
       // Broadcast to other admins in the room (except sender)
       socket.to('admin-room').emit('otp-read', {
         notificationId: data.notificationId,
@@ -148,11 +147,8 @@ io.on('connection', (socket) => {
   // Handle OTP expiry broadcast
   socket.on('otp-expired', (data) => {
     try {
-      console.log('⏰ OTP expired:', data);
-
       // Wait 30 seconds before removing from all admin clients
       setTimeout(() => {
-        console.log('🗑️ Removing expired OTP from all admins:', data.username);
         io.to('admin-room').emit('otp-expired', {
           notificationId: data.notificationId,
           username: data.username,
@@ -170,7 +166,6 @@ io.on('connection', (socket) => {
       const { auctionId, userId, userName, companyId, companyName } = data;
 
       if (!auctionId || !userId) {
-        console.log('❌ Missing required fields:', { auctionId, userId });
         socket.emit('error', { message: 'auctionId and userId are required' });
         return;
       }

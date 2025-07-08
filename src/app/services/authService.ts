@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { setupSessionInterceptor } from '@/app/utils/apiInterceptor';
 
 // Base API URL
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -12,6 +13,9 @@ const authApi = axios.create({
   timeout: 10000, // 10 seconds timeout
   withCredentials: true, // เพื่อให้สามารถรับและส่ง cookie ได้
 });
+
+// Setup session interceptor สำหรับจัดการ concurrent login
+setupSessionInterceptor(authApi);
 
 // Types for API requests and responses
 export interface LoginRequest {

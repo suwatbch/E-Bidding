@@ -536,8 +536,6 @@ export default function AuctionFormPage() {
       // ตั้งค่า selectedCompanyId หลังจากโหลดข้อมูลเสร็จแล้ว
       setSelectedCompanyId(userCompanyData.company_id);
     } else {
-      // ถ้าไม่มีบริษัทที่เชื่อมโยง ให้ล้างการเลือกบริษัท
-      console.log('No company relationship found for user:', userId);
       setSelectedCompanyId(null);
       setCompanySearchTerm('');
     }

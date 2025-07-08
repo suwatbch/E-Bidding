@@ -32,13 +32,12 @@ function isAdminOnlyRoute(path) {
 }
 
 // Middleware สำหรับตรวจสอบ Authentication
-function authMiddleware(req, res, next) {
+async function authMiddleware(req, res, next) {
   const path = req.path;
   const method = req.method;
 
   // ข้าม authentication สำหรับ public routes
   if (isPublicRoute(path)) {
-    console.log(`🟢 Public Route: ${method} ${path} - ไม่ต้องเช็ค Token`);
     return next();
   }
 
@@ -47,7 +46,6 @@ function authMiddleware(req, res, next) {
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
   if (!token) {
-    console.log(`🔴 No Token: ${method} ${path}`);
     return res.status(401).json({
       success: false,
       message: 'ไม่พบ Access Token กรุณา Login ก่อน',
@@ -55,39 +53,40 @@ function authMiddleware(req, res, next) {
     });
   }
 
-  // ตรวจสอบ Token
-  const tokenResult = verifyToken(token);
+  try {
+    // ตรวจสอบ Token (ใช้ await เพราะตอนนี้เป็น async function)
+    const tokenResult = await verifyToken(token);
 
-  if (!tokenResult.success) {
-    console.log(`🔴 Invalid Token: ${method} ${path}`);
-    return res.status(403).json({
-      success: false,
-      message: 'Token ไม่ถูกต้องหรือหมดอายุ',
-      code: 'INVALID_TOKEN',
-    });
-  }
-
-  // เพิ่มข้อมูลผู้ใช้ใน request
-  req.user = tokenResult.data;
-
-  // ตรวจสอบสิทธิ์ Admin สำหรับ Admin-only routes
-  if (isAdminOnlyRoute(path)) {
-    if (req.user.type !== 'admin') {
-      console.log(
-        `🔴 Admin Required: ${method} ${path} - User: ${req.user.username} (${req.user.type})`
-      );
+    if (!tokenResult.success) {
       return res.status(403).json({
         success: false,
-        message: 'ไม่มีสิทธิ์เข้าถึง ต้องเป็น Admin เท่านั้น',
-        code: 'ADMIN_REQUIRED',
+        message: 'Token ไม่ถูกต้องหรือหมดอายุ',
+        code: 'INVALID_TOKEN',
       });
     }
-  }
 
-  console.log(
-    `🟢 Authenticated: ${method} ${path} - User: ${req.user.username} (${req.user.type})`
-  );
-  next();
+    // เพิ่มข้อมูลผู้ใช้ใน request
+    req.user = tokenResult.data;
+
+    // ตรวจสอบสิทธิ์ Admin สำหรับ Admin-only routes
+    if (isAdminOnlyRoute(path)) {
+      if (req.user.type !== 'admin') {
+        return res.status(403).json({
+          success: false,
+          message: 'ไม่มีสิทธิ์เข้าถึง ต้องเป็น Admin เท่านั้น',
+          code: 'ADMIN_REQUIRED',
+        });
+      }
+    }
+    next();
+  } catch (error) {
+    console.error(`🔴 Auth Error: ${method} ${path}`, error);
+    return res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการตรวจสอบ Token',
+      code: 'AUTH_ERROR',
+    });
+  }
 }
 
 // Middleware สำหรับบังคับให้เป็น Admin

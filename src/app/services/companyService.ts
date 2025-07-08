@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { setupSessionInterceptor } from '@/app/utils/apiInterceptor';
 
 // Get base URL from environment or use default
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -11,6 +12,9 @@ const companyApi = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Setup session interceptor สำหรับจัดการ concurrent login
+setupSessionInterceptor(companyApi);
 
 // Helper function to get auth token from cookie first, then localStorage
 const getAuthTokenFromStorage = (): string | null => {
