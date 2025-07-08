@@ -57,6 +57,21 @@ app.set('io', io);
 // Store auction room data
 const auctionRooms = new Map(); // auctionId -> Set of socket.id
 const userSockets = new Map(); // socket.id -> { userId, auctionId, userInfo }
+const adminSockets = new Set(); // Set of admin socket.id
+
+// Helper function to join admin room
+const joinAdminRoom = (socket, userInfo) => {
+  if (userInfo.userType === 'admin') {
+    socket.join('admin-room');
+    adminSockets.add(socket.id);
+  }
+};
+
+// Helper function to leave admin room
+const leaveAdminRoom = (socket) => {
+  socket.leave('admin-room');
+  adminSockets.delete(socket.id);
+};
 
 // Helper function to get online users in auction
 const getAuctionOnlineUsers = (auctionId) => {
@@ -92,6 +107,63 @@ const broadcastAuctionUpdate = (auctionId) => {
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
+  // Handle admin joining admin room
+  socket.on('join-admin', (data) => {
+    try {
+      const { userId, username, userType } = data;
+
+      if (userType === 'admin') {
+        const userInfo = { userId, username, userType };
+        joinAdminRoom(socket, userInfo);
+
+        socket.emit('admin-joined', {
+          message: 'Successfully joined admin room',
+          adminCount: adminSockets.size,
+        });
+      } else {
+        socket.emit('error', { message: 'Admin access required' });
+      }
+    } catch (error) {
+      console.error('❌ Error joining admin room:', error);
+      socket.emit('error', { message: 'Failed to join admin room' });
+    }
+  });
+
+  // Handle OTP mark as read
+  socket.on('otp-mark-read', (data) => {
+    try {
+      console.log('📖 OTP marked as read:', data);
+      // Broadcast to other admins in the room (except sender)
+      socket.to('admin-room').emit('otp-read', {
+        notificationId: data.notificationId,
+        adminId: data.adminId,
+        username: data.username,
+        otp: data.otp,
+      });
+    } catch (error) {
+      console.error('❌ Error handling otp-mark-read:', error);
+    }
+  });
+
+  // Handle OTP expiry broadcast
+  socket.on('otp-expired', (data) => {
+    try {
+      console.log('⏰ OTP expired:', data);
+
+      // Wait 30 seconds before removing from all admin clients
+      setTimeout(() => {
+        console.log('🗑️ Removing expired OTP from all admins:', data.username);
+        io.to('admin-room').emit('otp-expired', {
+          notificationId: data.notificationId,
+          username: data.username,
+          otp: data.otp,
+        });
+      }, 30000); // 30 seconds delay
+    } catch (error) {
+      console.error('❌ Error handling otp-expired:', error);
+    }
+  });
+
   // Handle joining auction room
   socket.on('join-auction', async (data) => {
     try {
@@ -237,6 +309,11 @@ io.on('connection', (socket) => {
 
       // Remove user info
       userSockets.delete(socket.id);
+    }
+
+    // Clean up admin from admin room
+    if (adminSockets.has(socket.id)) {
+      leaveAdminRoom(socket);
     }
   });
 

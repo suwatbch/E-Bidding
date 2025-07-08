@@ -238,7 +238,7 @@ export const NavMyAuctionIcon: React.FC<IconProps> = ({ className }) => (
 
 export const NavNotificationIcon: React.FC<IconProps> = ({ className }) => (
   <Notifications
-    style={{ width: '20px', height: '20px' }}
+    style={{ width: '18px', height: '18px' }}
     className={className}
   />
 );

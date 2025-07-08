@@ -143,4 +143,38 @@ export const authService = {
       };
     }
   },
+
+  /**
+   * Get active OTPs (Admin only)
+   */
+  getActiveOtps: async (): Promise<{
+    success: boolean;
+    message: string;
+    data?: any[];
+  }> => {
+    try {
+      const token =
+        localStorage.getItem('auth_token') ||
+        sessionStorage.getItem('auth_token');
+
+      const response = await authApi.get('/active-otps', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('Error in authService.getActiveOtps:', error);
+
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'เกิดข้อผิดพลาดในการดึงข้อมูล OTP',
+        data: [],
+      };
+    }
+  },
 };

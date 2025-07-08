@@ -21,12 +21,8 @@ import {
   NavLanguageManageIcon,
   NavAuctionTypeIcon,
 } from '@/app/components/ui/Icons';
-import {
-  connectSocket,
-  disconnectSocket,
-  subscribeToNotifications,
-  unsubscribeFromNotifications,
-} from '@/app/services/socketService';
+import { connectSocket, disconnectSocket } from '@/app/services/socketService';
+import socket from '@/app/services/socketService';
 import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 import Dropdown from './ui/Dropdown';
@@ -34,6 +30,7 @@ import Container from './ui/Container';
 import { User } from '@/app/services/userService';
 import { useAuth } from '@/app/contexts/AuthContext';
 import { authService } from '@/app/services/authService';
+import { formatDateTime } from '@/app/utils/globalFunction';
 
 interface FormData {
   username: string;
@@ -70,9 +67,10 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDataOpen, setIsDataOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<FormData>(initialForm);
+  const [otpNotifications, setOtpNotifications] = useState<any[]>([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   // เพิ่ม state สำหรับเก็บข้อมูลจาก localStorage
   const [localUserData, setLocalUserData] = useState<{
@@ -85,6 +83,7 @@ export default function Navbar() {
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const dataDropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const notificationDropdownRef = useRef<HTMLDivElement>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -219,7 +218,7 @@ export default function Navbar() {
       }
       clearTimeout(fallbackTimeout);
     };
-  }, [user]); // เพิ่ม dependency user
+  }, [user]); // เพิ่ม user dependency
 
   // เพิ่ม useEffect เพื่อรอการเปลี่ยนแปลงของ user จาก AuthContext
   useEffect(() => {
@@ -236,17 +235,8 @@ export default function Navbar() {
     // เชื่อมต่อ socket เมื่อโหลด Navbar
     connectSocket();
 
-    // รับการแจ้งเตือนใหม่
-    const handleNewNotification = (data: { name: string }) => {
-      setNotificationCount((prev) => prev + 1);
-    };
-
-    // สมัครรับการแจ้งเตือน
-    subscribeToNotifications(handleNewNotification);
-
     // cleanup เมื่อ unmount
     return () => {
-      unsubscribeFromNotifications(handleNewNotification);
       disconnectSocket();
     };
   }, []);
@@ -254,26 +244,35 @@ export default function Navbar() {
   useEffect(() => {
     // ฟังก์ชันจัดการคลิกนอกพื้นที่
     const handleClickOutside = (event: MouseEvent) => {
-      // ปิดเมนูโปรไฟล์ถ้าคลิกข้างนอก
+      const target = event.target as Node;
+
+      // ตรวจสอบการคลิกข้างนอกเมนูโปรไฟล์
       if (
         profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target as Node)
+        !profileDropdownRef.current.contains(target)
       ) {
         setIsProfileOpen(false);
       }
-      // ปิดเมนูข้อมูลถ้าคลิกข้างนอก
+
+      // ตรวจสอบการคลิกข้างนอกเมนูข้อมูล
       if (
         dataDropdownRef.current &&
-        !dataDropdownRef.current.contains(event.target as Node)
+        !dataDropdownRef.current.contains(target)
       ) {
         setIsDataOpen(false);
       }
-      // ปิดเมนูมือถือถ้าคลิกข้างนอก
-      if (
-        mobileMenuRef.current &&
-        !mobileMenuRef.current.contains(event.target as Node)
-      ) {
+
+      // ตรวจสอบการคลิกข้างนอกเมนูมือถือ
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(target)) {
         setIsOpen(false);
+      }
+
+      // ตรวจสอบการคลิกข้างนอก notification dropdown
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(target)
+      ) {
+        setIsNotificationOpen(false);
       }
     };
 
@@ -284,6 +283,118 @@ export default function Navbar() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
+  }, []);
+
+  // ฟังก์ชันโหลด OTP จาก database
+  const loadOtpNotifications = async () => {
+    if (user && user.type === 'admin') {
+      try {
+        const result = await authService.getActiveOtps();
+
+        if (result.success && result.data) {
+          // แปลงข้อมูลจาก database เป็น format ที่ใช้ใน frontend
+          const formattedNotifications = result.data.map((otp: any) => ({
+            id: Date.now() + Math.random(), // สร้าง unique ID
+            otp: otp.otp,
+            user_id: otp.user_id,
+            username: otp.username,
+            start_time: otp.start_time, // เก็บ format เดิมสำหรับการคำนวณ
+            end_time: otp.end_time, // เก็บ format เดิมสำหรับการคำนวณ
+            phone: otp.phone,
+            remainingTime: getRemainingTime(otp.end_time),
+          }));
+
+          setOtpNotifications(formattedNotifications);
+        }
+      } catch (error) {
+        console.error('Failed to load OTP notifications:', error);
+      }
+    }
+  };
+
+  // Load notifications from database on mount
+  useEffect(() => {
+    loadOtpNotifications();
+  }, [user]);
+
+  // Socket.IO สำหรับ Admin OTP Notifications
+  useEffect(() => {
+    if (user && user.type === 'admin') {
+      // เชื่อมต่อ socket
+      connectSocket();
+
+      // Listen for socket events
+      const handleConnect = () => {
+        // Join admin room
+        socket.emit('join-admin', {
+          userId: user.user_id,
+          username: user.username,
+          userType: user.type,
+        });
+
+        // โหลดข้อมูล OTP หลังจากเชื่อมต่อแล้ว
+        setTimeout(() => {
+          loadOtpNotifications();
+        }, 500); // รอ 500ms ให้ socket เซ็ตอัพเสร็จก่อน
+      };
+
+      const handleOtpGenerated = (otpData: any) => {
+        const notificationId = Date.now() + Math.random();
+        const remainingTime = getRemainingTime(otpData.end_time);
+
+        const newNotification = {
+          id: notificationId,
+          ...otpData,
+          remainingTime: remainingTime,
+        };
+
+        // Add to notifications list (ข้อมูลใหม่จาก socket)
+        setOtpNotifications((prev) => [newNotification, ...prev.slice(0, 9)]);
+      };
+
+      const handleAdminJoined = (data: any) => {
+        // Admin joined admin room
+      };
+
+      // Register event listeners
+      socket.on('connect', handleConnect);
+      socket.on('otp-generated', handleOtpGenerated);
+      socket.on('admin-joined', handleAdminJoined);
+
+      // ถ้า socket เชื่อมต่อแล้ว ให้เรียก handleConnect ทันที
+      if (socket.connected) {
+        handleConnect();
+      }
+
+      return () => {
+        socket.off('connect', handleConnect);
+        socket.off('otp-generated', handleOtpGenerated);
+        socket.off('admin-joined', handleAdminJoined);
+      };
+    }
+  }, [user]);
+
+  // Countdown Timer Effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setOtpNotifications((prevNotifications) => {
+        if (prevNotifications.length === 0) return prevNotifications;
+
+        const updatedNotifications = prevNotifications.map((notif) => ({
+          ...notif,
+          remainingTime: getRemainingTime(notif.end_time),
+        }));
+
+        // Filter out expired notifications (หมดอายุแล้วจะหายไปเอง)
+        const activeNotifications = updatedNotifications.filter(
+          (notif) => notif.remainingTime > 0
+        );
+
+        return activeNotifications;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const navigation = [
@@ -300,24 +411,81 @@ export default function Navbar() {
   ];
 
   const handleLogout = async () => {
-    setIsProfileOpen(false); // ปิดเมนูดรอปดาวน์
-
     try {
-      // เรียก logout API
-      await authService.logout();
-
-      // เรียก logout function จาก AuthContext
-      logout();
-
-      // Redirect ไปหน้า login
+      await logout();
       router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
-
-      // ถึงแม้จะ error ใน API ก็ให้ logout ท้องถิ่นแล้ว redirect
-      logout();
-      router.push('/login');
     }
+  };
+
+  // Format countdown time (MM:SS)
+  const formatCountdown = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate remaining time for OTP
+  const getRemainingTime = (endTime: string) => {
+    try {
+      const now = new Date().getTime();
+
+      // สร้าง Date object โดยให้ JavaScript จัดการ timezone เอง
+      let endDate;
+
+      // ถ้ามี 'T' และ 'Z' แล้ว → UTC format
+      if (endTime.includes('T') && endTime.includes('Z')) {
+        endDate = new Date(endTime);
+      }
+      // ถ้ามี 'T' แต่ไม่มี 'Z' → เพิ่ม 'Z' เพื่อบอกว่าเป็น UTC
+      else if (endTime.includes('T') && !endTime.includes('Z')) {
+        endDate = new Date(endTime + 'Z');
+      }
+      // ถ้าเป็น format "YYYY-MM-DD HH:mm:ss" → ถือว่าเป็น UTC และเพิ่ม 'Z'
+      else if (endTime.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        // แปลง space เป็น T ก่อน แล้วเพิ่ม Z
+        const isoFormat = endTime.replace(' ', 'T') + 'Z';
+        endDate = new Date(isoFormat);
+      }
+      // ถ้าเป็น format "YYYY-MM-DD HH:mm:ss.000Z" → ใช้ตรงๆ
+      else if (endTime.includes('.') && endTime.includes('Z')) {
+        endDate = new Date(endTime);
+      }
+      // fallback: ลองแปลงตรงๆ
+      else {
+        endDate = new Date(endTime);
+      }
+
+      const endTimestamp = endDate.getTime();
+
+      if (isNaN(endTimestamp)) {
+        console.error('Invalid end time format:', endTime);
+        return 0;
+      }
+
+      const remaining = Math.max(0, Math.floor((endTimestamp - now) / 1000));
+
+      return remaining;
+    } catch (error) {
+      console.error(
+        '❌ Error in getRemainingTime:',
+        error,
+        'endTime:',
+        endTime
+      );
+      return 0;
+    }
+  };
+
+  // Format timestamp for display
+  const formatNotificationTime = (timestamp: string) => {
+    return formatDateTime(timestamp);
+  };
+
+  // Handle notification click
+  const handleNotificationClick = () => {
+    setIsNotificationOpen(!isNotificationOpen);
   };
 
   const isActivePage = (path: string) => pathname === path;
@@ -634,6 +802,84 @@ export default function Navbar() {
               {/* Language Switcher */}
               <LanguageSwitcher variant="navbar" />
 
+              {/* Notification Bell */}
+              {user && user.type === 'admin' && (
+                <div className="relative">
+                  <button
+                    onClick={handleNotificationClick}
+                    className="group relative p-2 rounded-xl text-white hover:bg-white/10 transition-all duration-300"
+                  >
+                    <div className="transform group-hover:scale-110 transition duration-300">
+                      <NavNotificationIcon className="w-6 h-6" />
+                    </div>
+                  </button>
+
+                  {/* Notification Dropdown */}
+                  {isNotificationOpen && user?.type === 'admin' && (
+                    <div
+                      ref={notificationDropdownRef}
+                      className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50"
+                    >
+                      <div className="max-h-96 overflow-y-auto">
+                        {otpNotifications.length > 0 ? (
+                          otpNotifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className="p-4 border-b border-gray-50 hover:bg-gray-50"
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className="flex-shrink-0">
+                                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <span className="text-blue-600 font-bold text-sm">
+                                      OTP
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900">
+                                    ผู้ใช้: {notification.username}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    รหัส OTP:{' '}
+                                    <span className="font-mono font-bold">
+                                      {notification.otp}
+                                    </span>
+                                  </p>
+                                  <div className="flex items-center justify-between mt-2">
+                                    <p className="text-xs text-gray-500">
+                                      {formatNotificationTime(
+                                        notification.end_time
+                                      )}
+                                    </p>
+                                    {notification.remainingTime > 0 ? (
+                                      <p className="text-xs font-medium text-red-600 bg-red-50 px-2 py-1 rounded-full">
+                                        เหลือ{' '}
+                                        {formatCountdown(
+                                          notification.remainingTime
+                                        )}
+                                      </p>
+                                    ) : (
+                                      <p className="text-xs text-gray-400">
+                                        หมดอายุแล้ว
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="p-8 text-center text-gray-500">
+                            <NavNotificationIcon className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                            <p>ไม่มีการแจ้งเตือน</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Profile Dropdown */}
               <Dropdown
                 isOpen={isProfileOpen}
@@ -816,6 +1062,17 @@ export default function Navbar() {
 
                 {/* Language Selector Mobile */}
                 <div className="border-t border-gray-100 pt-2">
+                  {/* Notification Bell Mobile */}
+                  {user && user.type === 'admin' && (
+                    <button
+                      onClick={handleNotificationClick}
+                      className="flex items-center w-full px-4 py-2.5 text-gray-700 hover:bg-blue-50/50 rounded-lg relative"
+                    >
+                      <NavNotificationIcon className="w-5 h-5 mr-2" />
+                      {t('notifications') || 'การแจ้งเตือน'}
+                    </button>
+                  )}
+
                   <LanguageSwitcher variant="navbar" />
                 </div>
 

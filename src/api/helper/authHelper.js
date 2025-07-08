@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../config/dataconfig');
+const { getDateTimeUTCNow } = require('../globalFunction');
 
 // JWT Secret (ในการใช้งานจริงควรเก็บใน environment variable)
 const JWT_SECRET =
@@ -216,6 +217,49 @@ async function loginUser(username, password) {
   }
 }
 
+// ฟังก์ชันดึง OTP ที่ยังไม่ได้ใช้สำหรับแอดมิน
+async function getActiveOtps() {
+  try {
+    const query = `
+      SELECT 
+        o.otp,
+        o.user_id,
+        o.username,
+        o.start_time,
+        o.end_time,
+        o.is_used,
+        u.phone
+      FROM otp o
+      LEFT JOIN users u ON o.user_id = u.user_id
+      WHERE o.is_used = 0 
+        AND o.end_time > NOW()
+      ORDER BY o.end_time DESC
+    `;
+
+    const result = await executeQuery(query, []);
+
+    if (result.success) {
+      return {
+        success: true,
+        data: result.data,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'เกิดข้อผิดพลาดในการดึงข้อมูล OTP',
+        data: [],
+      };
+    }
+  } catch (error) {
+    console.error('Error in getActiveOtps:', error);
+    return {
+      success: false,
+      error: error.message,
+      data: [],
+    };
+  }
+}
+
 // ฟังก์ชันสำหรับการร้องขอ OTP
 async function requestOtp(username) {
   try {
@@ -316,6 +360,12 @@ async function requestOtp(username) {
         data: {
           message: 'รหัส OTP ถูกส่งไปยังเบอร์โทรศัพท์ที่ลงทะเบียน',
           expires_in: '5 นาที',
+          // ข้อมูลสำหรับ admin notification
+          otp: otp,
+          user_id: user.user_id,
+          username: user.username,
+          start_time: startTime,
+          end_time: endTime,
         },
       };
     } else {
@@ -482,4 +532,5 @@ module.exports = {
   requestOtp,
   resetPassword,
   verifyToken,
+  getActiveOtps,
 };
