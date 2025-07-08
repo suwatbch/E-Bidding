@@ -834,6 +834,13 @@ export default function Navbar() {
                     <div className="transform group-hover:scale-110 transition duration-300">
                       <NavNotificationIcon className="w-6 h-6" />
                     </div>
+
+                    {/* Notification Badge */}
+                    {otpNotifications.length > 0 && (
+                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {otpNotifications.length}
+                      </div>
+                    )}
                   </button>
 
                   {/* Notification Dropdown */}
@@ -1090,7 +1097,15 @@ export default function Navbar() {
                       onClick={handleNotificationClick}
                       className="flex items-center w-full px-4 py-2.5 text-gray-700 hover:bg-blue-50/50 rounded-lg relative"
                     >
-                      <NavNotificationIcon className="w-5 h-5 mr-2" />
+                      <div className="relative mr-2">
+                        <NavNotificationIcon className="w-5 h-5" />
+                        {/* Mobile Notification Badge */}
+                        {otpNotifications.length > 0 && (
+                          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                            {otpNotifications.length}
+                          </div>
+                        )}
+                      </div>
                       {t('notifications') || 'การแจ้งเตือน'}
                     </button>
                   )}
