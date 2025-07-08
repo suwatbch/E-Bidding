@@ -363,10 +363,22 @@ export default function Navbar() {
         );
       };
 
+      const handleOtpCleanupExpired = () => {
+        // ลบ OTP ที่หมดเวลาแล้วทั้งหมดออกจาก notifications
+        setOtpNotifications((prev) => {
+          const now = new Date().getTime();
+          return prev.filter((notif) => {
+            const remainingTime = getRemainingTime(notif.end_time);
+            return remainingTime > 0; // เก็บเฉพาะที่ยังไม่หมดเวลา
+          });
+        });
+      };
+
       // Register event listeners
       socket.on('connect', handleConnect);
       socket.on('otp-generated', handleOtpGenerated);
       socket.on('otp-remove-old', handleOtpRemoveOld);
+      socket.on('otp-cleanup-expired', handleOtpCleanupExpired);
       socket.on('admin-joined', handleAdminJoined);
 
       // ถ้า socket เชื่อมต่อแล้ว ให้เรียก handleConnect ทันที
@@ -378,6 +390,7 @@ export default function Navbar() {
         socket.off('connect', handleConnect);
         socket.off('otp-generated', handleOtpGenerated);
         socket.off('otp-remove-old', handleOtpRemoveOld);
+        socket.off('otp-cleanup-expired', handleOtpCleanupExpired);
         socket.off('admin-joined', handleAdminJoined);
       };
     }

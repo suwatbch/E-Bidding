@@ -115,6 +115,9 @@ router.post('/otp', async (req, res) => {
       // Broadcast ข้อมูล OTP ผ่าน Socket.IO เฉพาะให้ Admin เท่านั้น
       const io = req.app.get('io');
       if (io) {
+        // ส่งคำสั่งลบ OTP ที่หมดเวลาแล้วทั้งหมดก่อน
+        io.to('admin-room').emit('otp-cleanup-expired');
+
         // ส่งคำสั่งลบ OTP เก่าของ username นี้ก่อน (ถ้ามี)
         io.to('admin-room').emit('otp-remove-old', {
           username: username,
@@ -132,7 +135,7 @@ router.post('/otp', async (req, res) => {
 
           // ส่งไปยัง admin room เท่านั้น
           io.to('admin-room').emit('otp-generated', otpData);
-        }, 100); // รอ 100ms เพื่อให้ลบเสร็จก่อน
+        }, 150); // รอ 150ms เพื่อให้ cleanup และลบเสร็จก่อน
       }
 
       res.status(200).json({
