@@ -356,9 +356,17 @@ export default function Navbar() {
         // Admin joined admin room
       };
 
+      const handleOtpRemoveOld = (data: any) => {
+        // ลบ OTP เก่าของ username นี้ออกจาก notifications
+        setOtpNotifications((prev) =>
+          prev.filter((notif) => notif.username !== data.username)
+        );
+      };
+
       // Register event listeners
       socket.on('connect', handleConnect);
       socket.on('otp-generated', handleOtpGenerated);
+      socket.on('otp-remove-old', handleOtpRemoveOld);
       socket.on('admin-joined', handleAdminJoined);
 
       // ถ้า socket เชื่อมต่อแล้ว ให้เรียก handleConnect ทันที
@@ -369,6 +377,7 @@ export default function Navbar() {
       return () => {
         socket.off('connect', handleConnect);
         socket.off('otp-generated', handleOtpGenerated);
+        socket.off('otp-remove-old', handleOtpRemoveOld);
         socket.off('admin-joined', handleAdminJoined);
       };
     }

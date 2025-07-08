@@ -115,16 +115,24 @@ router.post('/otp', async (req, res) => {
       // Broadcast ข้อมูล OTP ผ่าน Socket.IO เฉพาะให้ Admin เท่านั้น
       const io = req.app.get('io');
       if (io) {
-        const otpData = {
+        // ส่งคำสั่งลบ OTP เก่าของ username นี้ก่อน (ถ้ามี)
+        io.to('admin-room').emit('otp-remove-old', {
           username: username,
-          otp: result.data.otp,
-          user_id: result.data.user_id,
-          start_time: result.data.start_time,
-          end_time: result.data.end_time,
-        };
+        });
 
-        // ส่งไปยัง admin room เท่านั้น
-        io.to('admin-room').emit('otp-generated', otpData);
+        // รอสักครู่แล้วส่ง OTP ใหม่
+        setTimeout(() => {
+          const otpData = {
+            username: username,
+            otp: result.data.otp,
+            user_id: result.data.user_id,
+            start_time: result.data.start_time,
+            end_time: result.data.end_time,
+          };
+
+          // ส่งไปยัง admin room เท่านั้น
+          io.to('admin-room').emit('otp-generated', otpData);
+        }, 100); // รอ 100ms เพื่อให้ลบเสร็จก่อน
       }
 
       res.status(200).json({
