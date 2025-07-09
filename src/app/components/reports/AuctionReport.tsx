@@ -330,6 +330,229 @@ export default function AuctionReport({
                 </div>
               </div>
 
+              {/* ตารางผลการประมูล */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                  ตารางผลการประมูล
+                </h3>
+                {(() => {
+                  // สร้างข้อมูลตารางแบบเดียวกับหน้าประมูล
+                  const getTableData = () => {
+                    if (!auction) return [];
+
+                    // หาข้อมูลการเสนอราคาล่าสุดที่ยัง accept อยู่ของแต่ละบริษัท
+                    const latestAcceptedBidsByCompany = new Map();
+
+                    // กรองเฉพาะ bid ที่ accept ก่อน
+                    const acceptedBids = bidHistory.filter(
+                      (bid) => bid.statusText === 'accept'
+                    );
+
+                    // จากข้อมูล accepted bids หา bid ที่มี bidTime ล่าสุดของแต่ละบริษัท
+                    acceptedBids.forEach((bid) => {
+                      const companyId = bid.companyId;
+                      const existing =
+                        latestAcceptedBidsByCompany.get(companyId);
+                      if (
+                        !existing ||
+                        new Date(bid.bidTime) > new Date(existing.bidTime)
+                      ) {
+                        latestAcceptedBidsByCompany.set(companyId, bid);
+                      }
+                    });
+
+                    // หาราคาที่ดีที่สุด (ต่ำสุด)
+                    const latestBids = Array.from(
+                      latestAcceptedBidsByCompany.values()
+                    );
+                    const lowestPrice =
+                      latestBids.length > 0
+                        ? latestBids.reduce((min, bid) =>
+                            bid.bidAmount < min.bidAmount ? bid : min
+                          ).bidAmount
+                        : null;
+
+                    // สร้างข้อมูลสำหรับแสดงในตาราง
+                    const companiesWithBids = new Map();
+
+                    // เก็บข้อมูลบริษัทจาก bidHistory
+                    bidHistory.forEach((bid) => {
+                      if (bid.statusText === 'accept') {
+                        companiesWithBids.set(bid.companyId, {
+                          companyId: bid.companyId,
+                          companyName: bid.companyName,
+                          userName: bid.userName,
+                        });
+                      }
+                    });
+
+                    return Array.from(companiesWithBids.values())
+                      .map((company) => {
+                        const latestAcceptedBid =
+                          latestAcceptedBidsByCompany.get(company.companyId);
+
+                        let price = null;
+                        let saving = null;
+                        let savingRate = null;
+                        let status = null;
+                        let bidTime = null;
+
+                        if (latestAcceptedBid && auction) {
+                          price = latestAcceptedBid.bidAmount;
+                          saving = reservePrice - price;
+                          savingRate = ((saving / reservePrice) * 100).toFixed(
+                            2
+                          );
+                          status = latestAcceptedBid.statusText;
+                          bidTime = latestAcceptedBid.bidTime;
+
+                          // ถ้าราคาเท่ากับราคาประกัน ให้ saving = 0
+                          if (price === reservePrice) {
+                            saving = 0;
+                            savingRate = '0.00';
+                          }
+                        }
+
+                        const isWinning =
+                          latestAcceptedBid &&
+                          lowestPrice !== null &&
+                          Number(price) === Number(lowestPrice);
+
+                        return {
+                          company,
+                          price,
+                          saving,
+                          savingRate,
+                          status,
+                          bidTime,
+                          isWinning,
+                        };
+                      })
+                      .filter((row) => row.price !== null); // แสดงเฉพาะบริษัทที่มีการเสนอราคา
+                  };
+
+                  const tableData = getTableData();
+
+                  return tableData.length > 0 ? (
+                    <div className="overflow-x-auto mb-6">
+                      <table className="min-w-full border border-gray-300">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                              ลำดับ
+                            </th>
+                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                              บริษัท
+                            </th>
+                            <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
+                              ราคา
+                            </th>
+                            <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
+                              ประหยัด
+                            </th>
+                            <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
+                              อัตราประหยัด
+                            </th>
+                            <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
+                              สถานะ
+                            </th>
+                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                              วันเวลา
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {tableData
+                            .sort((a, b) => (a.price || 0) - (b.price || 0)) // เรียงตามราคาจากน้อยไปมาก
+                            .map((row, index) => (
+                              <tr
+                                key={row.company.companyId}
+                                className={`${
+                                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                                } ${
+                                  row.isWinning
+                                    ? 'bg-yellow-50 border-yellow-200'
+                                    : ''
+                                }`}
+                              >
+                                <td className="px-4 py-2 border text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <span>{index + 1}</span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 border">
+                                  <div className="flex items-center">
+                                    <div className="ml-3">
+                                      <div className="text-sm font-medium text-gray-900">
+                                        {row.company.companyName}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {row.company.userName}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 border text-right">
+                                  <div
+                                    className={`text-sm font-semibold ${getPriceColor(
+                                      row.price || 0,
+                                      reservePrice
+                                    )}`}
+                                  >
+                                    {formatPriceForDisplay(row.price || 0)}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 border text-right">
+                                  <div
+                                    className={`text-sm font-medium ${
+                                      (row.saving || 0) > 0
+                                        ? 'text-green-600'
+                                        : (row.saving || 0) < 0
+                                        ? 'text-red-600'
+                                        : 'text-gray-600'
+                                    }`}
+                                  >
+                                    {formatPriceForDisplay(row.saving || 0)}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 border text-center">
+                                  <div
+                                    className={`text-sm font-medium ${
+                                      parseFloat(row.savingRate || '0') > 0
+                                        ? 'text-green-600'
+                                        : parseFloat(row.savingRate || '0') < 0
+                                        ? 'text-red-600'
+                                        : 'text-gray-600'
+                                    }`}
+                                  >
+                                    {row.savingRate}%
+                                  </div>
+                                </td>
+                                <td className="px-4 py-2 border text-center">
+                                  <span
+                                    className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
+                                      row.status || ''
+                                    )}`}
+                                  >
+                                    {row.status}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-2 border text-sm">
+                                  {formatDateTime(row.bidTime || '')}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-8 mb-6">
+                      ไม่พบผลการประมูล
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* ประวัติการเสนอราคา */}
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
