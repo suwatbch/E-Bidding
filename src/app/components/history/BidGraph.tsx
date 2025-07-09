@@ -184,9 +184,6 @@ export default function BidGraph({
               />
             </svg>
             กราฟประวัติการประมูล - {formatAuctionId(auctionId)}
-            <span className="text-sm opacity-75">
-              ({companies.length} บริษัท, {graphData.length} จุด)
-            </span>
           </h2>
           <button
             onClick={onClose}
