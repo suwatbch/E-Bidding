@@ -13,6 +13,7 @@ import {
 } from '@/app/components/ui/AucTable';
 import EmptyState from '@/app/components/ui/EmptyState';
 import BidHistory from '@/app/components/history/BidHistory';
+import BidGraph from '@/app/components/history/BidGraph';
 import BidPopup from '@/app/components/ui/BidPopup';
 import CustomAlert from '@/app/components/ui/CustomAlert';
 import {
@@ -83,6 +84,7 @@ export default function AuctionDetailPage() {
   const [error, setError] = useState('');
   const [timeRemaining, setTimeRemaining] = useState('');
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
+  const [showGraphPopup, setShowGraphPopup] = useState(false);
   const [showBidPopup, setShowBidPopup] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -994,13 +996,24 @@ export default function AuctionDetailPage() {
             </div>
 
             {/* History Button */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <button
-                onClick={() => setShowHistoryPopup(true)}
-                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
-              >
-                📊 ดูประวัติการเสนอราคา
-              </button>
+            <div className="flex gap-2">
+              <div className="bg-white rounded-lg shadow-sm border p-4 flex-1">
+                <button
+                  onClick={() => setShowHistoryPopup(true)}
+                  className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  📊 ประวัติ
+                </button>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-4 flex-1">
+                <button
+                  onClick={() => setShowGraphPopup(true)}
+                  className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  กราฟ
+                </button>
+              </div>
             </div>
 
             {/* Bid Button */}
@@ -1270,6 +1283,28 @@ export default function AuctionDetailPage() {
               : undefined
           }
           onClose={() => setShowHistoryPopup(false)}
+        />
+      )}
+
+      {/* Bid Graph Popup */}
+      {showGraphPopup && (
+        <BidGraph
+          isOpen={showGraphPopup}
+          onClose={() => setShowGraphPopup(false)}
+          auctionId={auctionId}
+          reservePrice={auction.reserve_price}
+          auction={{
+            currency: auction.currency,
+            name: auction.name,
+            start_dt: auction.start_dt,
+            end_dt: auction.end_dt,
+          }}
+          user={user}
+          userCompanyId={
+            user
+              ? participants.find((p) => p.user_id === user.user_id)?.company_id
+              : undefined
+          }
         />
       )}
 
