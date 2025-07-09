@@ -219,27 +219,12 @@ export interface UpdateAuctionWithParticipantsRequest {
   }[];
 }
 
-// Bid Status Constants
-export const BidStatus = {
-  ACCEPT: 'accept',
-  REJECT: 'reject',
-  CANCELED: 'canceled',
-} as const;
-
-export type BidStatusType = (typeof BidStatus)[keyof typeof BidStatus];
-
-export const getBidStatusColor = (status: string): string => {
-  switch (status) {
-    case BidStatus.ACCEPT:
-      return 'text-green-600 bg-green-100';
-    case BidStatus.REJECT:
-      return 'text-red-600 bg-red-100';
-    case BidStatus.CANCELED:
-      return 'text-gray-600 bg-gray-100';
-    default:
-      return 'text-gray-600 bg-gray-100';
-  }
-};
+// Import Bid Status utilities from globalFunction
+import {
+  BidStatus,
+  getBidStatusColor,
+  type BidStatusType,
+} from '@/app/utils/globalFunction';
 
 // Error handling helpers
 const handleAuctionsApiError = (

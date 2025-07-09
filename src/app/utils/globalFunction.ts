@@ -2,7 +2,6 @@ import {
   auctionsService,
   type AuctionParticipant,
   type AuctionBid,
-  getBidStatusColor,
 } from '@/app/services/auctionsService';
 
 import {
@@ -11,6 +10,7 @@ import {
 } from '@/app/services/userCompanyService';
 import { userService } from '@/app/services/userService';
 import { companyService } from '@/app/services/companyService';
+import { currencyConfig } from '@/app/model/config';
 
 // =============================================================================
 // USER COMPANY UTILITIES (NEW VERSIONS WITH userCompanyService)
@@ -193,6 +193,64 @@ export const isValidDate = (date: Date): boolean => {
  */
 export const getCurrentDateTime = (): string => {
   return formatDateForData(new Date());
+};
+
+/**
+ * ได้วันเวลาปัจจุบันในรูปแบบ dd/mm/yyyy hh:mm ตามเวลาท้องถิ่นของประเทศ
+ * @returns string ในรูปแบบ "dd/mm/yyyy hh:mm"
+ */
+export const getCurrentDateTimeFormatted = (): string => {
+  const now = new Date();
+  const day = now.getDate().toString().padStart(2, '0');
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const year = now.getFullYear().toString();
+  const hour = now.getHours().toString().padStart(2, '0');
+  const minute = now.getMinutes().toString().padStart(2, '0');
+
+  return `${day}/${month}/${year} ${hour}:${minute}`;
+};
+
+/**
+ * ฟังก์ชันสำหรับดึงชื่อ currency จาก ID
+ * @param currencyId - ID ของ currency
+ * @returns string - รหัสของ currency เช่น 'THB', 'USD'
+ */
+export const getCurrencyName = (currencyId: number): string => {
+  const currency = currencyConfig[currencyId as keyof typeof currencyConfig];
+  return currency ? currency.code : 'THB';
+};
+
+// =============================================================================
+// BID STATUS UTILITIES
+// =============================================================================
+
+/**
+ * Bid Status Constants
+ */
+export const BidStatus = {
+  ACCEPT: 'accept',
+  REJECT: 'reject',
+  CANCELED: 'canceled',
+} as const;
+
+export type BidStatusType = (typeof BidStatus)[keyof typeof BidStatus];
+
+/**
+ * ฟังก์ชันสำหรับดึงสี CSS สำหรับแสดงสถานะ bid
+ * @param status - สถานะของ bid เช่น 'accept', 'reject', 'canceled'
+ * @returns string - CSS classes สำหรับสีและพื้นหลัง
+ */
+export const getBidStatusColor = (status: string): string => {
+  switch (status) {
+    case BidStatus.ACCEPT:
+      return 'text-green-600 bg-green-100';
+    case BidStatus.REJECT:
+      return 'text-red-600 bg-red-100';
+    case BidStatus.CANCELED:
+      return 'text-gray-600 bg-gray-100';
+    default:
+      return 'text-gray-600 bg-gray-100';
+  }
 };
 
 /**
@@ -1984,6 +2042,7 @@ export default {
   parseStringToDate,
   isValidDate,
   getCurrentDateTime,
+  getCurrentDateTimeFormatted,
   safeParseDate,
   convertToLocalDateTimeString,
   createDateChangeHandler,
@@ -2067,4 +2126,11 @@ export default {
   createSecureUrl,
   createAuctionFormUrl,
   convertUTCToLocal,
+
+  // Currency
+  getCurrencyName,
+
+  // Bid Status
+  BidStatus,
+  getBidStatusColor,
 };

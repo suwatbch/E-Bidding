@@ -42,13 +42,14 @@ import {
   auctionTypeService,
   type AuctionType,
 } from '@/app/services/auctionTypeService';
-import { getStatusById, currencyConfig } from '@/app/model/config';
+import { getStatusById } from '@/app/model/config';
 import {
   decodeAuctionId,
   formatAuctionId,
   formatPriceForDisplay,
   formatDateTime,
   getPriceColor,
+  getCurrencyName,
 } from '@/app/utils/globalFunction';
 import {
   connectSocket,
@@ -371,7 +372,7 @@ export default function AuctionDetailPage() {
       setShowWinningIcon(true);
       setIsCountingDown(false);
       // อัปเดทสถานะเป็น 5 (สิ้นสุดแล้ว)
-      if (auction.status == 4) {
+      if (auction.status == 2 || auction.status == 3 || auction.status == 4) {
         updateAuctionStatusToEndingSoon(5);
       }
       return;
@@ -512,11 +513,6 @@ export default function AuctionDetailPage() {
   const getAuctionTypeName = (auctionTypeId: number): string => {
     const auctionType = auctionTypes.find((type) => type.id === auctionTypeId);
     return auctionType ? auctionType.name : `ประเภท ${auctionTypeId}`;
-  };
-
-  const getCurrencyName = (currencyId: number): string => {
-    const currency = currencyConfig[currencyId as keyof typeof currencyConfig];
-    return currency ? currency.code : '';
   };
 
   const getStatusIcon = (status: number) => {
@@ -1019,14 +1015,16 @@ export default function AuctionDetailPage() {
             </div>
 
             {/* auction report */}
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <button
-                onClick={() => setShowReportPopup(true)}
-                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
-              >
-                รายงานประมูล
-              </button>
-            </div>
+            {user?.type === 'admin' && (
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <button
+                  onClick={() => setShowReportPopup(true)}
+                  className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  รายงานประมูล
+                </button>
+              </div>
+            )}
 
             {/* Bid Button */}
             {canPlaceBid() && (
@@ -1132,7 +1130,7 @@ export default function AuctionDetailPage() {
                   </TableHead>
                   <TableHead className="w-[15%] min-w-[90px] max-w-[130px] text-center">
                     <div className="flex items-center justify-center gap-2">
-                      เวลา
+                      วันเวลา
                     </div>
                   </TableHead>
                 </TableRow>

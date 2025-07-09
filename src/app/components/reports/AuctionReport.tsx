@@ -6,6 +6,11 @@ import {
   formatDateTime,
   getBidHistoryData,
   formatAuctionId,
+  getCurrentDateTimeFormatted,
+  getCurrencyName,
+  getBidStatusColor,
+  getPriceColor,
+  BidStatus,
 } from '@/app/utils/globalFunction';
 
 interface AuctionReportProps {
@@ -89,27 +94,32 @@ export default function AuctionReport({
     }
   };
 
-  const getCurrentDateTime = () => {
-    return new Date().toLocaleString('th-TH', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   const getWinningBid = () => {
     if (bidHistory.length === 0) return null;
 
-    // หาราคาสูงสุดที่ยังไม่ถูก reject
+    // หาการเสนอราคาที่ accept ทั้งหมด
     const acceptedBids = bidHistory.filter(
       (bid) => bid.statusText === 'accept'
     );
     if (acceptedBids.length === 0) return null;
 
-    return acceptedBids.reduce((highest, current) =>
-      current.bidAmount > highest.bidAmount ? current : highest
+    // หารายการล่าสุดของแต่ละบริษัทที่เป็น accept
+    const companyLatestBids = new Map();
+
+    acceptedBids.forEach((bid) => {
+      const companyId = bid.companyId;
+      const existing = companyLatestBids.get(companyId);
+      if (!existing || new Date(bid.bidTime) > new Date(existing.bidTime)) {
+        companyLatestBids.set(companyId, bid);
+      }
+    });
+
+    // หาราคาต่ำสุดจากรายการล่าสุดของแต่ละบริษัท (ราคาที่ดีที่สุด)
+    const latestBids = Array.from(companyLatestBids.values());
+    if (latestBids.length === 0) return null;
+
+    return latestBids.reduce((min, current) =>
+      current.bidAmount < min.bidAmount ? current : min
     );
   };
 
@@ -209,7 +219,7 @@ export default function AuctionReport({
                   {auction?.name || `การประมูล ${formatAuctionId(auctionId)}`}
                 </h2>
                 <p className="text-sm text-gray-500 mt-2">
-                  วันที่พิมพ์: {getCurrentDateTime()}
+                  วันที่พิมพ์: {getCurrentDateTimeFormatted()}
                 </p>
               </div>
 
@@ -246,7 +256,9 @@ export default function AuctionReport({
                       <span className="font-medium">ราคาประกัน:</span>
                       <span className="font-semibold text-blue-600">
                         {formatPriceForDisplay(reservePrice)}{' '}
-                        {auction?.currency}
+                        {auction?.currency
+                          ? getCurrencyName(auction.currency)
+                          : ''}
                       </span>
                     </div>
                   </div>
@@ -267,15 +279,28 @@ export default function AuctionReport({
                         </div>
                         <div className="flex justify-between">
                           <span className="font-medium">ราคาที่ชนะ:</span>
-                          <span className="font-semibold text-green-600">
-                            {formatPriceForDisplay(winningBid.bidAmount)}
+                          <span
+                            className={`font-semibold ${getPriceColor(
+                              winningBid.bidAmount,
+                              reservePrice
+                            )}`}
+                          >
+                            {formatPriceForDisplay(winningBid.bidAmount)}{' '}
+                            {auction?.currency
+                              ? getCurrencyName(auction.currency)
+                              : ''}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="font-medium">
                             จำนวนเงินที่ประหยัด:
                           </span>
-                          <span className="font-semibold text-red-600">
+                          <span
+                            className={`font-semibold ${getPriceColor(
+                              getSavingsAmount(),
+                              reservePrice
+                            )}`}
+                          >
                             {formatPriceForDisplay(getSavingsAmount())}
                           </span>
                         </div>
@@ -283,7 +308,12 @@ export default function AuctionReport({
                           <span className="font-medium">
                             เปอร์เซ็นต์ประหยัด:
                           </span>
-                          <span className="font-semibold text-red-600">
+                          <span
+                            className={`font-semibold ${getPriceColor(
+                              getSavingsPercentage(),
+                              reservePrice
+                            )}`}
+                          >
                             {getSavingsPercentage().toFixed(2)}%
                           </span>
                         </div>
@@ -317,7 +347,7 @@ export default function AuctionReport({
                             ผู้เสนอราคา
                           </th>
                           <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
-                            ราคาเสนอ
+                            ราคา
                           </th>
                           <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
                             สถานะ
@@ -345,19 +375,22 @@ export default function AuctionReport({
                               {bid.fullname}
                             </td>
                             <td className="px-4 py-2 border text-sm text-right font-medium">
-                              {formatPriceForDisplay(bid.bidAmount)}
+                              <div
+                                className={`text-sm font-semibold ${getPriceColor(
+                                  bid.bidAmount,
+                                  reservePrice
+                                )}`}
+                              >
+                                {formatPriceForDisplay(bid.bidAmount)}
+                              </div>
                             </td>
                             <td className="px-4 py-2 border text-sm text-center">
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                  bid.statusText === 'accept'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
+                                className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
+                                  bid.statusText
+                                )}`}
                               >
-                                {bid.statusText === 'accept'
-                                  ? 'ยอมรับ'
-                                  : 'ปฏิเสธ'}
+                                {bid.statusText}
                               </span>
                             </td>
                             <td className="px-4 py-2 border text-sm">
@@ -378,7 +411,7 @@ export default function AuctionReport({
               {/* Footer */}
               <div className="border-t pt-4 text-sm text-gray-500 text-center">
                 <p>รายงานนี้สร้างโดยระบบประมูลอิเล็กทรอนิกส์</p>
-                <p>วันเวลาที่พิมพ์: {getCurrentDateTime()}</p>
+                <p>วันที่พิมพ์: {getCurrentDateTimeFormatted()}</p>
               </div>
             </div>
           )}

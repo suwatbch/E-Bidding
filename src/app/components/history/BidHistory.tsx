@@ -7,8 +7,10 @@ import {
   getBidHistoryData,
   formatAuctionId,
   getPriceColor,
+  getCurrencyName,
+  getBidStatusColor,
+  BidStatus,
 } from '@/app/utils/globalFunction';
-import { currencyConfig } from '@/app/model/config';
 
 interface BidHistoryProps {
   isOpen: boolean;
@@ -51,12 +53,6 @@ export default function BidHistory({
 
     return () => clearInterval(timer);
   }, []);
-
-  // ฟังก์ชันสำหรับดึงชื่อ currency
-  const getCurrencyName = (currencyId: number): string => {
-    const currency = currencyConfig[currencyId as keyof typeof currencyConfig];
-    return currency ? currency.code : 'THB';
-  };
 
   // ฟังก์ชันตรวจสอบว่าสามารถ reject bid ได้หรือไม่ (ใช้ logic เดียวกับ canPlaceBid)
   const canRejectBid = (): boolean => {
@@ -240,16 +236,16 @@ export default function BidHistory({
                         บริษัท
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        ผู้ประมูล
+                        ผู้เสนอราคา
                       </th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        ราคาเสนอ
+                        ราคา
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         สถานะ
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
-                        วันที่-เวลา
+                        วันเวลา
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                         จัดการ
@@ -309,7 +305,7 @@ export default function BidHistory({
                               {formatPriceForDisplay(
                                 Math.abs(bid.priceDifference)
                               )}{' '}
-                              ({bid.percentageDifference.toFixed(1)}%)
+                              ({bid.percentageDifference.toFixed(2)}%)
                             </div>
                           )}
                         </td>
@@ -343,7 +339,7 @@ export default function BidHistory({
                                   d="M6 18L18 6M6 6l12 12"
                                 />
                               </svg>
-                              ปฏิเสธ
+                              reject
                             </button>
                           ) : (
                             <span className="text-gray-400 text-xs">-</span>
@@ -399,7 +395,11 @@ export default function BidHistory({
                       {formatPriceForDisplay(reservePrice)}{' '}
                       {getCurrencyName(auction?.currency || 1)}{' '}
                     </span>
-                    • ราคาล่าสุด:{' '}
+                    •{' '}
+                    {user && user.type === 'admin'
+                      ? 'ราคาที่ดีที่สุด'
+                      : 'ราคาล่าสุด'}
+                    :{' '}
                     <span
                       className={`font-medium ${(() => {
                         const acceptedBids = bidHistory.filter(
@@ -407,17 +407,46 @@ export default function BidHistory({
                         );
                         if (acceptedBids.length === 0) return 'text-gray-500';
 
-                        // หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
-                        const latestAcceptedBid = acceptedBids.sort(
-                          (a, b) =>
-                            new Date(b.bidTime).getTime() -
-                            new Date(a.bidTime).getTime()
-                        )[0];
+                        if (user && user.type === 'admin') {
+                          // สำหรับ admin: หาราคาที่ดีที่สุด (ต่ำสุด) จากรายการล่าสุดของแต่ละบริษัท
+                          const companyLatestBids = new Map();
 
-                        return getPriceColor(
-                          latestAcceptedBid.bidAmount,
-                          reservePrice
-                        );
+                          // หารายการล่าสุดของแต่ละบริษัทที่เป็น accept
+                          acceptedBids.forEach((bid) => {
+                            const companyId = bid.companyId;
+                            const existing = companyLatestBids.get(companyId);
+                            if (
+                              !existing ||
+                              new Date(bid.bidTime) > new Date(existing.bidTime)
+                            ) {
+                              companyLatestBids.set(companyId, bid);
+                            }
+                          });
+
+                          // หาราคาต่ำสุดจากรายการล่าสุดของแต่ละบริษัท
+                          const latestBids = Array.from(
+                            companyLatestBids.values()
+                          );
+                          if (latestBids.length === 0) return 'text-gray-500';
+
+                          const bestBid = latestBids.reduce((min, bid) =>
+                            bid.bidAmount < min.bidAmount ? bid : min
+                          );
+
+                          return getPriceColor(bestBid.bidAmount, reservePrice);
+                        } else {
+                          // สำหรับ user: หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
+                          const latestAcceptedBid = acceptedBids.sort(
+                            (a, b) =>
+                              new Date(b.bidTime).getTime() -
+                              new Date(a.bidTime).getTime()
+                          )[0];
+
+                          return getPriceColor(
+                            latestAcceptedBid.bidAmount,
+                            reservePrice
+                          );
+                        }
                       })()}`}
                     >
                       {(() => {
@@ -426,16 +455,45 @@ export default function BidHistory({
                         );
                         if (acceptedBids.length === 0) return 'ยังไม่มี';
 
-                        // หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
-                        const latestAcceptedBid = acceptedBids.sort(
-                          (a, b) =>
-                            new Date(b.bidTime).getTime() -
-                            new Date(a.bidTime).getTime()
-                        )[0];
+                        if (user && user.type === 'admin') {
+                          // สำหรับ admin: หาราคาที่ดีที่สุด (ต่ำสุด) จากรายการล่าสุดของแต่ละบริษัท
+                          const companyLatestBids = new Map();
 
-                        return formatPriceForDisplay(
-                          latestAcceptedBid.bidAmount
-                        );
+                          // หารายการล่าสุดของแต่ละบริษัทที่เป็น accept
+                          acceptedBids.forEach((bid) => {
+                            const companyId = bid.companyId;
+                            const existing = companyLatestBids.get(companyId);
+                            if (
+                              !existing ||
+                              new Date(bid.bidTime) > new Date(existing.bidTime)
+                            ) {
+                              companyLatestBids.set(companyId, bid);
+                            }
+                          });
+
+                          // หาราคาต่ำสุดจากรายการล่าสุดของแต่ละบริษัท
+                          const latestBids = Array.from(
+                            companyLatestBids.values()
+                          );
+                          if (latestBids.length === 0) return 'ยังไม่มี';
+
+                          const bestBid = latestBids.reduce((min, bid) =>
+                            bid.bidAmount < min.bidAmount ? bid : min
+                          );
+
+                          return formatPriceForDisplay(bestBid.bidAmount);
+                        } else {
+                          // สำหรับ user: หาราคาล่าสุดที่ accept โดยเรียงตามเวลา
+                          const latestAcceptedBid = acceptedBids.sort(
+                            (a, b) =>
+                              new Date(b.bidTime).getTime() -
+                              new Date(a.bidTime).getTime()
+                          )[0];
+
+                          return formatPriceForDisplay(
+                            latestAcceptedBid.bidAmount
+                          );
+                        }
                       })()}{' '}
                       {bidHistory.filter((b) => b.status === 'accept').length >
                         0 && getCurrencyName(auction?.currency || 1)}
