@@ -131,7 +131,7 @@ export default function AuctionReport({
 
   const getSavingsPercentage = () => {
     const savings = getSavingsAmount();
-    if (savings <= 0) return 0;
+    if (reservePrice === 0) return 0;
     return (savings / reservePrice) * 100;
   };
 
@@ -297,11 +297,14 @@ export default function AuctionReport({
                           </span>
                           <span
                             className={`font-semibold ${getPriceColor(
-                              getSavingsAmount(),
+                              reservePrice - getSavingsAmount(),
                               reservePrice
                             )}`}
                           >
-                            {formatPriceForDisplay(getSavingsAmount())}
+                            {formatPriceForDisplay(getSavingsAmount())}{' '}
+                            {auction?.currency
+                              ? getCurrencyName(auction.currency)
+                              : ''}
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -310,7 +313,7 @@ export default function AuctionReport({
                           </span>
                           <span
                             className={`font-semibold ${getPriceColor(
-                              getSavingsPercentage(),
+                              reservePrice - getSavingsPercentage(),
                               reservePrice
                             )}`}
                           >
@@ -372,7 +375,7 @@ export default function AuctionReport({
                               {bid.companyName}
                             </td>
                             <td className="px-4 py-2 border text-sm">
-                              {bid.fullname}
+                              {bid.userName}
                             </td>
                             <td className="px-4 py-2 border text-sm text-right font-medium">
                               <div

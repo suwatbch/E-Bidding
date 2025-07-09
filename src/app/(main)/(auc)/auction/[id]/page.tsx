@@ -1015,7 +1015,7 @@ export default function AuctionDetailPage() {
             </div>
 
             {/* auction report */}
-            {user?.type === 'admin' && (
+            {user?.type === 'admin' && auction.status == 5 && (
               <div className="bg-white rounded-lg shadow-sm border p-4">
                 <button
                   onClick={() => setShowReportPopup(true)}
