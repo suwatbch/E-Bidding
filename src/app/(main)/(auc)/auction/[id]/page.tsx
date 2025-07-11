@@ -15,6 +15,7 @@ import EmptyState from '@/app/components/ui/EmptyState';
 import BidHistory from '@/app/components/history/BidHistory';
 import BidGraph from '@/app/components/history/BidGraph';
 import AuctionReport from '@/app/components/reports/AuctionReport';
+import AuctionReport2 from '@/app/components/reports/AuctionReport2';
 import BidPopup from '@/app/components/ui/BidPopup';
 import CustomAlert from '@/app/components/ui/CustomAlert';
 import {
@@ -88,6 +89,7 @@ export default function AuctionDetailPage() {
   const [showHistoryPopup, setShowHistoryPopup] = useState(false);
   const [showGraphPopup, setShowGraphPopup] = useState(false);
   const [showReportPopup, setShowReportPopup] = useState(false);
+  const [showReport2Popup, setShowReport2Popup] = useState(false);
   const [showBidPopup, setShowBidPopup] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -1026,6 +1028,18 @@ export default function AuctionDetailPage() {
               </div>
             )}
 
+            {/* auction report */}
+            {user?.type === 'admin' && auction.status == 5 && (
+              <div className="bg-white rounded-lg shadow-sm border p-4">
+                <button
+                  onClick={() => setShowReport2Popup(true)}
+                  className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
+                >
+                  รายงานประมูล2
+                </button>
+              </div>
+            )}
+
             {/* Bid Button */}
             {canPlaceBid() && (
               <div className="bg-white rounded-lg shadow-sm border p-6">
@@ -1337,6 +1351,15 @@ export default function AuctionDetailPage() {
               ? participants.find((p) => p.user_id === user.user_id)?.company_id
               : undefined
           }
+        />
+      )}
+
+      {/* Auction Report2 Popup */}
+      {showReport2Popup && (
+        <AuctionReport2
+          isOpen={showReport2Popup}
+          onClose={() => setShowReport2Popup(false)}
+          auctionIdString={params.id as string}
         />
       )}
 
