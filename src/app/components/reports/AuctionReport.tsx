@@ -7,80 +7,73 @@ import {
   getBidHistoryData,
   formatAuctionId,
   getCurrentDateTimeFormatted,
+  getPriceColor,
   getCurrencyName,
   getBidStatusColor,
-  getPriceColor,
   BidStatus,
+  decodeAuctionId,
 } from '@/app/utils/globalFunction';
+import { auctionsService } from '@/app/services/auctionsService';
 
-interface AuctionReportProps {
+interface AuctionReport2Props {
   isOpen: boolean;
   onClose: () => void;
-  auctionId: number;
-  reservePrice: number;
-  auction?: {
-    currency: number;
-    name?: string;
-    start_dt?: string;
-    end_dt?: string;
-    description?: string;
-  };
-  user?: {
-    user_id: number;
-    type?: string;
-    fullname?: string;
-    username?: string;
-  } | null;
-  userCompanyId?: number;
+  auctionIdString: string; // รับ string เช่น "AUC0040"
 }
 
-export default function AuctionReport({
+export default function AuctionReport2({
   isOpen,
   onClose,
-  auctionId,
-  reservePrice,
-  auction,
-  user,
-  userCompanyId,
-}: AuctionReportProps) {
+  auctionIdString,
+}: AuctionReport2Props) {
+  const [auction, setAuction] = useState<any>(null);
   const [bidHistory, setBidHistory] = useState<any[]>([]);
+  const [participants, setParticipants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [reservePrice, setReservePrice] = useState(0);
   const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  // แปลง auctionIdString เป็น number
+  const auctionId =
+    decodeAuctionId(auctionIdString) ||
+    parseInt(auctionIdString.replace(/\D/g, ''));
 
-    const loadBidHistory = async () => {
+  useEffect(() => {
+    if (!isOpen || !auctionId) return;
+
+    const loadAllData = async () => {
       setIsLoading(true);
       try {
-        const data = await getBidHistoryData(auctionId, reservePrice);
+        // 1. โหลดข้อมูลประมูล
+        const auctionResponse = await auctionsService.getAuctionById(auctionId);
+        if (auctionResponse.success && auctionResponse.data) {
+          setAuction(auctionResponse.data);
+          setReservePrice(auctionResponse.data.reserve_price);
 
-        // กรองข้อมูลตามสิทธิ์ผู้ใช้
-        let filteredData = data;
-
-        if (user && user.type !== 'admin') {
-          if (userCompanyId) {
-            filteredData = data.filter(
-              (bid: any) => bid.companyId === userCompanyId
-            );
-          } else {
-            filteredData = data.filter(
-              (bid: any) => bid.userId === user.user_id
-            );
+          // 2. โหลดข้อมูลผู้เข้าร่วมประมูล
+          const participantsResponse =
+            await auctionsService.getAuctionParticipantsWithDetails(auctionId);
+          if (participantsResponse.success && participantsResponse.data) {
+            setParticipants(participantsResponse.data);
           }
-        }
 
-        setBidHistory(filteredData);
+          // 3. โหลดประวัติการเสนอราคา
+          const bidData = await getBidHistoryData(
+            auctionId,
+            auctionResponse.data.reserve_price
+          );
+          setBidHistory(bidData);
+        }
       } catch (error) {
-        console.error('Error loading bid history:', error);
+        console.error('Error loading auction data:', error);
         setBidHistory([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadBidHistory();
-  }, [isOpen, auctionId, reservePrice, user, userCompanyId]);
+    loadAllData();
+  }, [isOpen, auctionId]);
 
   const handlePrint = () => {
     if (printRef.current) {
@@ -90,7 +83,7 @@ export default function AuctionReport({
       document.body.innerHTML = printContent;
       window.print();
       document.body.innerHTML = originalContent;
-      window.location.reload(); // รีโหลดหน้าเพื่อคืนค่า event listeners
+      window.location.reload();
     }
   };
 
@@ -158,7 +151,7 @@ export default function AuctionReport({
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            รายงานผลการประมูล - {formatAuctionId(auctionId)}
+            รายงานผลการประมูล - {auctionIdString}
           </h2>
           <div className="flex gap-2">
             <button
@@ -216,7 +209,7 @@ export default function AuctionReport({
                   รายงานผลการประมูลอิเล็กทรอนิกส์
                 </h1>
                 <h2 className="text-lg font-semibold text-gray-600">
-                  {auction?.name || `การประมูล ${formatAuctionId(auctionId)}`}
+                  {auction?.name || `การประมูล ${auctionIdString}`}
                 </h2>
                 <p className="text-sm text-gray-500 mt-2">
                   วันที่พิมพ์: {getCurrentDateTimeFormatted()}
@@ -232,7 +225,7 @@ export default function AuctionReport({
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="font-medium">รหัสการประมูล:</span>
-                      <span>{formatAuctionId(auctionId)}</span>
+                      <span>{auctionIdString}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">ชื่อการประมูล:</span>
@@ -296,10 +289,13 @@ export default function AuctionReport({
                             จำนวนเงินที่ประหยัด:
                           </span>
                           <span
-                            className={`font-semibold ${getPriceColor(
-                              reservePrice - getSavingsAmount(),
-                              reservePrice
-                            )}`}
+                            className={`font-semibold ${
+                              getSavingsAmount() > 0
+                                ? 'text-green-600'
+                                : getSavingsAmount() < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                            }`}
                           >
                             {formatPriceForDisplay(getSavingsAmount())}{' '}
                             {auction?.currency
@@ -312,10 +308,13 @@ export default function AuctionReport({
                             เปอร์เซ็นต์ประหยัด:
                           </span>
                           <span
-                            className={`font-semibold ${getPriceColor(
-                              reservePrice - getSavingsPercentage(),
-                              reservePrice
-                            )}`}
+                            className={`font-semibold ${
+                              getSavingsPercentage() > 0
+                                ? 'text-green-600'
+                                : getSavingsPercentage() < 0
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                            }`}
                           >
                             {getSavingsPercentage().toFixed(2)}%
                           </span>
@@ -336,9 +335,9 @@ export default function AuctionReport({
                   ตารางผลการประมูล
                 </h3>
                 {(() => {
-                  // สร้างข้อมูลตารางแบบเดียวกับหน้าประมูล
+                  // สร้างข้อมูลตารางแบบเดียวกับหน้าประมูล (ใช้ participants)
                   const getTableData = () => {
-                    if (!auction) return [];
+                    if (!auction || participants.length === 0) return [];
 
                     // หาข้อมูลการเสนอราคาล่าสุดที่ยัง accept อยู่ของแต่ละบริษัท
                     const latestAcceptedBidsByCompany = new Map();
@@ -372,63 +371,47 @@ export default function AuctionReport({
                           ).bidAmount
                         : null;
 
-                    // สร้างข้อมูลสำหรับแสดงในตาราง
-                    const companiesWithBids = new Map();
+                    // ใช้ข้อมูลจาก participants (ผู้เข้าร่วมประมูลทั้งหมด)
+                    return participants.map((participant) => {
+                      const latestAcceptedBid = latestAcceptedBidsByCompany.get(
+                        participant.company_id
+                      );
 
-                    // เก็บข้อมูลบริษัทจาก bidHistory
-                    bidHistory.forEach((bid) => {
-                      if (bid.statusText === 'accept') {
-                        companiesWithBids.set(bid.companyId, {
-                          companyId: bid.companyId,
-                          companyName: bid.companyName,
-                          userName: bid.userName,
-                        });
-                      }
-                    });
+                      let price = null;
+                      let saving = null;
+                      let savingRate = null;
+                      let status = null;
+                      let bidTime = null;
 
-                    return Array.from(companiesWithBids.values())
-                      .map((company) => {
-                        const latestAcceptedBid =
-                          latestAcceptedBidsByCompany.get(company.companyId);
+                      if (latestAcceptedBid && auction) {
+                        price = latestAcceptedBid.bidAmount;
+                        saving = reservePrice - price;
+                        savingRate = ((saving / reservePrice) * 100).toFixed(2);
+                        status = latestAcceptedBid.statusText;
+                        bidTime = latestAcceptedBid.bidTime;
 
-                        let price = null;
-                        let saving = null;
-                        let savingRate = null;
-                        let status = null;
-                        let bidTime = null;
-
-                        if (latestAcceptedBid && auction) {
-                          price = latestAcceptedBid.bidAmount;
-                          saving = reservePrice - price;
-                          savingRate = ((saving / reservePrice) * 100).toFixed(
-                            2
-                          );
-                          status = latestAcceptedBid.statusText;
-                          bidTime = latestAcceptedBid.bidTime;
-
-                          // ถ้าราคาเท่ากับราคาประกัน ให้ saving = 0
-                          if (price === reservePrice) {
-                            saving = 0;
-                            savingRate = '0.00';
-                          }
+                        // ถ้าราคาเท่ากับราคาประกัน ให้ saving = 0
+                        if (price === reservePrice) {
+                          saving = 0;
+                          savingRate = '0.00';
                         }
+                      }
 
-                        const isWinning =
-                          latestAcceptedBid &&
-                          lowestPrice !== null &&
-                          Number(price) === Number(lowestPrice);
+                      const isWinning =
+                        latestAcceptedBid &&
+                        lowestPrice !== null &&
+                        Number(price) === Number(lowestPrice);
 
-                        return {
-                          company,
-                          price,
-                          saving,
-                          savingRate,
-                          status,
-                          bidTime,
-                          isWinning,
-                        };
-                      })
-                      .filter((row) => row.price !== null); // แสดงเฉพาะบริษัทที่มีการเสนอราคา
+                      return {
+                        participant,
+                        price,
+                        saving,
+                        savingRate,
+                        status,
+                        bidTime,
+                        isWinning,
+                      };
+                    });
                   };
 
                   const tableData = getTableData();
@@ -463,10 +446,17 @@ export default function AuctionReport({
                         </thead>
                         <tbody>
                           {tableData
-                            .sort((a, b) => (a.price || 0) - (b.price || 0)) // เรียงตามราคาจากน้อยไปมาก
+                            .sort((a, b) => {
+                              // ใส่คนที่ไม่มีราคาไว้ท้าย
+                              if (a.price === null && b.price === null)
+                                return 0;
+                              if (a.price === null) return 1;
+                              if (b.price === null) return -1;
+                              return a.price - b.price; // เรียงตามราคาจากน้อยไปมาก
+                            })
                             .map((row, index) => (
                               <tr
-                                key={row.company.companyId}
+                                key={row.participant.id}
                                 className={`${
                                   index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                                 } ${
@@ -484,61 +474,71 @@ export default function AuctionReport({
                                   <div className="flex items-center">
                                     <div className="ml-3">
                                       <div className="text-sm font-medium text-gray-900">
-                                        {row.company.companyName}
+                                        {row.participant.company_name ||
+                                          `บริษัท ${row.participant.company_id}`}
                                       </div>
                                       <div className="text-xs text-gray-500">
-                                        {row.company.userName}
+                                        {row.participant.user_name ||
+                                          `ผู้ใช้ ${row.participant.user_id}`}
                                       </div>
                                     </div>
                                   </div>
                                 </td>
                                 <td className="px-4 py-2 border text-right">
-                                  <div
-                                    className={`text-sm font-semibold ${getPriceColor(
-                                      row.price || 0,
-                                      reservePrice
-                                    )}`}
-                                  >
-                                    {formatPriceForDisplay(row.price || 0)}
-                                  </div>
+                                  {row.price && (
+                                    <div
+                                      className={`text-sm font-semibold ${getPriceColor(
+                                        row.price,
+                                        reservePrice
+                                      )}`}
+                                    >
+                                      {formatPriceForDisplay(row.price)}
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2 border text-right">
-                                  <div
-                                    className={`text-sm font-medium ${
-                                      (row.saving || 0) > 0
-                                        ? 'text-green-600'
-                                        : (row.saving || 0) < 0
-                                        ? 'text-red-600'
-                                        : 'text-gray-600'
-                                    }`}
-                                  >
-                                    {formatPriceForDisplay(row.saving || 0)}
-                                  </div>
+                                  {row.saving && (
+                                    <div
+                                      className={`text-sm font-medium ${
+                                        row.saving > 0
+                                          ? 'text-green-600'
+                                          : row.saving < 0
+                                          ? 'text-red-600'
+                                          : 'text-gray-600'
+                                      }`}
+                                    >
+                                      {formatPriceForDisplay(row.saving)}
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2 border text-center">
-                                  <div
-                                    className={`text-sm font-medium ${
-                                      parseFloat(row.savingRate || '0') > 0
-                                        ? 'text-green-600'
-                                        : parseFloat(row.savingRate || '0') < 0
-                                        ? 'text-red-600'
-                                        : 'text-gray-600'
-                                    }`}
-                                  >
-                                    {row.savingRate}%
-                                  </div>
+                                  {row.savingRate && (
+                                    <div
+                                      className={`text-sm font-medium ${
+                                        parseFloat(row.savingRate) > 0
+                                          ? 'text-green-600'
+                                          : parseFloat(row.savingRate) < 0
+                                          ? 'text-red-600'
+                                          : 'text-gray-600'
+                                      }`}
+                                    >
+                                      {row.savingRate}%
+                                    </div>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2 border text-center">
-                                  <span
-                                    className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
-                                      row.status || ''
-                                    )}`}
-                                  >
-                                    {row.status}
-                                  </span>
+                                  {row.status && (
+                                    <span
+                                      className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
+                                        row.status
+                                      )}`}
+                                    >
+                                      {row.status}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-4 py-2 border text-sm">
-                                  {formatDateTime(row.bidTime || '')}
+                                  {row.bidTime && formatDateTime(row.bidTime)}
                                 </td>
                               </tr>
                             ))}
