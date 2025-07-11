@@ -126,6 +126,7 @@ export default function AuctionsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [perPage, setPerPage] = useLocalStorage('auctionPerPage', 10);
   const [mounted, setMounted] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   const { user } = useAuth();
 
@@ -334,6 +335,25 @@ export default function AuctionsPage() {
     } catch (error: any) {
       console.error('Error deleting auction:', error);
       alert('เกิดข้อผิดพลาดในการลบข้อมูล');
+    }
+  };
+
+  const handleCheckExpiredAuctions = async () => {
+    setIsCheckingStatus(true);
+    try {
+      const result = await auctionsService.checkExpiredAuctions();
+      if (result.success && result.message === null) {
+        if (result.data?.updatedCount > 0) {
+          await loadAuctions();
+        }
+      } else {
+        alert(result.message || 'เกิดข้อผิดพลาดในการเช็คสถานะ');
+      }
+    } catch (error) {
+      console.error('Error checking expired auctions:', error);
+      alert('เกิดข้อผิดพลาดในการเช็คสถานะ');
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
 
@@ -680,7 +700,37 @@ export default function AuctionsPage() {
 
         {user?.type === 'admin' && (
           <div className="flex justify-between items-center m-4">
-            <div className="flex"></div>
+            <div className="flex">
+              <button
+                onClick={handleCheckExpiredAuctions}
+                disabled={isCheckingStatus}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isCheckingStatus ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    กำลังเช็ค...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    ตรวจสอบสถานะปัจจุบัน
+                  </>
+                )}
+              </button>
+            </div>
             <Link
               href={createSecureUrl('/auctionform?id=', 0)}
               prefetch={false}

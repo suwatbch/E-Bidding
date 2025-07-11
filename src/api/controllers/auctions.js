@@ -23,6 +23,7 @@ const {
   rejectBid,
   getAuctionBids,
   updateAuctionStatus,
+  checkAndUpdateExpiredAuctions,
 } = require('../helper/auctionsHelper');
 
 // GET /api/auctions/types - ดึงข้อมูลประเภทประมูลทั้งหมด (ต้องอยู่ก่อน /:id)
@@ -1082,6 +1083,46 @@ router.post('/update-status/:id', async (req, res) => {
       success: false,
       message: 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์',
       error: error.message,
+    });
+  }
+});
+
+// POST /api/auctions/check-expired - เช็คและอัพเดทสถานะการประมูลที่หมดเวลาแล้ว
+router.post('/check-expired', async (req, res) => {
+  try {
+    const result = await checkAndUpdateExpiredAuctions();
+
+    if (result.success) {
+      // Broadcast สถานะใหม่ผ่าน Socket.IO สำหรับการประมูลที่อัพเดท
+      const io = req.app.get('io');
+      if (io && result.updatedAuctions && result.updatedAuctions.length > 0) {
+        result.updatedAuctions.forEach((auction) => {
+          io.emit('auctionStatusUpdate', {
+            auctionId: auction.auction_id,
+            status: auction.status,
+          });
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: null,
+        data: {
+          updatedCount: result.updatedCount,
+          updatedAuctions: result.updatedAuctions,
+        },
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        message: result.message || 'เกิดข้อผิดพลาดในการเช็คสถานะ',
+      });
+    }
+  } catch (error) {
+    console.error('Error in checkExpiredAuctions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการเช็คสถานะ',
     });
   }
 });

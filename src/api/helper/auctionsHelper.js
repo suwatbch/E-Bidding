@@ -1069,6 +1069,81 @@ const updateAuctionStatus = async (auctionId, status) => {
   }
 };
 
+/**
+ * เช็คและอัพเดทสถานะการประมูลที่หมดเวลาแล้ว
+ * เช็คสถานะ 2, 3, 4 และเปลี่ยนเป็น 5 ถ้าหมดเวลาแล้ว
+ */
+const checkAndUpdateExpiredAuctions = async () => {
+  try {
+    // ดึงการประมูลที่มีสถานะ 2, 3, 4 และเวลาสิ้นสุดผ่านไปแล้ว
+    const selectQuery = `
+      SELECT auction_id, name, end_dt, status
+      FROM auction 
+      WHERE status IN (2, 3, 4) 
+        AND is_deleted = 0 
+        AND end_dt < UTC_TIMESTAMP()
+    `;
+
+    const selectResult = await executeQuery(selectQuery);
+
+    if (!selectResult.success) {
+      return {
+        success: false,
+        message: 'ไม่สามารถดึงข้อมูลการประมูลได้',
+      };
+    }
+
+    const expiredAuctions = selectResult.data;
+
+    if (expiredAuctions.length === 0) {
+      return {
+        success: true,
+        message: 'ไม่มีการประมูลที่ต้องอัพเดทสถานะ',
+        updatedCount: 0,
+        updatedAuctions: [],
+      };
+    }
+
+    // อัพเดทสถานะเป็น 5 (สิ้นสุดประมูล)
+    const auctionIds = expiredAuctions.map((auction) => auction.auction_id);
+    const updateQuery = `
+      UPDATE auction 
+      SET status = 5, updated_dt = UTC_TIMESTAMP()
+      WHERE auction_id IN (${auctionIds.map(() => '?').join(',')})
+        AND is_deleted = 0
+    `;
+
+    const updateResult = await executeQuery(updateQuery, auctionIds);
+
+    if (!updateResult.success) {
+      return {
+        success: false,
+        message: 'ไม่สามารถอัพเดทสถานะการประมูลได้',
+      };
+    }
+
+    // เตรียมข้อมูลที่อัพเดทแล้ว
+    const updatedAuctions = expiredAuctions.map((auction) => ({
+      ...auction,
+      status: 5,
+      updated_dt: getDateTimeUTCNow(),
+    }));
+
+    return {
+      success: true,
+      message: `อัพเดทสถานะการประมูลสำเร็จ จำนวน ${updateResult.data.affectedRows} รายการ`,
+      updatedCount: updateResult.data.affectedRows,
+      updatedAuctions: updatedAuctions,
+    };
+  } catch (error) {
+    console.error('Error in checkAndUpdateExpiredAuctions:', error);
+    return {
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการเช็คสถานะการประมูล',
+    };
+  }
+};
+
 module.exports = {
   getAllAuctions,
   getAuctionById,
@@ -1093,4 +1168,5 @@ module.exports = {
   rejectBid,
   getAuctionBids,
   updateAuctionStatus,
+  checkAndUpdateExpiredAuctions,
 };

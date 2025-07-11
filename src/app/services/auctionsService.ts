@@ -891,4 +891,24 @@ export const auctionsService = {
       };
     }
   },
+
+  /**
+   * เช็คและอัพเดทสถานะการประมูลที่หมดเวลาแล้ว
+   */
+  checkExpiredAuctions: async (): Promise<ApiResponse> => {
+    try {
+      const response: AxiosResponse<ApiResponse> = await auctionsApi.post(
+        '/check-expired'
+      );
+      return response.data;
+    } catch (error: any) {
+      console.error('Error checking expired auctions:', error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          'เกิดข้อผิดพลาดในการเช็คสถานะการประมูล',
+      };
+    }
+  },
 };
