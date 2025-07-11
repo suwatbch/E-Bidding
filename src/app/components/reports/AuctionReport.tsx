@@ -7,9 +7,9 @@ import {
   getBidHistoryData,
   formatAuctionId,
   getCurrentDateTimeFormatted,
-  getPriceColor,
+  getPriceColorText700,
   getCurrencyName,
-  getBidStatusColor,
+  getBidStatusColorText700,
   BidStatus,
   decodeAuctionId,
 } from '@/app/utils/globalFunction';
@@ -78,12 +78,111 @@ export default function AuctionReport2({
   const handlePrint = () => {
     if (printRef.current) {
       const printContent = printRef.current.innerHTML;
-      const originalContent = document.body.innerHTML;
 
-      document.body.innerHTML = printContent;
-      window.print();
-      document.body.innerHTML = originalContent;
-      window.location.reload();
+      // เปิดแทบใหม่และพิมพ์ทันที
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>รายงานประมูล - ${auctionIdString}</title>
+            <meta charset="utf-8">
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                margin: 20px; 
+                color: black;
+                background: white;
+              }
+              table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                margin: 10px 0;
+              }
+              th, td { 
+                border: 1px solid #ddd; 
+                padding: 8px; 
+                text-align: left; 
+              }
+              th { 
+                background-color: #f5f5f5; 
+                font-weight: bold;
+              }
+              .text-center { text-align: center; }
+              .text-right { text-align: right; }
+              .font-bold, .font-semibold, .font-medium { font-weight: bold; }
+                                 .text-green-700 { color: inherit; }
+                 .text-red-700 { color: inherit; }
+                 .text-blue-700 { color: inherit; }
+              .text-gray-500 { color: #6b7280; }
+              .bg-yellow-50 { background-color: #fefce8; }
+              .border-yellow-200 { border-color: #fde047; }
+              .space-y-3 > * + * { margin-top: 12px; }
+              .space-y-6 > * + * { margin-top: 24px; }
+              .border-b { border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; }
+              .grid { display: grid; }
+              .grid-cols-1 { grid-template-columns: 1fr; }
+              .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+              .gap-6 { gap: 24px; }
+              @media screen and (min-width: 768px) {
+                .md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+              }
+              .flex { display: flex; }
+              .justify-between { justify-content: space-between; }
+              .items-center { align-items: center; }
+              .gap-2 { gap: 8px; }
+              .text-xl { font-size: 1.25rem; }
+              .text-lg { font-size: 1.125rem; }
+              .text-sm { font-size: 0.875rem; }
+              .text-xs { font-size: 0.75rem; }
+              .mb-2 { margin-bottom: 8px; }
+              .mt-2 { margin-top: 8px; }
+              .px-2 { padding-left: 8px; padding-right: 8px; }
+              .py-1 { padding-top: 4px; padding-bottom: 4px; }
+              .rounded { border-radius: 4px; }
+              .bg-green-100 { background-color: #dcfce7; }
+              .bg-red-100 { background-color: #fee2e2; }
+              
+              /* Print specific styles to maintain layout */
+              .overflow-x-auto { overflow-x: auto; }
+              .min-w-full { min-width: 100%; }
+              
+              @media print {
+                body { margin: 0 0cm; font-size: 12px; }
+                @page { margin: 1cm 1.5cm; size: A4; }
+                
+                /* Force 2-column layout for auction info */
+                .md\\:grid-cols-2 { 
+                  grid-template-columns: repeat(2, 1fr) !important; 
+                }
+                
+                /* Table adjustments for print */
+                .overflow-x-auto { overflow: visible !important; }
+                table { font-size: 0.75rem !important; } /* xs */
+                th, td { 
+                  padding: 4px !important; 
+                  font-size: 0.75rem !important; /* xs */
+                }
+                th { font-size: 0.8rem !important; } /* หัวตารางใหญ่กว่าเล็กน้อย */
+              }
+            </style>
+          </head>
+          <body>
+            ${printContent}
+            <script>
+              window.onload = function() {
+                window.print();
+                window.onafterprint = function() {
+                  window.close();
+                };
+              };
+            </script>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
     }
   };
 
@@ -156,7 +255,7 @@ export default function AuctionReport2({
           <div className="flex gap-2">
             <button
               onClick={handlePrint}
-              className="bg-white text-green-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium flex items-center gap-2"
+              className="bg-white text-green-700 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors font-medium flex items-center gap-2"
             >
               <svg
                 className="w-4 h-4"
@@ -195,23 +294,23 @@ export default function AuctionReport2({
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+        <div className="p-8 overflow-y-auto max-h-[calc(90vh-160px)]">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-              <span className="ml-2 text-gray-600">กำลังโหลดข้อมูล...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div>
+              <span className="ml-2">กำลังโหลดข้อมูล...</span>
             </div>
           ) : (
             <div ref={printRef} className="space-y-6">
               {/* Header ของรายงาน */}
               <div className="text-center border-b pb-4">
-                <h1 className="text-2xl font-bold text-gray-800 mb-2">
+                <h1 className="text-xl font-bold mb-2">
                   รายงานผลการประมูลอิเล็กทรอนิกส์
                 </h1>
-                <h2 className="text-lg font-semibold text-gray-600">
+                <h2 className="text-md font-semibold">
                   {auction?.name || `การประมูล ${auctionIdString}`}
                 </h2>
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-xs mt-2">
                   วันที่พิมพ์: {getCurrentDateTimeFormatted()}
                 </p>
               </div>
@@ -219,10 +318,10 @@ export default function AuctionReport2({
               {/* ข้อมูลการประมูล */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                  <h3 className="text-sm font-semibold border-b pb-2">
                     ข้อมูลการประมูล
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     <div className="flex justify-between">
                       <span className="font-medium">รหัสการประมูล:</span>
                       <span>{auctionIdString}</span>
@@ -247,7 +346,7 @@ export default function AuctionReport2({
                     </div>
                     <div className="flex justify-between">
                       <span className="font-medium">ราคาประกัน:</span>
-                      <span className="font-semibold text-blue-600">
+                      <span className="text-blue-700">
                         {formatPriceForDisplay(reservePrice)}{' '}
                         {auction?.currency
                           ? getCurrencyName(auction.currency)
@@ -258,22 +357,22 @@ export default function AuctionReport2({
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                  <h3 className="text-sm font-semibold border-b pb-2">
                     ผลการประมูล
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs">
                     {winningBid ? (
                       <>
                         <div className="flex justify-between">
                           <span className="font-medium">ผู้ชนะการประมูล:</span>
-                          <span className="font-semibold text-green-600">
+                          <span className="text-green-700">
                             {winningBid.companyName}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="font-medium">ราคาที่ชนะ:</span>
                           <span
-                            className={`font-semibold ${getPriceColor(
+                            className={`${getPriceColorText700(
                               winningBid.bidAmount,
                               reservePrice
                             )}`}
@@ -289,12 +388,12 @@ export default function AuctionReport2({
                             จำนวนเงินที่ประหยัด:
                           </span>
                           <span
-                            className={`font-semibold ${
+                            className={`${
                               getSavingsAmount() > 0
-                                ? 'text-green-600'
+                                ? 'text-green-700'
                                 : getSavingsAmount() < 0
-                                ? 'text-red-600'
-                                : 'text-gray-600'
+                                ? 'text-red-700'
+                                : 'text-gray-700'
                             }`}
                           >
                             {formatPriceForDisplay(getSavingsAmount())}{' '}
@@ -308,12 +407,12 @@ export default function AuctionReport2({
                             เปอร์เซ็นต์ประหยัด:
                           </span>
                           <span
-                            className={`font-semibold ${
+                            className={`${
                               getSavingsPercentage() > 0
-                                ? 'text-green-600'
+                                ? 'text-green-700'
                                 : getSavingsPercentage() < 0
-                                ? 'text-red-600'
-                                : 'text-gray-600'
+                                ? 'text-red-700'
+                                : 'text-gray-700'
                             }`}
                           >
                             {getSavingsPercentage().toFixed(2)}%
@@ -331,7 +430,7 @@ export default function AuctionReport2({
 
               {/* ตารางผลการประมูล */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                <h3 className="text-sm font-semibold border-b pb-2">
                   ตารางผลการประมูล
                 </h3>
                 {(() => {
@@ -421,25 +520,25 @@ export default function AuctionReport2({
                       <table className="min-w-full border border-gray-300">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                               ลำดับ
                             </th>
-                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                               บริษัท
                             </th>
-                            <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-right text-xs font-medium uppercase">
                               ราคา
                             </th>
-                            <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-right text-xs font-medium uppercase">
                               ประหยัด
                             </th>
-                            <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-center text-xs font-medium uppercase">
                               อัตราประหยัด
                             </th>
-                            <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-center text-xs font-medium uppercase">
                               สถานะ
                             </th>
-                            <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                               วันเวลา
                             </th>
                           </tr>
@@ -465,15 +564,15 @@ export default function AuctionReport2({
                                     : ''
                                 }`}
                               >
-                                <td className="px-4 py-2 border text-sm">
+                                <td className="px-4 py-2 text-xs">
                                   <div className="flex items-center gap-2">
                                     <span>{index + 1}</span>
                                   </div>
                                 </td>
-                                <td className="px-4 py-2 border">
+                                <td className="px-4 py-2">
                                   <div className="flex items-center">
                                     <div className="ml-3">
-                                      <div className="text-sm font-medium text-gray-900">
+                                      <div className="text-xs text-gray-900">
                                         {row.participant.company_name ||
                                           `บริษัท ${row.participant.company_id}`}
                                       </div>
@@ -484,10 +583,10 @@ export default function AuctionReport2({
                                     </div>
                                   </div>
                                 </td>
-                                <td className="px-4 py-2 border text-right">
+                                <td className="px-4 py-2 text-right">
                                   {row.price && (
                                     <div
-                                      className={`text-sm font-semibold ${getPriceColor(
+                                      className={`text-xs ${getPriceColorText700(
                                         row.price,
                                         reservePrice
                                       )}`}
@@ -496,40 +595,40 @@ export default function AuctionReport2({
                                     </div>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 border text-right">
+                                <td className="px-4 py-2 text-right">
                                   {row.saving && (
                                     <div
-                                      className={`text-sm font-medium ${
+                                      className={`text-xs ${
                                         row.saving > 0
-                                          ? 'text-green-600'
+                                          ? 'text-green-700'
                                           : row.saving < 0
-                                          ? 'text-red-600'
-                                          : 'text-gray-600'
+                                          ? 'text-red-700'
+                                          : 'text-gray-700'
                                       }`}
                                     >
                                       {formatPriceForDisplay(row.saving)}
                                     </div>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 border text-center">
+                                <td className="px-4 py-2 text-center">
                                   {row.savingRate && (
                                     <div
-                                      className={`text-sm font-medium ${
+                                      className={`text-xs ${
                                         parseFloat(row.savingRate) > 0
-                                          ? 'text-green-600'
+                                          ? 'text-green-700'
                                           : parseFloat(row.savingRate) < 0
-                                          ? 'text-red-600'
-                                          : 'text-gray-600'
+                                          ? 'text-red-700'
+                                          : 'text-gray-700'
                                       }`}
                                     >
                                       {row.savingRate}%
                                     </div>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 border text-center">
+                                <td className="px-4 py-2 text-center">
                                   {row.status && (
                                     <span
-                                      className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
+                                      className={`px-2 py-1 rounded text-xs ${getBidStatusColorText700(
                                         row.status
                                       )}`}
                                     >
@@ -537,7 +636,7 @@ export default function AuctionReport2({
                                     </span>
                                   )}
                                 </td>
-                                <td className="px-4 py-2 border text-sm">
+                                <td className="px-4 py-2 text-xs">
                                   {row.bidTime && formatDateTime(row.bidTime)}
                                 </td>
                               </tr>
@@ -555,7 +654,7 @@ export default function AuctionReport2({
 
               {/* ประวัติการเสนอราคา */}
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                <h3 className="text-sm font-semibold border-b pb-2">
                   ประวัติการเสนอราคา
                 </h3>
                 {bidHistory.length > 0 ? (
@@ -563,22 +662,22 @@ export default function AuctionReport2({
                     <table className="min-w-full border border-gray-300">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                             ลำดับ
                           </th>
-                          <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                             บริษัท
                           </th>
-                          <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                             ผู้เสนอราคา
                           </th>
-                          <th className="px-4 py-2 border text-right text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-right text-xs font-medium uppercase">
                             ราคา
                           </th>
-                          <th className="px-4 py-2 border text-center text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-center text-xs font-medium uppercase">
                             สถานะ
                           </th>
-                          <th className="px-4 py-2 border text-left text-xs font-medium text-gray-500 uppercase">
+                          <th className="px-4 py-2 border text-left text-xs font-medium uppercase">
                             วันเวลา
                           </th>
                         </tr>
@@ -591,18 +690,16 @@ export default function AuctionReport2({
                               index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                             }
                           >
-                            <td className="px-4 py-2 border text-sm">
-                              {index + 1}
-                            </td>
-                            <td className="px-4 py-2 border text-sm">
+                            <td className="px-4 py-2 text-xs">{index + 1}</td>
+                            <td className="px-4 py-2 text-xs">
                               {bid.companyName}
                             </td>
-                            <td className="px-4 py-2 border text-sm">
+                            <td className="px-4 py-2 text-xs">
                               {bid.userName}
                             </td>
-                            <td className="px-4 py-2 border text-sm text-right font-medium">
+                            <td className="px-4 py-2 text-xs text-right">
                               <div
-                                className={`text-sm font-semibold ${getPriceColor(
+                                className={`text-xs ${getPriceColorText700(
                                   bid.bidAmount,
                                   reservePrice
                                 )}`}
@@ -610,16 +707,16 @@ export default function AuctionReport2({
                                 {formatPriceForDisplay(bid.bidAmount)}
                               </div>
                             </td>
-                            <td className="px-4 py-2 border text-sm text-center">
+                            <td className="px-4 py-2 text-xs text-center">
                               <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${getBidStatusColor(
+                                className={`px-2 py-1 rounded text-xs ${getBidStatusColorText700(
                                   bid.statusText
                                 )}`}
                               >
                                 {bid.statusText}
                               </span>
                             </td>
-                            <td className="px-4 py-2 border text-sm">
+                            <td className="px-4 py-2 text-xs">
                               {formatDateTime(bid.bidTime)}
                             </td>
                           </tr>
@@ -635,7 +732,7 @@ export default function AuctionReport2({
               </div>
 
               {/* Footer */}
-              <div className="border-t pt-4 text-sm text-gray-500 text-center">
+              <div className="border-t pt-4 text-xs text-center">
                 <p>รายงานนี้สร้างโดยระบบประมูลอิเล็กทรอนิกส์</p>
                 <p>วันที่พิมพ์: {getCurrentDateTimeFormatted()}</p>
               </div>

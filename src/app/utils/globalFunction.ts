@@ -105,6 +105,29 @@ export const getPriceColor = (
   }
 };
 
+/**
+ * กำหนดสีตามราคาเปรียบเทียบกับราคาประกัน
+ * @param bidAmount - ราคาที่เสนอ
+ * @param reservePrice - ราคาประกัน
+ * @returns string - CSS class สำหรับสี
+ */
+export const getPriceColorText700 = (
+  bidAmount: number,
+  reservePrice: number
+): string => {
+  // Convert to numbers to ensure proper comparison
+  const bidAmountNum = Number(bidAmount);
+  const reservePriceNum = Number(reservePrice);
+
+  if (bidAmountNum < reservePriceNum) {
+    return 'text-green-700'; // ราคาต่ำกว่าราคาประกัน (ประหยัด)
+  } else if (bidAmountNum === reservePriceNum) {
+    return 'text-gray-700'; // ราคาเท่าราคาประกัน
+  } else {
+    return 'text-red-700'; // ราคาสูงกว่าราคาประกัน (แพง)
+  }
+};
+
 // =============================================================================
 // DATE & TIME UTILITIES
 // =============================================================================
@@ -250,6 +273,24 @@ export const getBidStatusColor = (status: string): string => {
       return 'text-gray-600 bg-gray-100';
     default:
       return 'text-gray-600 bg-gray-100';
+  }
+};
+
+/**
+ * ฟังก์ชันสำหรับดึงสี CSS สำหรับแสดงสถานะ bid
+ * @param status - สถานะของ bid เช่น 'accept', 'reject', 'canceled'
+ * @returns string - CSS classes สำหรับสีและพื้นหลัง
+ */
+export const getBidStatusColorText700 = (status: string): string => {
+  switch (status) {
+    case BidStatus.ACCEPT:
+      return 'text-green-700 bg-green-100';
+    case BidStatus.REJECT:
+      return 'text-red-700 bg-red-100';
+    case BidStatus.CANCELED:
+      return 'text-gray-700 bg-gray-100';
+    default:
+      return 'text-gray-700 bg-gray-100';
   }
 };
 
