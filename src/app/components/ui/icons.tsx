@@ -27,6 +27,13 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import SummarizeIcon from '@mui/icons-material/Summarize';
 import DescriptionIcon from '@mui/icons-material/Description';
 import ArticleIcon from '@mui/icons-material/Article';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import ApartmentIcon from '@mui/icons-material/Apartment';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import {
   Home,
   Gavel,
@@ -217,6 +224,13 @@ export const UserIcon = () => (
   <Person style={{ width: '20px', height: '20px' }} className="text-gray-500" />
 );
 
+export const NavRefreshIcon = ({ className }: IconProps) => (
+  <RefreshIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
 export const AucCategoryIcon: React.FC<IconProps> = ({ className }) => (
   <Category style={{ width: '16px', height: '16px' }} className={className} />
 );
@@ -231,6 +245,48 @@ export const AucEndTimeIcon: React.FC<IconProps> = ({ className }) => (
 
 export const AucUserIcon: React.FC<IconProps> = ({ className }) => (
   <Person style={{ width: '18px', height: '18px' }} className={className} />
+);
+
+export const AucMoneyIcon: React.FC<IconProps> = ({ className }) => (
+  <AttachMoneyIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucTrophyIcon: React.FC<IconProps> = ({ className }) => (
+  <EmojiEventsIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucApartmentIcon: React.FC<IconProps> = ({ className }) => (
+  <ApartmentIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucAssignmentIcon: React.FC<IconProps> = ({ className }) => (
+  <AssignmentIndIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
+);
+
+export const AucHourglassIcon: React.FC<IconProps> = ({ className }) => (
+  <HourglassEmptyIcon
+    style={{ width: '15px', height: '15px' }}
+    className={className}
+  />
+);
+
+export const AucCurrencyIcon: React.FC<IconProps> = ({ className }) => (
+  <CurrencyExchangeIcon
+    style={{ width: '16px', height: '16px' }}
+    className={className}
+  />
 );
 
 // Auction Status Icons

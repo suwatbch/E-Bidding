@@ -17,10 +17,12 @@ import {
   AucOpenIcon,
   AucPendingIcon,
   AucBiddingIcon,
+  AucAssignmentIcon,
   AucEndingSoonIcon,
   AucEndedIcon,
   AucCancelledIcon,
   AucOfferIcon,
+  AucHourglassIcon,
 } from '@/app/components/ui/icons';
 import Container from '@/app/components/ui/Container';
 import { statusConfig, getStatusById } from '@/app/model/config';
@@ -857,7 +859,7 @@ export default function AuctionsPage() {
                 </TableHead>
                 <TableHead className="w-[25%] min-w-[200px] max-w-[400px]">
                   <div className="flex items-center gap-2">
-                    <AucBiddingIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                    <AucAssignmentIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
@@ -887,7 +889,7 @@ export default function AuctionsPage() {
                 </TableHead>
                 <TableHead className="w-[10%] min-w-[80px] max-w-[120px] text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <AucOfferIcon className="w-5 h-5 text-gray-500" />
+                    <AucHourglassIcon className="w-5 h-5 text-gray-500" />
                     สถานะ
                   </div>
                 </TableHead>

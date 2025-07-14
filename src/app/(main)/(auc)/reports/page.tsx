@@ -16,8 +16,16 @@ import {
   AucUserIcon,
   AucEndedIcon,
   AucOfferIcon,
+  AucBiddingIcon,
+  AucMoneyIcon,
+  AucTrophyIcon,
+  AucApartmentIcon,
+  AucAssignmentIcon,
   NavBarChartIcon,
   NavInsightsIcon,
+  SearchBarIcon,
+  NavArrowDownIcon,
+  NavRefreshIcon,
 } from '@/app/components/ui/icons';
 import Container from '@/app/components/ui/Container';
 import { statusConfig, getStatusById } from '@/app/model/config';
@@ -36,6 +44,7 @@ import {
   formatDateTime,
   safeParseDate,
   formatAuctionId,
+  formatPriceForDisplay,
 } from '@/app/utils/globalFunction';
 
 interface AuctionReportItem {
@@ -364,304 +373,282 @@ export default function ReportsPage() {
   const currentItems = filteredItems.slice(startIndex, endIndex);
 
   return (
-    <Container>
-      <div className="py-8">
-        {/* Filter Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-800">
-              ตัวกรองการค้นหา
-            </h3>
-            <button
-              onClick={handleReset}
-              className="text-sm font-medium text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors duration-200"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-4 h-4 transition-transform duration-500 hover:rotate-180"
+    <>
+      <Container>
+        <div className="pt-8">
+          {/* Filter Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-800">
+                ตัวกรองการค้นหา
+              </h3>
+              <button
+                onClick={handleReset}
+                className="text-sm font-medium text-blue-500 hover:text-blue-700 flex items-center gap-1 transition-colors duration-200"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-                />
-              </svg>
-              รีเซ็ตตัวกรอง
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* ประเภท */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-                  ประเภท
-                </div>
-              </label>
-              <div className="relative">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none focus:border-transparent"
-                >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+                <NavRefreshIcon className="w-4 h-4 transition-transform duration-500 hover:rotate-180" />
+                รีเซ็ตตัวกรอง
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {/* ประเภท */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <AucCategoryIcon className="w-4 h-4 text-gray-500" />
+                    ประเภท
+                  </div>
+                </label>
+                <div className="relative">
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none focus:border-transparent"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                    <NavArrowDownIcon className="w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* วันที่เริ่มต้น */}
+              <div className="relative w-full">
+                <ThaiDatePicker
+                  selected={startDate}
+                  onChange={(date) => {
+                    if (user?.type === 'admin' && date) {
+                      setStartDate(date);
+                    }
+                  }}
+                  label="วันที่เริ่มต้น"
+                  placeholder="เลือกวันที่เริ่มต้น"
+                  disabled={user?.type !== 'admin'}
+                />
+              </div>
+
+              {/* วันที่สิ้นสุด */}
+              <div className="relative">
+                <ThaiDatePicker
+                  selected={endDate}
+                  onChange={(date) => {
+                    if (user?.type === 'admin' && date) {
+                      setEndDate(date);
+                    }
+                  }}
+                  label="วันที่สิ้นสุด"
+                  placeholder="เลือกวันที่สิ้นสุด"
+                  disabled={user?.type !== 'admin'}
+                />
+              </div>
+
+              {/* ปุ่มค้นหา */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <div className="flex items-center gap-2 mb-1.5 h-5">
+                    {/* เว้นพื้นที่เพื่อให้ความสูงเท่ากับ label อื่นๆ */}
+                  </div>
+                </label>
+                <button
+                  onClick={handleSearch}
+                  className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2"
+                >
+                  <SearchBarIcon className="w-4 h-4" />
+                  ค้นหา
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Info Section */}
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredItems.length}
+            perPage={perPage}
+            onPageChange={setCurrentPage}
+            onPerPageChange={handlePerPageChange}
+            mounted={mounted}
+          />
+        </div>
+      </Container>
+
+      <div
+        className="w-full px-4"
+        style={{
+          marginLeft: 'calc(-50vw + 50%)',
+          marginRight: 'calc(-50vw + 50%)',
+          width: '100vw',
+        }}
+      >
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold flex items-center gap-2">
+                  รายงานการประมูล
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-green-50 text-green-600">
+                  <AucEndedIcon className="w-4 h-4" />
+                  สิ้นสุดประมูล
                 </div>
               </div>
             </div>
-
-            {/* วันที่เริ่มต้น */}
-            <div className="relative w-full">
-              <ThaiDatePicker
-                selected={startDate}
-                onChange={(date) => {
-                  if (user?.type === 'admin' && date) {
-                    setStartDate(date);
-                  }
-                }}
-                label="วันที่เริ่มต้น"
-                placeholder="เลือกวันที่เริ่มต้น"
-                disabled={user?.type !== 'admin'}
-              />
-            </div>
-
-            {/* วันที่สิ้นสุด */}
-            <div className="relative">
-              <ThaiDatePicker
-                selected={endDate}
-                onChange={(date) => {
-                  if (user?.type === 'admin' && date) {
-                    setEndDate(date);
-                  }
-                }}
-                label="วันที่สิ้นสุด"
-                placeholder="เลือกวันที่สิ้นสุด"
-                disabled={user?.type !== 'admin'}
-              />
-            </div>
-
-            {/* ปุ่มค้นหา */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <div className="flex items-center gap-2 mb-1.5 h-5">
-                  {/* เว้นพื้นที่เพื่อให้ความสูงเท่ากับ label อื่นๆ */}
-                </div>
-              </label>
-              <button
-                onClick={handleSearch}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center gap-2"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className="w-4 h-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                  />
-                </svg>
-                ค้นหา
-              </button>
-            </div>
           </div>
+
+          <Table className="table-fixed w-full">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[4%] min-w-[50px] text-center">
+                  <div className="flex text-xs items-center justify-center">
+                    ลำดับ
+                  </div>
+                </TableHead>
+                <TableHead className="w-[12%] min-w-[100px]">
+                  <div className="flex text-xs items-center gap-2">
+                    <AucAssignmentIcon className="w-4 h-4 text-gray-500" />
+                    ชื่อตลาด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[12%] min-w-[100px]">
+                  <div className="flex text-xs items-center justify-center gap-2">
+                    <AucCategoryIcon className="w-4 h-4 text-gray-500" />
+                    ประเภท
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] min-w-[90px] text-center">
+                  <div className="flex text-xs items-center justify-center gap-2">
+                    <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+                    วันที่ประมูล
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] min-w-[90px] text-right">
+                  <div className="flex text-xs items-center justify-end gap-2">
+                    <AucOfferIcon className="w-4 h-4 text-gray-500" />
+                    ราคาประกัน
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] min-w-[90px] text-right">
+                  <div className="flex text-xs items-center justify-end gap-2">
+                    <AucMoneyIcon className="w-4 h-4 text-gray-500" />
+                    ราคาที่ชนะ
+                  </div>
+                </TableHead>
+                <TableHead className="w-[10%] min-w-[90px] text-right">
+                  <div className="flex text-xs items-center justify-end gap-2">
+                    <NavInsightsIcon className="w-4 h-4 text-gray-500" />
+                    ประหยัด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[8%] min-w-[80px] text-center">
+                  <div className="flex text-xs items-center justify-center gap-2">
+                    <NavBarChartIcon className="w-4 h-4 text-gray-500" />
+                    อัตราประหยัด
+                  </div>
+                </TableHead>
+                <TableHead className="w-[8%] min-w-[80px] text-center">
+                  <div className="flex text-xs items-center justify-center gap-2">
+                    <AucBiddingIcon className="w-4 h-4 text-gray-500" />
+                    เสนอราคา
+                  </div>
+                </TableHead>
+                <TableHead className="w-[8%] min-w-[70px] text-center">
+                  <div className="flex text-xs items-center justify-center gap-2">
+                    <AucApartmentIcon className="w-4 h-4 text-gray-500" />
+                    ซัพพลายเออร์
+                  </div>
+                </TableHead>
+                <TableHead className="w-[12%] min-w-[100px]">
+                  <div className="flex text-xs items-center gap-2">
+                    <AucTrophyIcon className="w-4 h-4 text-gray-500" />
+                    ผู้ชนะประมูล
+                  </div>
+                </TableHead>
+                <TableHead className="w-[12%] min-w-[100px]">
+                  <div className="flex text-xs items-center gap-2">
+                    <AucEndedIcon className="w-4 h-4 text-gray-500" />
+                    ผู้ที่ได้รับคัดเลือก
+                  </div>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {currentItems.length === 0 ? (
+                <EmptyState
+                  title="ไม่พบข้อมูลรายงาน"
+                  description="ไม่มีการประมูลที่สิ้นสุดแล้วในช่วงเวลาที่เลือก"
+                  colSpan={10}
+                />
+              ) : (
+                currentItems.map((item, index) => (
+                  <TableRow
+                    key={item.auction_id}
+                    className="hover:bg-blue-50/50 transition-colors"
+                  >
+                    <TableCell className="font-medium text-center">
+                      <div className="text-xs">
+                        {(startIndex + index + 1).toLocaleString('th-TH')}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="w-full overflow-hidden">
+                        <div
+                          className="font-medium text-blue-700 truncate w-full text-sm"
+                          title={item.title}
+                        >
+                          {item.title}
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">
+                          [{formatAuctionId(item.auction_id)}]
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div
+                        className="text-xs truncate w-full"
+                        title={item.category}
+                      >
+                        {item.category}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-xs">
+                        {formatDateTime(item.auctionDate)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="text-xs font-medium">
+                        {formatPriceForDisplay(item.reservePrice)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right"></TableCell>
+                    <TableCell className="text-right"></TableCell>
+                    <TableCell className="text-right"></TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-gray-600 text-xs">
+                        {formatNumber(item.bidCount)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-gray-600 text-xs">
+                        {formatNumber(item.participantCount)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right"></TableCell>
+                    <TableCell className="text-center"></TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-
-        {/* Table Info Section */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredItems.length}
-          perPage={perPage}
-          onPageChange={setCurrentPage}
-          onPerPageChange={handlePerPageChange}
-          mounted={mounted}
-        />
       </div>
-    </Container>
-
-    // <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-    //   <div className="p-6 border-b border-gray-200">
-    //     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-    //       <div className="flex items-center justify-between">
-    //         <h2 className="text-2xl font-semibold flex items-center gap-2">
-    //           รายงานการประมูล
-    //         </h2>
-    //       </div>
-    //       <div className="flex items-center gap-2">
-    //         <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-green-50 text-green-600">
-    //           <AucEndedIcon className="w-4 h-4" />
-    //           สิ้นสุดประมูล
-    //         </div>
-    //       </div>
-    //     </div>
-    //   </div>
-
-    //   <Table className="table-fixed w-full">
-    //     <TableHeader>
-    //       <TableRow>
-    //         <TableHead className="w-[4%] min-w-[50px] text-center">
-    //           ลำดับ
-    //         </TableHead>
-    //         <TableHead className="w-[12%] min-w-[100px] text-center">
-    //           <div className="flex items-center justify-center gap-2">
-    //             <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
-    //             วันที่ประมูล
-    //           </div>
-    //         </TableHead>
-    //         <TableHead className="w-[18%] min-w-[150px]">
-    //           <div className="flex items-center gap-2">
-    //             <NavInsightsIcon className="w-4 h-4 text-gray-500" />
-    //             ชื่อสินค้า
-    //           </div>
-    //         </TableHead>
-    //         <TableHead className="w-[10%] min-w-[80px]">
-    //           <div className="flex items-center gap-2">
-    //             <AucCategoryIcon className="w-4 h-4 text-gray-500" />
-    //             ประเภท
-    //           </div>
-    //         </TableHead>
-    //         <TableHead className="w-[8%] min-w-[70px] text-center">
-    //           <div className="flex items-center justify-center gap-2">
-    //             <AucUserIcon className="w-4 h-4 text-gray-500" />
-    //             ผู้เข้าร่วม
-    //           </div>
-    //         </TableHead>
-    //         <TableHead className="w-[10%] min-w-[90px] text-right">
-    //           ราคาประกัน
-    //         </TableHead>
-    //         <TableHead className="w-[10%] min-w-[90px] text-right">
-    //           ราคาที่ชนะ
-    //         </TableHead>
-    //         <TableHead className="w-[8%] min-w-[80px] text-center">
-    //           ประหยัด (%)
-    //         </TableHead>
-    //         <TableHead className="w-[6%] min-w-[60px] text-center">
-    //           <div className="flex items-center justify-center gap-2">
-    //             <AucOfferIcon className="w-4 h-4 text-gray-500" />
-    //             Bids
-    //           </div>
-    //         </TableHead>
-    //         <TableHead className="w-[14%] min-w-[120px]">
-    //           ผู้ชนะประมูล
-    //         </TableHead>
-    //       </TableRow>
-    //     </TableHeader>
-    //     <TableBody>
-    //       {currentItems.length === 0 ? (
-    //         <EmptyState
-    //           title="ไม่พบข้อมูลรายงาน"
-    //           description="ไม่มีการประมูลที่สิ้นสุดแล้วในช่วงเวลาที่เลือก"
-    //           colSpan={10}
-    //         />
-    //       ) : (
-    //         currentItems.map((item, index) => (
-    //           <TableRow
-    //             key={item.auction_id}
-    //             className="hover:bg-blue-50/50 transition-colors"
-    //           >
-    //             <TableCell className="font-medium text-center">
-    //               {(startIndex + index + 1).toLocaleString('th-TH')}
-    //             </TableCell>
-    //             <TableCell className="text-center">
-    //               <div className="text-sm">
-    //                 {formatDateTime(item.auctionDate).split(' ')[0]}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell>
-    //               <div className="w-full overflow-hidden">
-    //                 <div
-    //                   className="font-medium text-blue-700 truncate w-full text-sm"
-    //                   title={item.title}
-    //                 >
-    //                   {item.title}
-    //                 </div>
-    //                 <div className="text-xs text-gray-400 mt-1">
-    //                   [{formatAuctionId(item.auction_id)}]
-    //                 </div>
-    //               </div>
-    //             </TableCell>
-    //             <TableCell>
-    //               <div
-    //                 className="text-sm truncate w-full"
-    //                 title={item.category}
-    //               >
-    //                 {item.category}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell className="text-center">
-    //               <div className="flex items-center justify-center gap-1 text-gray-600">
-    //                 <AucUserIcon className="w-4 h-4" />
-    //                 {formatNumber(item.participantCount)}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell className="text-right">
-    //               <div className="text-sm font-medium">
-    //                 {formatPrice(item.reservePrice)}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell className="text-right">
-    //               <div className="text-sm font-medium text-green-600">
-    //                 {formatPrice(item.winnerPrice)}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell className="text-center">
-    //               <div
-    //                 className={`text-sm font-medium ${
-    //                   item.savingPercent > 0
-    //                     ? 'text-green-600'
-    //                     : item.savingPercent < 0
-    //                     ? 'text-red-600'
-    //                     : 'text-gray-600'
-    //                 }`}
-    //               >
-    //                 {item.savingPercent.toFixed(1)}%
-    //               </div>
-    //             </TableCell>
-    //             <TableCell className="text-center">
-    //               <div className="flex items-center justify-center gap-1 text-gray-600">
-    //                 <AucOfferIcon className="w-4 h-4" />
-    //                 {formatNumber(item.bidCount)}
-    //               </div>
-    //             </TableCell>
-    //             <TableCell>
-    //               <div
-    //                 className="text-sm truncate w-full"
-    //                 title={item.winnerName}
-    //               >
-    //                 {item.winnerName}
-    //               </div>
-    //             </TableCell>
-    //           </TableRow>
-    //         ))
-    //       )}
-    //     </TableBody>
-    //   </Table>
-    // </div>
+    </>
   );
 }
