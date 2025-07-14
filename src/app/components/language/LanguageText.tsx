@@ -312,15 +312,6 @@ export default function TransectionLanguage({
           </div>
         </div>
 
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredAndPaginatedData.total}
-          perPage={perPage}
-          onPageChange={setCurrentPage}
-          onPerPageChange={handlePerPageChange}
-          mounted={mounted}
-        />
-
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="flex flex-col">
             <div className="overflow-x-auto">
@@ -502,6 +493,16 @@ export default function TransectionLanguage({
             </div>
           </div>
         </div>
+
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAndPaginatedData.total}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
       </div>
 
       {/* Modal using Portal */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -35,7 +35,9 @@ import {
   Auction,
   AuctionType,
   AuctionParticipant,
+  AuctionBid,
 } from '@/app/services/auctionsService';
+import { companyService, Company } from '@/app/services/companyService';
 import ThaiDatePicker from '@/app/components/ui/DatePicker';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
@@ -45,6 +47,7 @@ import {
   safeParseDate,
   formatAuctionId,
   formatPriceForDisplay,
+  getPriceColor,
 } from '@/app/utils/globalFunction';
 
 interface AuctionReportItem {
@@ -60,6 +63,8 @@ interface AuctionReportItem {
   savingPercent: number;
   bidCount: number;
   winnerName: string;
+  supplierCount: number;
+  selectedWinnerName: string;
   status: number;
 }
 
@@ -69,6 +74,10 @@ export default function ReportsPage() {
   const [auctionParticipants, setAuctionParticipants] = useState<
     AuctionParticipant[]
   >([]);
+  const [auctionBids, setAuctionBids] = useState<{
+    [auctionId: number]: AuctionBid[];
+  }>({});
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('ทั้งหมด');
   const [startDate, setStartDate] = useState(() => {
     const today = new Date();
@@ -151,15 +160,53 @@ export default function ReportsPage() {
         auctionParticipants?.filter((p) => p.auction_id === auction.auction_id)
           .length || 0;
 
-      // คำนวณ Saving (ใช้ค่า default เนื่องจากไม่มีข้อมูล winner_price ใน Auction interface)
+      // ดึงข้อมูล bid สำหรับการประมูลนี้
+      const bids = auctionBids[auction.auction_id] || [];
+      const bidCount = bids.length;
+
+      // กรองเฉพาะ bid ที่มี status = 'accept' (ใช้โลจิกเดียวกับ BidHistory.tsx)
+      const acceptedBids = bids.filter((bid) => bid.status === 'accept');
+
+      // หารายการ bid ล่าสุดของแต่ละบริษัท (ใช้โลจิกเดียวกับ BidHistory.tsx)
+      const companyLatestBids = new Map<number, AuctionBid>();
+      acceptedBids.forEach((bid) => {
+        const companyId = bid.company_id;
+        const existing = companyLatestBids.get(companyId);
+        if (!existing || new Date(bid.bid_time) > new Date(existing.bid_time)) {
+          companyLatestBids.set(companyId, bid);
+        }
+      });
+
+      // หาราคาต่ำสุดจากรายการล่าสุดของแต่ละบริษัท (ผู้ชนะการประมูล)
+      const latestBids = Array.from(companyLatestBids.values());
+      const winningBid =
+        latestBids.length > 0
+          ? latestBids.reduce((min, bid) =>
+              bid.bid_amount < min.bid_amount ? bid : min
+            )
+          : null;
+
+      const winnerPrice = winningBid ? winningBid.bid_amount : 0;
+
+      // หาข้อมูลบริษัทของผู้ชนะจาก company_id ใน bid
+      const winnerCompany = winningBid
+        ? companies?.find((c) => c.id === winningBid.company_id)
+        : null;
+
+      const winnerName = winnerCompany?.name || '-';
+
+      // นับจำนวนซัพพลายเออร์ที่เสนอราคา (รายการล่าสุดของแต่ละบริษัท)
+      const supplierCount = latestBids.length;
+
+      // คำนวณ Saving (แสดงทั้งค่าบวกและลบ เหมือน BidHistory)
       const reservePrice = auction.reserve_price || 0;
-      const winnerPrice = 0; // TODO: ต้องดึงจาก AuctionBid table
-      const saving = reservePrice > 0 ? reservePrice - winnerPrice : 0;
+      const saving =
+        reservePrice > 0 && winnerPrice > 0 ? reservePrice - winnerPrice : 0;
       const savingPercent =
-        reservePrice > 0 ? (saving / reservePrice) * 100 : 0;
+        reservePrice > 0 && winnerPrice > 0 ? (saving / reservePrice) * 100 : 0;
 
       return {
-        no: idx,
+        no: idx + 1,
         auction_id: auction.auction_id,
         title: auction.name,
         category: auctionType?.name || '-',
@@ -169,8 +216,10 @@ export default function ReportsPage() {
         winnerPrice,
         saving,
         savingPercent,
-        bidCount: 0, // TODO: ต้องดึงจาก AuctionBid table
-        winnerName: '-', // TODO: ต้องดึงจาก AuctionBid + User table
+        bidCount,
+        winnerName,
+        supplierCount,
+        selectedWinnerName: winnerName, // ใช้ชื่อบริษัทเดียวกับผู้ชนะประมูล
         status: auction.status,
       } as AuctionReportItem;
     });
@@ -271,12 +320,43 @@ export default function ReportsPage() {
         endDateStr = todayEnd.toISOString().slice(0, 19).replace('T', ' ');
       }
 
-      const [auctionsResult, typesResult, participantsResult] =
+      const [auctionsResult, typesResult, participantsResult, companiesResult] =
         await Promise.all([
           auctionsService.getAllAuctions(startDateStr, endDateStr),
           auctionsService.getAuctionTypes(),
           auctionsService.getAuctionParticipants(),
+          companyService.getAllCompanies(),
         ]);
+
+      // ดึงข้อมูล bid สำหรับการประมูลที่สิ้นสุดแล้ว (status = 5)
+      if (auctionsResult.success && auctionsResult.data) {
+        const endedAuctions = auctionsResult.data.filter(
+          (auction) => auction.status === 5
+        );
+
+        const bidData: { [auctionId: number]: AuctionBid[] } = {};
+
+        await Promise.all(
+          endedAuctions.map(async (auction) => {
+            try {
+              const bidsResult = await auctionsService.getAcceptedBids(
+                auction.auction_id
+              );
+              if (bidsResult.success && bidsResult.data) {
+                bidData[auction.auction_id] = bidsResult.data;
+              }
+            } catch (error) {
+              console.error(
+                `Error fetching bids for auction ${auction.auction_id}:`,
+                error
+              );
+              bidData[auction.auction_id] = [];
+            }
+          })
+        );
+
+        setAuctionBids(bidData);
+      }
 
       if (auctionsResult.success && auctionsResult.message === null) {
         setAuctions(auctionsResult.data || []);
@@ -298,12 +378,20 @@ export default function ReportsPage() {
         alert(participantsResult.message);
         setAuctionParticipants([]);
       }
+
+      if (companiesResult.success && companiesResult.message === null) {
+        setCompanies(companiesResult.data || []);
+      } else {
+        alert(companiesResult.message);
+        setCompanies([]);
+      }
     } catch (error: any) {
       console.error('Error loading auctions:', error);
       alert(error);
       setAuctions([]);
       setAuctionTypes([]);
       setAuctionParticipants([]);
+      setCompanies([]);
     } finally {
       setMounted(true);
     }
@@ -464,16 +552,6 @@ export default function ReportsPage() {
               </div>
             </div>
           </div>
-
-          {/* Table Info Section */}
-          <Pagination
-            currentPage={currentPage}
-            totalItems={filteredItems.length}
-            perPage={perPage}
-            onPageChange={setCurrentPage}
-            onPerPageChange={handlePerPageChange}
-            mounted={mounted}
-          />
         </div>
       </Container>
 
@@ -485,6 +563,32 @@ export default function ReportsPage() {
           width: '100vw',
         }}
       >
+        <div className="rounded-lg p-2 mt-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-yellow-100 p-2 rounded-full flex items-center justify-center">
+              <svg
+                className="w-5 h-5 text-yellow-600"
+                fill="currentColor"
+                viewBox="0 2 22 22"
+              >
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-md font-semibold">ราคาประกันรวม:</span>
+            </div>
+            <div className="flex items-center gap-12">
+              <span className="text-sm">ราคาที่ชนะประมูลรวม:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">ราคาประหยัดรวม:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm">อัตราประหยัดรวม:</span>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -583,7 +687,7 @@ export default function ReportsPage() {
                 <EmptyState
                   title="ไม่พบข้อมูลรายงาน"
                   description="ไม่มีการประมูลที่สิ้นสุดแล้วในช่วงเวลาที่เลือก"
-                  colSpan={10}
+                  colSpan={11}
                 />
               ) : (
                 currentItems.map((item, index) => (
@@ -624,27 +728,87 @@ export default function ReportsPage() {
                         {formatPriceForDisplay(item.reservePrice)}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right"></TableCell>
-                    <TableCell className="text-right"></TableCell>
-                    <TableCell className="text-right"></TableCell>
+                    <TableCell className="text-right">
+                      <div
+                        className={`text-xs font-medium ${
+                          item.winnerPrice > 0
+                            ? getPriceColor(item.winnerPrice, item.reservePrice)
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {item.winnerPrice > 0
+                          ? formatPriceForDisplay(item.winnerPrice)
+                          : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div
+                        className={`text-xs font-medium ${
+                          item.saving !== 0
+                            ? getPriceColor(item.winnerPrice, item.reservePrice)
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {item.saving !== 0
+                          ? formatPriceForDisplay(item.saving)
+                          : '-'}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-gray-600 text-xs">
+                      <div
+                        className={`text-xs font-medium ${
+                          item.savingPercent !== 0
+                            ? getPriceColor(item.winnerPrice, item.reservePrice)
+                            : 'text-gray-400'
+                        }`}
+                      >
+                        {item.savingPercent !== 0
+                          ? `${item.savingPercent.toFixed(2)}%`
+                          : '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="text-xs text-gray-600">
                         {formatNumber(item.bidCount)}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-gray-600 text-xs">
-                        {formatNumber(item.participantCount)}
+                      <div className="text-xs text-gray-600">
+                        {formatNumber(item.supplierCount)}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right"></TableCell>
-                    <TableCell className="text-center"></TableCell>
+                    <TableCell>
+                      <div
+                        className="text-xs truncate w-full"
+                        title={item.winnerName}
+                      >
+                        {item.winnerName}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        className="text-xs truncate w-full"
+                        title={item.selectedWinnerName}
+                      >
+                        {item.selectedWinnerName}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
         </div>
+
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredItems.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
       </div>
     </>
   );

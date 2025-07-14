@@ -757,16 +757,6 @@ export default function AuctionsPage() {
           </div>
         )}
 
-        {/* Table Info Section */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredItems.length}
-          perPage={perPage}
-          onPageChange={setCurrentPage}
-          onPerPageChange={handlePerPageChange}
-          mounted={mounted}
-        />
-
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -1088,6 +1078,16 @@ export default function AuctionsPage() {
             </TableBody>
           </Table>
         </div>
+
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredItems.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
       </div>
     </Container>
   );

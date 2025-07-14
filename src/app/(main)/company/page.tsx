@@ -408,16 +408,6 @@ export default function CompanyPage() {
           </div>
         </div>
 
-        {/* Table Info Section */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredCompanies.length}
-          perPage={perPage}
-          onPageChange={setCurrentPage}
-          onPerPageChange={handlePerPageChange}
-          mounted={mounted}
-        />
-
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -712,6 +702,16 @@ export default function CompanyPage() {
             </table>
           </div>
         </div>
+
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredCompanies.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
 
         {/* Modal */}
         {isModalOpen && (

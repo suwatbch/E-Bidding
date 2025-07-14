@@ -396,16 +396,6 @@ export default function AuctionTypePage() {
           </div>
         </div>
 
-        {/* Table Info Section */}
-        <Pagination
-          currentPage={currentPage}
-          totalItems={filteredAuctionTypes.length}
-          perPage={perPage}
-          onPageChange={setCurrentPage}
-          onPerPageChange={handlePerPageChange}
-          mounted={mounted}
-        />
-
         {/* Table Section */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="overflow-x-auto">
@@ -612,6 +602,16 @@ export default function AuctionTypePage() {
             </table>
           </div>
         </div>
+
+        {/* Table Info Section */}
+        <Pagination
+          currentPage={currentPage}
+          totalItems={filteredAuctionTypes.length}
+          perPage={perPage}
+          onPageChange={setCurrentPage}
+          onPerPageChange={handlePerPageChange}
+          mounted={mounted}
+        />
       </div>
 
       {/* Modal */}
