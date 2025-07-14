@@ -512,67 +512,67 @@ export default function ReportsPage() {
                 </TableHead>
                 <TableHead className="w-[12%] min-w-[100px]">
                   <div className="flex text-xs items-center gap-2">
-                    <AucAssignmentIcon className="w-4 h-4 text-gray-500" />
+                    <AucAssignmentIcon className="w-4 h-4" />
                     ชื่อตลาด
                   </div>
                 </TableHead>
                 <TableHead className="w-[12%] min-w-[100px]">
                   <div className="flex text-xs items-center justify-center gap-2">
-                    <AucCategoryIcon className="w-4 h-4 text-gray-500" />
+                    <AucCategoryIcon className="w-4 h-4" />
                     ประเภท
                   </div>
                 </TableHead>
                 <TableHead className="w-[10%] min-w-[90px] text-center">
                   <div className="flex text-xs items-center justify-center gap-2">
-                    <AucStartTimeIcon className="w-4 h-4 text-gray-500" />
+                    <AucStartTimeIcon className="w-4 h-4" />
                     วันที่ประมูล
                   </div>
                 </TableHead>
                 <TableHead className="w-[10%] min-w-[90px] text-right">
                   <div className="flex text-xs items-center justify-end gap-2">
-                    <AucOfferIcon className="w-4 h-4 text-gray-500" />
+                    <AucOfferIcon className="w-4 h-4" />
                     ราคาประกัน
                   </div>
                 </TableHead>
                 <TableHead className="w-[10%] min-w-[90px] text-right">
                   <div className="flex text-xs items-center justify-end gap-2">
-                    <AucMoneyIcon className="w-4 h-4 text-gray-500" />
+                    <AucMoneyIcon className="w-4 h-4" />
                     ราคาที่ชนะ
                   </div>
                 </TableHead>
                 <TableHead className="w-[10%] min-w-[90px] text-right">
                   <div className="flex text-xs items-center justify-end gap-2">
-                    <NavInsightsIcon className="w-4 h-4 text-gray-500" />
+                    <NavInsightsIcon className="w-4 h-4" />
                     ประหยัด
                   </div>
                 </TableHead>
                 <TableHead className="w-[8%] min-w-[80px] text-center">
                   <div className="flex text-xs items-center justify-center gap-2">
-                    <NavBarChartIcon className="w-4 h-4 text-gray-500" />
+                    <NavBarChartIcon className="w-4 h-4" />
                     อัตราประหยัด
                   </div>
                 </TableHead>
                 <TableHead className="w-[8%] min-w-[80px] text-center">
                   <div className="flex text-xs items-center justify-center gap-2">
-                    <AucBiddingIcon className="w-4 h-4 text-gray-500" />
+                    <AucBiddingIcon className="w-4 h-4" />
                     เสนอราคา
                   </div>
                 </TableHead>
                 <TableHead className="w-[8%] min-w-[70px] text-center">
                   <div className="flex text-xs items-center justify-center gap-2">
-                    <AucApartmentIcon className="w-4 h-4 text-gray-500" />
+                    <AucApartmentIcon className="w-4 h-4" />
                     ซัพพลายเออร์
                   </div>
                 </TableHead>
                 <TableHead className="w-[12%] min-w-[100px]">
                   <div className="flex text-xs items-center gap-2">
-                    <AucTrophyIcon className="w-4 h-4 text-gray-500" />
+                    <AucTrophyIcon className="w-4 h-4" />
                     ผู้ชนะประมูล
                   </div>
                 </TableHead>
                 <TableHead className="w-[12%] min-w-[100px]">
                   <div className="flex text-xs items-center gap-2">
-                    <AucEndedIcon className="w-4 h-4 text-gray-500" />
+                    <AucEndedIcon className="w-4 h-4" />
                     ผู้ที่ได้รับคัดเลือก
                   </div>
                 </TableHead>
@@ -599,13 +599,10 @@ export default function ReportsPage() {
                     <TableCell>
                       <div className="w-full overflow-hidden">
                         <div
-                          className="font-medium text-blue-700 truncate w-full text-sm"
+                          className="font-medium truncate w-full text-sm"
                           title={item.title}
                         >
                           {item.title}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          [{formatAuctionId(item.auction_id)}]
                         </div>
                       </div>
                     </TableCell>
