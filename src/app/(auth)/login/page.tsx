@@ -10,7 +10,7 @@ import {
   FormEmailIcon,
   FormLockIcon,
   ButtonLoginIcon,
-} from '@/app/components/ui/Icons';
+} from '@/app/components/ui/icons';
 import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import LanguageSwitcher from '@/app/components/LanguageSwitcher';
 import CircuitBackground from '@/app/components/CircuitBackground';

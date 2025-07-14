@@ -21,6 +21,12 @@ import PendingIcon from '@mui/icons-material/Pending';
 import TimerIcon from '@mui/icons-material/Timer';
 import BlockIcon from '@mui/icons-material/Block';
 import LanguageIcon from '@mui/icons-material/Language';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import InsightsIcon from '@mui/icons-material/Insights';
+import SummarizeIcon from '@mui/icons-material/Summarize';
+import DescriptionIcon from '@mui/icons-material/Description';
+import ArticleIcon from '@mui/icons-material/Article';
 import {
   Home,
   Gavel,
@@ -59,6 +65,49 @@ export const NavLogoIcon = ({ className }: IconProps) => (
 
 export const AuctionIcon = ({ className }: IconProps) => (
   <GavelIcon style={{ width: '24px', height: '24px' }} className={className} />
+);
+
+// Report and Analytics Icons
+export const NavReportIcon = ({ className }: IconProps) => (
+  <AssessmentIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
+export const NavBarChartIcon: React.FC<IconProps> = ({ className }) => (
+  <BarChartIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
+export const NavInsightsIcon = ({ className }: IconProps) => (
+  <InsightsIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
+export const NavSummarizeIcon = ({ className }: IconProps) => (
+  <SummarizeIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
+export const DocumentIcon = ({ className }: IconProps) => (
+  <DescriptionIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
+);
+
+export const ArticleReportIcon = ({ className }: IconProps) => (
+  <ArticleIcon
+    style={{ width: '20px', height: '20px' }}
+    className={className}
+  />
 );
 
 // Medium Icons (20px)

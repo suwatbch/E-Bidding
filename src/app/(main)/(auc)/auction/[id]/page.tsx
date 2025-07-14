@@ -30,7 +30,11 @@ import {
   AucEndedIcon,
   AucCancelledIcon,
   AuctionIcon,
-} from '@/app/components/ui/Icons';
+  NavInsightsIcon,
+  DocumentIcon,
+  ArticleReportIcon,
+  NavBarChartIcon,
+} from '@/app/components/ui/icons';
 import {
   auctionsService,
   type Auction,
@@ -1000,7 +1004,8 @@ export default function AuctionDetailPage() {
                   onClick={() => setShowHistoryPopup(true)}
                   className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
                 >
-                  📊 ประวัติ
+                  <DocumentIcon className="w-5 h-5" />
+                  ประวัติ
                 </button>
               </div>
 
@@ -1009,6 +1014,7 @@ export default function AuctionDetailPage() {
                   onClick={() => setShowGraphPopup(true)}
                   className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
                 >
+                  <NavInsightsIcon className="w-5 h-5" />
                   กราฟ
                 </button>
               </div>
@@ -1021,6 +1027,7 @@ export default function AuctionDetailPage() {
                   onClick={() => setShowReportPopup(true)}
                   className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors font-medium flex items-center justify-center gap-2"
                 >
+                  <NavBarChartIcon className="w-5 h-5" />
                   รายงานประมูล
                 </button>
               </div>

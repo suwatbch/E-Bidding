@@ -21,7 +21,7 @@ import {
   AucEndedIcon,
   AucCancelledIcon,
   AucOfferIcon,
-} from '@/app/components/ui/Icons';
+} from '@/app/components/ui/icons';
 import Container from '@/app/components/ui/Container';
 import { statusConfig, getStatusById } from '@/app/model/config';
 import { useAuth } from '@/app/contexts/AuthContext';

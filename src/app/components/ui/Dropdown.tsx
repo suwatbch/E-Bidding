@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { NavArrowDownIcon } from './Icons';
+import { NavArrowDownIcon } from './icons';
 
 interface DropdownProps {
   isOpen: boolean;

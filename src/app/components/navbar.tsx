@@ -20,7 +20,12 @@ import {
   NavHomeIcon,
   NavLanguageManageIcon,
   NavAuctionTypeIcon,
-} from '@/app/components/ui/Icons';
+  AuctionIcon,
+  NavReportIcon,
+  NavBarChartIcon,
+  NavInsightsIcon,
+  NavSummarizeIcon,
+} from '@/app/components/ui/icons';
 import { connectSocket, disconnectSocket } from '@/app/services/socketService';
 import socket from '@/app/services/socketService';
 import { useLanguageContext } from '@/app/contexts/LanguageContext';
@@ -820,6 +825,17 @@ export default function Navbar() {
                 </Dropdown>
               )}
 
+              {/* Auction Report */}
+              {user && user.type === 'admin' && (
+                <Link
+                  href="/reports"
+                  className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 text-white hover:bg-white/10"
+                >
+                  <NavBarChartIcon className="w-5 h-5" />
+                  {t('auction_report')}
+                </Link>
+              )}
+
               {/* Language Switcher */}
               <LanguageSwitcher variant="navbar" />
 
@@ -1086,6 +1102,17 @@ export default function Navbar() {
                       {t('language_info')}
                     </button>
                   </div>
+                )}
+
+                {/* Auction Report Mobile */}
+                {user && user.type === 'admin' && (
+                  <Link
+                    href="/reports"
+                    className="group flex items-center gap-1 px-1.5 py-2 rounded-xl text-sm transition-all duration-300 text-white hover:bg-white/10"
+                  >
+                    <NavBarChartIcon className="w-5 h-5" />
+                    {t('auction_report')}
+                  </Link>
                 )}
 
                 {/* Language Selector Mobile */}

@@ -8,7 +8,7 @@ import {
   AucCategoryIcon,
   AucOfferIcon,
   AucUserIcon,
-} from '@/app/components/ui/Icons';
+} from '@/app/components/ui/icons';
 import { statusConfig, currencyConfig } from '@/app/model/config';
 import { User, userService } from '@/app/services/userService';
 import { Company, companyService } from '@/app/services/companyService';

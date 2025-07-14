@@ -9,7 +9,7 @@ import {
 } from '@/app/services/userCompanyService';
 import Container from '@/app/components/ui/Container';
 import { useLocalStorage } from '@/app/hooks/useLocalStorage';
-import { LockTableIcon } from '@/app/components/ui/Icons';
+import { LockTableIcon } from '@/app/components/ui/icons';
 import Pagination from '@/app/components/ui/Pagination';
 import EmptyState from '@/app/components/ui/EmptyState';
 import { handleFormChange, formChangeConfig } from '@/app/utils/globalFunction';

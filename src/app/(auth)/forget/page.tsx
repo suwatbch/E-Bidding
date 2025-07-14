@@ -15,7 +15,7 @@ import {
   FormKeyIcon,
   ButtonSendIcon,
   LinkBackIcon,
-} from '@/app/components/ui/Icons';
+} from '@/app/components/ui/icons';
 import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import CircuitBackground from '@/app/components/CircuitBackground';
 

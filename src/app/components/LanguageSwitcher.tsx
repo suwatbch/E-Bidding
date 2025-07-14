@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { NavLanguageIcon, NavArrowDownIcon } from './ui/Icons';
+import { NavLanguageIcon, NavArrowDownIcon } from './ui/icons';
 import { useLanguageContext } from '@/app/contexts/LanguageContext';
 import Dropdown from './ui/Dropdown';
 
