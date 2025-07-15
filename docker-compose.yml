@@ -32,7 +32,7 @@ services:
       PMA_USER: admin_ebidding
       PMA_PASSWORD: admin231
     ports:
-      - '8001:80'
+      - '3002:80'
     depends_on:
       - db
     networks:
