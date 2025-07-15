@@ -42,6 +42,8 @@ services:
     build: .
     container_name: ebidding_web
     platform: linux/arm64
+    build:
+      context: .
     restart: always
     ports:
       - '3000:3000'
@@ -57,6 +59,8 @@ services:
     build: .
     container_name: ebidding_service
     platform: linux/arm64
+    build:
+      context: .
     restart: always
     ports:
       - '3001:3001'
