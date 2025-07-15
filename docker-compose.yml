@@ -1,19 +1,57 @@
 version: '3.8'
 
 services:
+  # MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: ebidding_db_mysql
+    platform: linux/arm64
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: ebidding
+      MYSQL_USER: admin_ebidding
+      MYSQL_PASSWORD: admin231
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+00:00'
+    networks:
+      - db_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ebidding_phpmyadmin
+    platform: linux/arm64
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: admin_ebidding
+      PMA_PASSWORD: admin231
+    ports:
+      - '8001:80'
+    depends_on:
+      - db
+    networks:
+      - db_network
+
   web:
     build: .
     container_name: ebidding_web
     platform: linux/arm64
     restart: always
     ports:
-      - "3000:3000"
+      - '3000:3000'
     command: npm start
     environment:
       - NODE_ENV=production
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
+    depends_on:
+      - db
+    networks:
+      - db_network
 
   service:
     build: .
@@ -21,11 +59,19 @@ services:
     platform: linux/arm64
     restart: always
     ports:
-      - "3001:3001"
+      - '3001:3001'
     command: npm run server
     environment:
       - NODE_ENV=production
       - PORT=3001
-    # volumes:
-    #   - .:/app
-    #   - /app/node_modules
+    depends_on:
+      - db
+    networks:
+      - db_network
+
+volumes:
+  mysql_data:
+
+networks:
+  db_network:
+    driver: bridge

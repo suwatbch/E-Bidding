@@ -1,6 +1,9 @@
 # ใช้ Node.js เวอร์ชันล่าสุดที่เสถียร
 FROM node:18-alpine
 
+# ติดตั้ง dependencies ที่จำเป็น
+RUN apk add --no-cache libc6-compat
+
 # สร้างและตั้งค่า working directory
 WORKDIR /app
 
@@ -13,7 +16,7 @@ RUN npm install
 # คัดลอกโค้ดทั้งหมด
 COPY . .
 
-# Build Next.js app
+# Build Next.js app (เฉพาะสำหรับ web service)
 RUN npm run build
 
 # เปิด port ที่จำเป็น
