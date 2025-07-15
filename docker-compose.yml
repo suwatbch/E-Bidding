@@ -64,6 +64,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=admin_ebidding
+      - DB_PASSWORD=admin231
+      - DB_NAME=ebidding
     depends_on:
       - db
     networks:
