@@ -1,5 +1,5 @@
 # ใช้ Node.js เวอร์ชันล่าสุดที่เสถียร
-FROM node:18-alpine
+FROM --platform=linux/amd64 node:18-alpine
 
 # ติดตั้ง dependencies ที่จำเป็น
 RUN apk add --no-cache libc6-compat
