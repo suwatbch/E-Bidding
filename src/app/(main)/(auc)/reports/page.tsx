@@ -454,6 +454,29 @@ export default function ReportsPage() {
     setCurrentPage(1);
   }, [selectedCategory, isFiltering]);
 
+  // Calculate totals with proper number validation and debug
+  const totalReservePrice = filteredItems.reduce(
+    (sum, item) => sum + (Number(item.reservePrice) || 0),
+    0
+  );
+  const totalWinnerPrice = filteredItems.reduce((sum, item) => {
+    const winnerPrice = Number(item.winnerPrice) || 0;
+    return sum + winnerPrice;
+  }, 0);
+
+  // Calculate savings correctly: include negative savings too
+  const totalSavings = filteredItems.reduce((sum, item) => {
+    const reservePrice = Number(item.reservePrice) || 0;
+    const winnerPrice = Number(item.winnerPrice) || 0;
+    // คำนวณการประหยัด = ราคาประกัน - ราคาที่ชนะ (รวมทั้งค่าลบด้วย)
+    const itemSaving =
+      reservePrice > 0 && winnerPrice > 0 ? reservePrice - winnerPrice : 0;
+    return sum + itemSaving;
+  }, 0);
+
+  const totalSavingsPercent =
+    totalReservePrice > 0 ? (totalSavings / totalReservePrice) * 100 : 0;
+
   // Calculate pagination
   const totalPages = Math.ceil(filteredItems.length / perPage);
   const startIndex = (currentPage - 1) * perPage;
@@ -576,15 +599,27 @@ export default function ReportsPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-md font-semibold">ราคาประกันรวม:</span>
+              <div className="text-md font-semibold text-gray-900">
+                {formatPriceForDisplay(totalReservePrice)}
+              </div>
             </div>
-            <div className="flex items-center gap-12">
+            <div className="flex items-center gap-2">
               <span className="text-sm">ราคาที่ชนะประมูลรวม:</span>
+              <div className="text-lg font-semibold text-green-600">
+                {formatPriceForDisplay(totalWinnerPrice)}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm">ราคาประหยัดรวม:</span>
+              <div className="text-lg font-semibold text-blue-600">
+                {formatPriceForDisplay(totalSavings)}
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm">อัตราประหยัดรวม:</span>
+              <div className="text-lg font-semibold text-orange-600">
+                {totalSavingsPercent.toFixed(2)}%
+              </div>
             </div>
           </div>
         </div>
