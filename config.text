@@ -1,7 +1,21 @@
+# FRONTEND
 /.env #สร้างไฟล์
-    NEXT_PUBLIC_API_URL=http://localhost:3001 
+NEXT_PUBLIC_API_URL=http://localhost:3001
 
-/src/api/.env #สร้างไฟล์
-    PORT=3001
-    FRONTEND_URL=http://localhost:3000
-    SERVER_URL=http://localhost 
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=admin_ebidding
+DB_PASSWORD=admin231
+DB_NAME=ebidding
+
+# BACKEND
+/src/api/config.js #สร้างไฟล์
+const PORT = 3001;
+const SERVER_URL = 'http://localhost';
+const FRONTEND_URL = 'http://localhost:3000';
+
+module.exports = {
+  PORT,
+  SERVER_URL,
+  FRONTEND_URL,
+};

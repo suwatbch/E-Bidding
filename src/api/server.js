@@ -11,13 +11,14 @@ const userCompanyRouter = require('./controllers/userCompany');
 const auctionsRouter = require('./controllers/auctions');
 const auctionTypeRouter = require('./controllers/auctionType');
 const auctionsHelper = require('./helper/auctionsHelper');
+const { PORT, SERVER_URL, FRONTEND_URL } = require('./config');
 
 const app = express();
 
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: FRONTEND_URL,
     credentials: true,
   })
 );
@@ -25,11 +26,6 @@ app.use(express.json());
 
 // Global Authentication Middleware
 app.use(authMiddleware);
-
-// Environment variables
-const PORT = process.env.PORT || 3001;
-const SERVER_URL = process.env.SERVER_URL || `http://localhost`;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 // Create HTTP server
 const httpServer = createServer(app);
