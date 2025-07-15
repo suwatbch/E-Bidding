@@ -1,6 +1,5 @@
-localhost
-/.env.local #สร้างไฟล์
-    NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
+/.env #สร้างไฟล์
+    NEXT_PUBLIC_API_URL=http://localhost:3001 
 
 /src/api/.env #สร้างไฟล์
     PORT=3001

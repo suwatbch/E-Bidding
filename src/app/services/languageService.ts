@@ -22,7 +22,7 @@ export interface LanguageText {
   text_value: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // ฟังก์ชันสำหรับอ่าน token จาก cookie และ localStorage
 const getAuthTokenFromStorage = (): string | null => {

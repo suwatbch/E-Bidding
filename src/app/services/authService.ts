@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { setupSessionInterceptor } from '@/app/utils/apiInterceptor';
 
 // Base API URL
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Create axios instance with base configuration
 const authApi = axios.create({

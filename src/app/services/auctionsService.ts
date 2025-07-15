@@ -2,8 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { setupSessionInterceptor } from '@/app/utils/apiInterceptor';
 
 // Base URL configuration
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Create axios instance for auctions API
 const auctionsApi = axios.create({
