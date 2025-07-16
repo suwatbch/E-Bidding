@@ -38,22 +38,6 @@ services:
     networks:
       - db_network
 
-  web:
-    container_name: ebidding_web
-    platform: linux/amd64
-    build:
-      context: .
-    restart: always
-    ports:
-      - '3000:3000'
-    command: npm start
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - db
-    networks:
-      - db_network
-
   service:
     container_name: ebidding_service
     platform: linux/amd64
@@ -71,6 +55,22 @@ services:
       - DB_USER=admin_ebidding
       - DB_PASSWORD=admin231
       - DB_NAME=ebidding
+    depends_on:
+      - db
+    networks:
+      - db_network
+
+  web:
+    container_name: ebidding_web
+    platform: linux/amd64
+    build:
+      context: .
+    restart: always
+    ports:
+      - '3000:3000'
+    command: npm start
+    environment:
+      - NODE_ENV=production
     depends_on:
       - db
     networks:
