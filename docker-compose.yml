@@ -71,9 +71,9 @@ services:
     command: npm start
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://34.124.247.58:3001
     depends_on:
-      - service
+      - db
     networks:
       - db_network
 
