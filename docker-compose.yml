@@ -48,8 +48,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - SERVER_URL=http://34.124.247.58
-      - FRONTEND_URL=http://34.124.247.58:3000
+      - SERVER_URL=http://localhost
+      - FRONTEND_URL=http://localhost:3000
       - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=admin_ebidding
@@ -71,7 +71,7 @@ services:
     command: npm start
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://34.124.247.58:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
     depends_on:
       - db
     networks:
