@@ -1,12 +1,19 @@
 const mysql = require('mysql2/promise');
+const {
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+} = require('../config');
 
 // Database configuration with environment variable support
 const dbConfig = {
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: DB_HOST,
+  port: DB_PORT,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
   charset: 'utf8mb4',
   timezone: '+00:00',
   acquireTimeout: 60000,
