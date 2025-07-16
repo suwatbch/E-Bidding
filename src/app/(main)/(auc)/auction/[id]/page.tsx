@@ -1165,7 +1165,9 @@ export default function AuctionDetailPage() {
                       <TableRow key={participant.id}>
                         <TableCell className="py-3 px-4 text-center">
                           <div className="flex items-center justify-center gap-2">
-                            {isWinning && showWinningIcon ? (
+                            {isWinning &&
+                            showWinningIcon &&
+                            (user?.type === 'admin' || auction.status !== 5) ? (
                               <AuctionIcon className="text-blue-600 w-4 h-4" />
                             ) : (
                               ''
