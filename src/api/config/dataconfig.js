@@ -2,7 +2,7 @@ const mysql = require('mysql2/promise');
 
 // Database configuration with environment variable support
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || '34.124.247.58',
   port: parseInt(process.env.DB_PORT) || 3306,
   user: process.env.DB_USER || 'admin_ebidding',
   password: process.env.DB_PASSWORD || 'admin231',
