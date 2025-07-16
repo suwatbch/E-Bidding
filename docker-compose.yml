@@ -29,8 +29,6 @@ services:
     environment:
       PMA_HOST: db
       PMA_PORT: 3306
-      PMA_USER: admin_ebidding
-      PMA_PASSWORD: admin231
     ports:
       - '3002:80'
     depends_on:
