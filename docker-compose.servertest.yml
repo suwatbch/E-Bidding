@@ -66,10 +66,9 @@ services:
     restart: always
     ports:
       - '3000:3000'
-    command: npm start
+    command: npm run dev
     environment:
       - NODE_ENV=servertest
-      - NEXT_PUBLIC_API_URL=http://34.124.247.58:3001
     depends_on:
       - service
     networks:
