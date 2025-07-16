@@ -11,7 +11,10 @@ const userCompanyRouter = require('./controllers/userCompany');
 const auctionsRouter = require('./controllers/auctions');
 const auctionTypeRouter = require('./controllers/auctionType');
 const auctionsHelper = require('./helper/auctionsHelper');
-const { PORT, SERVER_URL, FRONTEND_URL } = require('./config');
+// const { PORT, SERVER_URL, FRONTEND_URL } = require('./config');
+const PORT = 3001;
+const SERVER_URL = 'http://localhost';
+const FRONTEND_URL = 'http://localhost:3000';
 
 const app = express();
 

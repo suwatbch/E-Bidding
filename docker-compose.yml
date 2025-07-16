@@ -39,7 +39,6 @@ services:
       - db_network
 
   web:
-    build: .
     container_name: ebidding_web
     platform: linux/amd64
     build:
@@ -56,7 +55,6 @@ services:
       - db_network
 
   service:
-    build: .
     container_name: ebidding_service
     platform: linux/amd64
     build:

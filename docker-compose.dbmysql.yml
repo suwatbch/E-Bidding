@@ -4,8 +4,8 @@ services:
   # MySQL Database Service
   mysql:
     image: mysql:8.0
-    container_name: ebidding_mysql
-    platform: linux/arm64
+    container_name: ebidding_db_mysql
+    platform: linux/amd64
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: example
@@ -25,7 +25,7 @@ services:
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: ebidding_phpmyadmin
-    platform: linux/arm64
+    platform: linux/amd64
     restart: always
     environment:
       PMA_HOST: mysql
