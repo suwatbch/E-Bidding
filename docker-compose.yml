@@ -53,6 +53,8 @@ services:
       - DB_USER=admin_ebidding
       - DB_PASSWORD=admin231
       - DB_NAME=ebidding
+      - SERVER_URL=http://service
+      - FRONTEND_URL=http://localhost:3000
     depends_on:
       - db
     networks:
@@ -69,8 +71,9 @@ services:
     command: npm start
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
     depends_on:
-      - db
+      - service
     networks:
       - db_network
 

@@ -1,11 +1,6 @@
-// Load environment variables based on NODE_ENV
-const path = require('path');
-const environment = process.env.NODE_ENV || 'development';
-
-// Load environment-specific .env file only
-require('dotenv').config({
-  path: path.resolve(process.cwd(), `.env.${environment}`),
-});
+// Load environment variables
+// โหลด .env.local เป็นหลัก (ใช้ทั้ง dev และ production)
+require('dotenv').config({ path: '.env.local' });
 
 const express = require('express');
 const cors = require('cors');

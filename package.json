@@ -8,12 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "server": "node src/api/server.js",
-    "server:dev": "NODE_ENV=development node src/api/server.js",
-    "server:test": "NODE_ENV=servertest node src/api/server.js",
     "server:prod": "NODE_ENV=production node src/api/server.js",
-    "dev:server": "NODE_ENV=development nodemon src/api/server.js",
-    "dev:server:test": "NODE_ENV=servertest nodemon src/api/server.js",
-    "dev:server:prod": "NODE_ENV=production nodemon src/api/server.js"
+    "dev:server": "NODE_ENV=development nodemon src/api/server.js"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",

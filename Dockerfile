@@ -16,12 +16,13 @@ RUN npm install
 # คัดลอกโค้ดทั้งหมด
 COPY . .
 
-# Build Next.js app (เฉพาะสำหรับ web service)
+# Build Next.js app เฉพาะเมื่อต้องการ
+# (docker-compose จะ override command ตามต้องการ)
 RUN npm run build
 
 # เปิด port ที่จำเป็น
 EXPOSE 3000
 EXPOSE 3001
 
-# คำสั่งเริ่มต้นแอพ (จะถูก override โดย docker-compose)
+# คำสั่งเริ่มต้น (จะถูก override โดย docker-compose)
 CMD ["npm", "start"]
