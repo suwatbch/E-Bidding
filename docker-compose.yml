@@ -53,7 +53,7 @@ services:
       - DB_USER=admin_ebidding
       - DB_PASSWORD=admin231
       - DB_NAME=ebidding
-      - SERVER_URL=http://service
+      - SERVER_URL=http://localhost
       - FRONTEND_URL=http://localhost:3000
     depends_on:
       - db
