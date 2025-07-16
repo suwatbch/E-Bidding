@@ -69,6 +69,7 @@ services:
     command: npm start
     environment:
       - NODE_ENV=servertest
+      - NEXT_PUBLIC_API_URL=http://34.124.247.58:3001
     depends_on:
       - db
     networks:
