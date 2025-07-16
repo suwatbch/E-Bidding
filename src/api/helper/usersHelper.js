@@ -181,7 +181,7 @@ async function createUser(userData) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, now(), now())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, NOW(), NOW())
     `;
 
     const result = await executeQuery(query, [
@@ -523,7 +523,7 @@ async function createUserWithCompanies(userData, companies) {
         status,
         created_dt,
         updated_dt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, ?, now(), now())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, FALSE, ?, ?, NOW(), NOW())
     `;
 
     const [userResult] = await connection.execute(userQuery, [

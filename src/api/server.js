@@ -1,3 +1,12 @@
+// Load environment variables based on NODE_ENV
+const path = require('path');
+const environment = process.env.NODE_ENV || 'development';
+
+// Load environment-specific .env file only
+require('dotenv').config({
+  path: path.resolve(process.cwd(), `.env.${environment}`),
+});
+
 const express = require('express');
 const cors = require('cors');
 const { createServer } = require('http');
@@ -11,10 +20,10 @@ const userCompanyRouter = require('./controllers/userCompany');
 const auctionsRouter = require('./controllers/auctions');
 const auctionTypeRouter = require('./controllers/auctionType');
 const auctionsHelper = require('./helper/auctionsHelper');
-// const { PORT, SERVER_URL, FRONTEND_URL } = require('./config');
-const PORT = process.env.PORT || 3001;
-const SERVER_URL = process.env.SERVER_URL || 'http://34.124.247.58';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://34.124.247.58:3000';
+
+const PORT = process.env.PORT;
+const SERVER_URL = process.env.SERVER_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
 const app = express();
 

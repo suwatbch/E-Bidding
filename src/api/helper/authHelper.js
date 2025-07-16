@@ -4,10 +4,8 @@ const { executeQuery } = require('../config/dataconfig');
 const { getDateTimeUTCNow } = require('../globalFunction');
 
 // JWT Secret (ในการใช้งานจริงควรเก็บใน environment variable)
-const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  'E8d4K9mN2pQ7rV5xB1fG6hJ3kL0sT9wY2eR8uI5oP7qA4zC6vB3nM1xS8dF0gH9j';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN;
 
 // ดึงข้อมูลผู้ใช้ตาม username (helper function for loginUser)
 async function getUserByUsername(username) {

@@ -44,9 +44,9 @@ services:
     restart: always
     ports:
       - '3001:3001'
-    command: npm run server:prod
+    command: npm run dev:server
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3001
       - DB_HOST=db
       - DB_PORT=3306
@@ -66,9 +66,9 @@ services:
     restart: always
     ports:
       - '3000:3000'
-    command: npm start
+    command: npm run dev
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
     depends_on:
       - db
     networks:
