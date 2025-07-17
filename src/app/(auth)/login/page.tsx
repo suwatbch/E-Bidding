@@ -193,6 +193,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4">
       <CircuitBackground />
 
+      {/* Login Page */}
       <div className="w-full max-w-md">
         {/* Card Container */}
         <div className="relative bg-white rounded-2xl shadow-xl overflow-hidden mx-auto">
