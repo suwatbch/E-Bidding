@@ -1,0 +1,122 @@
+#<----------------------------------.env.local---------------------------------->
+# สรา้งไฟล์
+  .env.local
+
+# เนื้อหา
+  # Environment Configuration for E-Bidding System
+  # This file works for both local development and Docker Compose
+
+  # Database Configuration
+  DB_HOST=xxxxx
+  DB_PORT=3306
+  DB_USER=xxxxx
+  DB_PASSWORD=xxxxx
+  DB_NAME=xxxxx
+
+  # Server Configuration
+  PORT=3001
+  SERVER_URL=http://xxxxx
+
+  # Frontend Configuration
+  FRONTEND_URL=http://xxxxx:3000
+
+  # API URL for Next.js Frontend
+  # For local development: http://xxxxx:3001
+  # For Docker: will be overridden by docker-compose.yml
+  NEXT_PUBLIC_API_URL=http://xxxxx:3001
+
+  # JWT Configuration
+  JWT_SECRET=E8d4K9mN2pQ7rV5xB1fG6hJ3kL0sT9wY2eR8uI5oP7qA4zC6vB3nM1xS8dF0gH9j
+  JWT_EXPIRES_IN=24h
+
+
+#<----------------------------------docker-compose.yml---------------------------------->
+# สรา้งไฟล์
+  docker-compose.yml
+
+# เนื้อหา
+  version: '3.8'
+
+  services:
+    # MySQL Database Service
+    db:
+      image: mysql:8.0
+      container_name: ebidding_db_mysql
+      platform: linux/amd64
+      restart: always
+      environment:
+        MYSQL_ROOT_PASSWORD: xxxxx
+        MYSQL_DATABASE: xxxxx
+        MYSQL_USER: xxxxx
+        MYSQL_PASSWORD: xxxxx
+      ports:
+        - '3306:3306'
+      volumes:
+        - mysql_data:/var/lib/mysql
+        - ./mysql-init:/docker-entrypoint-initdb.d
+      command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+00:00'
+      networks:
+        - db_network
+
+    phpmyadmin:
+      image: phpmyadmin:latest
+      container_name: ebidding_phpmyadmin
+      platform: linux/amd64
+      restart: always
+      environment:
+        PMA_HOST: db
+        PMA_PORT: 3306
+      ports:
+        - '3002:80'
+      depends_on:
+        - db
+      networks:
+        - db_network
+
+    service:
+      container_name: ebidding_service
+      platform: linux/amd64
+      build:
+        context: .
+      restart: always
+      ports:
+        - '3001:3001'
+      command: npm run server:prod
+      environment:
+        - NODE_ENV=production
+        - PORT=3001
+        - SERVER_URL=http://xxxxx
+        - FRONTEND_URL=http://xxxxx:3000
+        - DB_HOST=db
+        - DB_PORT=3306
+        - DB_USER=admin_ebidding
+        - DB_PASSWORD=admin231
+        - DB_NAME=ebidding
+      depends_on:
+        - db
+      networks:
+        - db_network
+
+    web:
+      container_name: ebidding_web
+      platform: linux/amd64
+      build:
+        context: .
+      restart: always
+      ports:
+        - '3000:3000'
+      command: npm start
+      environment:
+        - NODE_ENV=production
+        - NEXT_PUBLIC_API_URL=http://xxxxx:3001
+      depends_on:
+        - db
+      networks:
+        - db_network
+
+  volumes:
+    mysql_data:
+
+  networks:
+    db_network:
+      driver: bridge

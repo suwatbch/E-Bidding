@@ -2,8 +2,9 @@ node_modules
 tsconfig.tsbuildinfo
 .next
 out
-# .env
-#.env.*
+.env
+.env.*
+docker-compose.yml
 dist
 .DS_Store
 npm-debug.log
@@ -12,7 +13,5 @@ yarn-error.log
 coverage
 *.local
 *.log
-# Docker
 *.pid
-# VSCode
 .vscode/
